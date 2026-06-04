@@ -1,0 +1,12 @@
+{
+  "tabs": {
+    "home": "Home",
+    "search": "Search",
+    "add": "Add",
+    "chat": "Chat",
+    "profile": "Profile"
+  },
+  "common": {
+    "appName": "Yuva"
+  }
+}

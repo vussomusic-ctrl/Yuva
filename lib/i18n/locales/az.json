@@ -1,0 +1,12 @@
+{
+  "tabs": {
+    "home": "Ana Səhifə",
+    "search": "Axtarış",
+    "add": "Elan ver",
+    "chat": "Mesajlar",
+    "profile": "Profil"
+  },
+  "common": {
+    "appName": "Yuva"
+  }
+}
