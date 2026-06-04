@@ -8,5 +8,77 @@
   },
   "common": {
     "appName": "Yuva"
+  },
+  "splash": {
+    "subtitle": "Ваше премиальное гнездо ждёт вас.",
+    "selectLanguage": "Выберите язык"
+  },
+  "welcome": {
+    "subtitle": "Эксклюзивная недвижимость для взыскательных клиентов.",
+    "createAccount": "Создать аккаунт",
+    "login": "Войти",
+    "or": "или",
+    "guest": "Продолжить как гость",
+    "legalPre": "Продолжая, вы соглашаетесь с нашими ",
+    "terms": "Условиями использования",
+    "legalAnd": " и ",
+    "privacy": "Политикой конфиденциальности",
+    "legalEnd": "."
+  },
+  "createAccount": {
+    "title": "Создать аккаунт",
+    "subtitle": "Откройте для себя эксклюзивную коллекцию премиальной недвижимости.",
+    "fullNameLabel": "Полное имя",
+    "fullNamePlaceholder": "Иван Иванов",
+    "emailLabel": "Электронная почта",
+    "emailPlaceholder": "ivan@example.com",
+    "passwordLabel": "Пароль",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Зарегистрироваться",
+    "or": "или",
+    "google": "Войти через Google",
+    "apple": "Войти через Apple",
+    "haveAccount": "Уже есть аккаунт?",
+    "login": "Войти",
+    "errName": "Введите имя",
+    "errEmail": "Введите корректный email",
+    "errPassword": "Введите пароль",
+    "success": "Готово! Регистрацию подключим к Supabase позже."
+  },
+  "home": {
+    "location": "Баку, Азербайджан",
+    "searchPlaceholder": "Город, район или метро...",
+    "dealSale": "Продажа",
+    "dealRent": "Аренда",
+    "dealSell": "Продать",
+    "catApartments": "Квартиры",
+    "catHouses": "Дома",
+    "catLand": "Земля",
+    "catObjects": "Объекты",
+    "recommended": "Рекомендуемые",
+    "seeAll": "Все",
+    "newListings": "Новые объявления",
+    "premium": "Premium",
+    "roomsUnit": "комн.",
+    "floorUnit": "этаж"
+  },
+  "propertyDetail": {
+    "area": "Площадь",
+    "rooms": "Комнаты",
+    "floor": "Этаж",
+    "description": "Описание",
+    "amenities": "Удобства",
+    "locationTitle": "Расположение",
+    "viewMap": "Открыть",
+    "verifiedAgent": "Проверенный агент",
+    "write": "Написать",
+    "amParking": "Подземная парковка",
+    "amElevator": "Лифт",
+    "amRenovation": "Ремонт",
+    "amFurniture": "Меблирована",
+    "amInternet": "Оптоволокно",
+    "amSecurity": "Охрана 24/7",
+    "amSeaView": "Вид на море",
+    "amKitchen": "Встроенная кухня"
   }
 }

@@ -8,5 +8,77 @@
   },
   "common": {
     "appName": "Yuva"
+  },
+  "splash": {
+    "subtitle": "Premium yuvanız sizi gözləyir.",
+    "selectLanguage": "Dili seçin"
+  },
+  "welcome": {
+    "subtitle": "Tələbkar müştərilər üçün eksklüziv daşınmaz əmlak.",
+    "createAccount": "Hesab yarat",
+    "login": "Daxil ol",
+    "or": "və ya",
+    "guest": "Qonaq kimi davam et",
+    "legalPre": "Davam etməklə siz ",
+    "terms": "İstifadə Şərtləri",
+    "legalAnd": " və ",
+    "privacy": "Məxfilik Siyasəti",
+    "legalEnd": " ilə razılaşırsınız."
+  },
+  "createAccount": {
+    "title": "Hesab yarat",
+    "subtitle": "Premium daşınmaz əmlakın eksklüziv kolleksiyasını kəşf edin.",
+    "fullNameLabel": "Tam ad",
+    "fullNamePlaceholder": "Əli Məmmədov",
+    "emailLabel": "E-poçt",
+    "emailPlaceholder": "ali@example.com",
+    "passwordLabel": "Şifrə",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Qeydiyyatdan keç",
+    "or": "və ya",
+    "google": "Google ilə daxil ol",
+    "apple": "Apple ilə daxil ol",
+    "haveAccount": "Artıq hesabınız var?",
+    "login": "Daxil ol",
+    "errName": "Adınızı daxil edin",
+    "errEmail": "Düzgün e-poçt daxil edin",
+    "errPassword": "Şifrəni daxil edin",
+    "success": "Hazırdır! Qeydiyyatı sonra Supabase ilə qoşacağıq."
+  },
+  "home": {
+    "location": "Bakı, Azərbaycan",
+    "searchPlaceholder": "Şəhər, rayon, və ya metro axtar...",
+    "dealSale": "Satılır",
+    "dealRent": "Kirayə",
+    "dealSell": "Sat",
+    "catApartments": "Mənzillər",
+    "catHouses": "Evlər",
+    "catLand": "Torpaq",
+    "catObjects": "Obyektlər",
+    "recommended": "Tövsiyə olunanlar",
+    "seeAll": "Hamısına bax",
+    "newListings": "Yeni elanlar",
+    "premium": "Premium",
+    "roomsUnit": "Otaq",
+    "floorUnit": "Mərtəbə"
+  },
+  "propertyDetail": {
+    "area": "Sahə",
+    "rooms": "Otaq",
+    "floor": "Mərtəbə",
+    "description": "Məlumat",
+    "amenities": "Şərait",
+    "locationTitle": "Xəritədə yeri",
+    "viewMap": "Bax",
+    "verifiedAgent": "Təsdiqlənmiş Agent",
+    "write": "Yaz",
+    "amParking": "Yeraltı parkinq",
+    "amElevator": "Lift",
+    "amRenovation": "Təmirli",
+    "amFurniture": "Mebellənmiş",
+    "amInternet": "Optik internet",
+    "amSecurity": "24/7 Mühafizə",
+    "amSeaView": "Dəniz mənzərəsi",
+    "amKitchen": "Quraşdırılmış mətbəx"
   }
 }

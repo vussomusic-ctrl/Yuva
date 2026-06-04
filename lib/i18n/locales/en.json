@@ -8,5 +8,77 @@
   },
   "common": {
     "appName": "Yuva"
+  },
+  "splash": {
+    "subtitle": "Your premium nest awaits.",
+    "selectLanguage": "Select Language"
+  },
+  "welcome": {
+    "subtitle": "Exclusive real estate for discerning clients.",
+    "createAccount": "Create account",
+    "login": "Log in",
+    "or": "or",
+    "guest": "Continue as guest",
+    "legalPre": "By continuing, you agree to our ",
+    "terms": "Terms of Use",
+    "legalAnd": " and ",
+    "privacy": "Privacy Policy",
+    "legalEnd": "."
+  },
+  "createAccount": {
+    "title": "Create account",
+    "subtitle": "Discover an exclusive collection of premium real estate.",
+    "fullNameLabel": "Full name",
+    "fullNamePlaceholder": "John Doe",
+    "emailLabel": "Email",
+    "emailPlaceholder": "john@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Sign up",
+    "or": "or",
+    "google": "Continue with Google",
+    "apple": "Continue with Apple",
+    "haveAccount": "Already have an account?",
+    "login": "Log in",
+    "errName": "Enter your name",
+    "errEmail": "Enter a valid email",
+    "errPassword": "Enter a password",
+    "success": "All set! We'll connect sign-up to Supabase later."
+  },
+  "home": {
+    "location": "Baku, Azerbaijan",
+    "searchPlaceholder": "City, district or metro...",
+    "dealSale": "For sale",
+    "dealRent": "For rent",
+    "dealSell": "Sell",
+    "catApartments": "Apartments",
+    "catHouses": "Houses",
+    "catLand": "Land",
+    "catObjects": "Objects",
+    "recommended": "Recommended",
+    "seeAll": "See all",
+    "newListings": "New listings",
+    "premium": "Premium",
+    "roomsUnit": "rooms",
+    "floorUnit": "floor"
+  },
+  "propertyDetail": {
+    "area": "Area",
+    "rooms": "Rooms",
+    "floor": "Floor",
+    "description": "Description",
+    "amenities": "Amenities",
+    "locationTitle": "Location",
+    "viewMap": "View",
+    "verifiedAgent": "Verified agent",
+    "write": "Message",
+    "amParking": "Underground parking",
+    "amElevator": "Elevator",
+    "amRenovation": "Renovated",
+    "amFurniture": "Furnished",
+    "amInternet": "Fiber internet",
+    "amSecurity": "24/7 security",
+    "amSeaView": "Sea view",
+    "amKitchen": "Fitted kitchen"
   }
 }

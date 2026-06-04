@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import { lightTheme, darkTheme } from "./colors";
+import { useColorScheme } from "react-native";
+import { lightTheme, darkTheme, Theme } from "./colors";
 
 type ThemeMode = "light" | "dark";
 
 interface ThemeContextValue {
   mode: ThemeMode;
-  colors: typeof lightTheme;
+  colors: Theme;
   toggleTheme: () => void;
 }
 
@@ -16,11 +17,16 @@ const ThemeContext = createContext<ThemeContextValue>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<ThemeMode>("light");
+  // Follow the device appearance by default; a manual toggle (future Settings
+  // screen) can override it for the rest of the session.
+  const system = useColorScheme();
+  const [override, setOverride] = useState<ThemeMode | null>(null);
+
+  const mode: ThemeMode = override ?? (system === "dark" ? "dark" : "light");
 
   const toggleTheme = useCallback(() => {
-    setMode((prev) => (prev === "light" ? "dark" : "light"));
-  }, []);
+    setOverride(mode === "light" ? "dark" : "light");
+  }, [mode]);
 
   const colors = mode === "light" ? lightTheme : darkTheme;
 
