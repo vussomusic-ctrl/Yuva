@@ -105,6 +105,15 @@ export const getListingsByOwner = (ownerId: string) =>
 
 export const getListingById = (id: string) => listings.find((l) => l.id === id);
 
+// Add a user-created listing to the in-memory feed (Add Listing flow). Prepends
+// so it shows first in My listings / feeds. Lost on reload; persist to Supabase
+// `listings` later. Caller supplies ownerId + premium.
+export function addListing(input: Omit<Listing, "id">): Listing {
+  const created: Listing = { ...input, id: `user-${Date.now()}` };
+  listings.unshift(created);
+  return created;
+}
+
 export const formatPrice = (azn: number) => `${azn.toLocaleString("en-US")} ₼`;
 
 // --- Property Detail enrichment (mock; Supabase joins later) ---

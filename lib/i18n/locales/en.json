@@ -91,7 +91,26 @@
     "logout": "Log out"
   },
   "addListing": {
-    "title": "Add listing"
+    "title": "Add listing",
+    "step1Title": "Photos",
+    "step2Title": "Type",
+    "step3Title": "Details",
+    "step4Title": "Preview",
+    "next": "Next",
+    "back": "Back",
+    "publish": "Publish",
+    "photosHint": "Add at least one photo",
+    "addPhoto": "Photo",
+    "cover": "Cover",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Listing title",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "More about the property...",
+    "selectRegion": "Select district",
+    "floorTotal": "Total floors",
+    "reviewTitle": "How your listing will look",
+    "publishedTitle": "Listing published!",
+    "publishedDesc": "Your listing now appears in My listings"
   },
   "search": {
     "resultsCount": "{{count}} listings found",

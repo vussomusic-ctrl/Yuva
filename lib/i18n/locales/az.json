@@ -91,7 +91,26 @@
     "logout": "Hesabdan çıx"
   },
   "addListing": {
-    "title": "Elan yerləşdir"
+    "title": "Elan yerləşdir",
+    "step1Title": "Şəkillər",
+    "step2Title": "Növ",
+    "step3Title": "Detallar",
+    "step4Title": "Önizləmə",
+    "next": "Növbəti",
+    "back": "Geri",
+    "publish": "Yerləşdir",
+    "photosHint": "Ən azı bir şəkil əlavə edin",
+    "addPhoto": "Şəkil",
+    "cover": "Üz qabığı",
+    "titleLabel": "Başlıq",
+    "titlePlaceholder": "Elan başlığı",
+    "descriptionLabel": "Təsvir",
+    "descriptionPlaceholder": "Obyekt haqqında ətraflı...",
+    "selectRegion": "Rayon seçin",
+    "floorTotal": "Mərtəbə (ümumi)",
+    "reviewTitle": "Elan belə görünəcək",
+    "publishedTitle": "Elan yerləşdirildi!",
+    "publishedDesc": "Elanınız «Mənim elanlarım»da görünür"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",

@@ -91,7 +91,26 @@
     "logout": "Выйти из аккаунта"
   },
   "addListing": {
-    "title": "Подать объявление"
+    "title": "Подать объявление",
+    "step1Title": "Фотографии",
+    "step2Title": "Тип",
+    "step3Title": "Детали",
+    "step4Title": "Предпросмотр",
+    "next": "Далее",
+    "back": "Назад",
+    "publish": "Опубликовать",
+    "photosHint": "Добавьте хотя бы одно фото",
+    "addPhoto": "Фото",
+    "cover": "Обложка",
+    "titleLabel": "Заголовок",
+    "titlePlaceholder": "Заголовок объявления",
+    "descriptionLabel": "Описание",
+    "descriptionPlaceholder": "Подробнее об объекте...",
+    "selectRegion": "Выберите район",
+    "floorTotal": "Этажность",
+    "reviewTitle": "Так будет выглядеть объявление",
+    "publishedTitle": "Объявление опубликовано!",
+    "publishedDesc": "Ваше объявление появилось в «Мои объявления»"
   },
   "search": {
     "resultsCount": "Найдено {{count}}",

@@ -10,14 +10,9 @@ import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { Segmented } from "../components/Segmented";
 import { DEALS, DealKey } from "../lib/dealTypes";
+import { PROPERTY_TYPES } from "../lib/propertyTypes";
 import { bakuRayons } from "../lib/mock/regions";
 
-const PROPERTY_TYPES = [
-  { key: "apartment", label: "filters.typeApartment" },
-  { key: "house", label: "filters.typeHouse" },
-  { key: "land", label: "filters.typeLand" },
-  { key: "object", label: "filters.typeObject" },
-];
 const ROOMS = ["1", "2", "3", "4", "5+"];
 
 const toggleIn = (arr: string[], v: string) =>
@@ -106,7 +101,7 @@ export default function FiltersModal() {
             {PROPERTY_TYPES.map((p) => (
               <FilterChip
                 key={p.key}
-                label={t(p.label)}
+                label={t(p.labelKey)}
                 active={propertyTypes.includes(p.key)}
                 onPress={() => setPropertyTypes((a) => toggleIn(a, p.key))}
                 colors={colors}
