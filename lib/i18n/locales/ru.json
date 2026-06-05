@@ -50,7 +50,6 @@
     "searchPlaceholder": "Город, район или метро...",
     "dealSale": "Продажа",
     "dealRent": "Аренда",
-    "dealSell": "Продать",
     "catApartments": "Квартиры",
     "catHouses": "Дома",
     "catLand": "Земля",
@@ -80,5 +79,46 @@
     "amSecurity": "Охрана 24/7",
     "amSeaView": "Вид на море",
     "amKitchen": "Встроенная кухня"
+  },
+  "profile": {
+    "roleUser": "Пользователь",
+    "roleAgent": "Агент",
+    "myListings": "Мои объявления",
+    "saved": "Сохранённые",
+    "language": "Язык",
+    "settings": "Настройки",
+    "theme": "Тема",
+    "logout": "Выйти из аккаунта"
+  },
+  "addListing": {
+    "title": "Подать объявление"
+  },
+  "search": {
+    "resultsCount": "Найдено {{count}}",
+    "viewList": "Список",
+    "viewMap": "Карта",
+    "mapSoon": "Карта скоро будет доступна",
+    "emptyTitle": "Ничего не найдено",
+    "emptyDesc": "Измените запрос или фильтры"
+  },
+  "filters": {
+    "title": "Фильтры",
+    "clear": "Очистить",
+    "apply": "Показать",
+    "dealType": "Тип сделки",
+    "propertyType": "Тип недвижимости",
+    "typeApartment": "Квартира",
+    "typeHouse": "Дом",
+    "typeLand": "Земля",
+    "typeObject": "Объект",
+    "price": "Цена, ₼",
+    "rooms": "Комнаты",
+    "area": "Площадь, m²",
+    "region": "Регион / район",
+    "floor": "Этаж",
+    "furnished": "С мебелью",
+    "mortgage": "Ипотека",
+    "min": "От",
+    "max": "До"
   }
 }

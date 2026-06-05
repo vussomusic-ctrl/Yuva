@@ -22,6 +22,8 @@ function RootInner() {
         <Stack.Screen name="create-account" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="property/[id]" />
+        <Stack.Screen name="add-listing" options={{ presentation: "modal" }} />
+        <Stack.Screen name="filters" options={{ presentation: "modal" }} />
       </Stack>
     </>
   );

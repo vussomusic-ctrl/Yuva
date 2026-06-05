@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Web preview only. react-native-web renders Pressables as focusable elements,
+ * so the browser draws its default focus ring (a blue system-accent rectangle
+ * on macOS) — e.g. around category tiles after a tap. We never use blue for
+ * selection outlines (CLAUDE.md): hide the ring for pointer/touch focus and, for
+ * keyboard users (a11y), recolor it to brand violet instead of blue.
+ * These pseudo-classes have no effect on native.
+ */
+:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+:focus-visible {
+  /* brand violet — never the #2E7FE8 blue. !important to win over
+     react-native-web's atomic outline reset on Pressables. */
+  outline: 2px solid #8b3fd6 !important;
+  outline-offset: 2px;
+}

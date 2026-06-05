@@ -50,7 +50,6 @@
     "searchPlaceholder": "City, district or metro...",
     "dealSale": "For sale",
     "dealRent": "For rent",
-    "dealSell": "Sell",
     "catApartments": "Apartments",
     "catHouses": "Houses",
     "catLand": "Land",
@@ -80,5 +79,46 @@
     "amSecurity": "24/7 security",
     "amSeaView": "Sea view",
     "amKitchen": "Fitted kitchen"
+  },
+  "profile": {
+    "roleUser": "User",
+    "roleAgent": "Agent",
+    "myListings": "My listings",
+    "saved": "Saved",
+    "language": "Language",
+    "settings": "Settings",
+    "theme": "Theme",
+    "logout": "Log out"
+  },
+  "addListing": {
+    "title": "Add listing"
+  },
+  "search": {
+    "resultsCount": "{{count}} listings found",
+    "viewList": "List",
+    "viewMap": "Map",
+    "mapSoon": "Map view coming soon",
+    "emptyTitle": "No results",
+    "emptyDesc": "Try changing your search or filters"
+  },
+  "filters": {
+    "title": "Filters",
+    "clear": "Clear",
+    "apply": "Show",
+    "dealType": "Deal type",
+    "propertyType": "Property type",
+    "typeApartment": "Apartment",
+    "typeHouse": "House",
+    "typeLand": "Land",
+    "typeObject": "Commercial",
+    "price": "Price, ₼",
+    "rooms": "Rooms",
+    "area": "Area, m²",
+    "region": "Region / district",
+    "floor": "Floor",
+    "furnished": "Furnished",
+    "mortgage": "Mortgage",
+    "min": "Min",
+    "max": "Max"
   }
 }

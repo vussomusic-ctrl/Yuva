@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   Image,
   Pressable,
   ScrollView,
@@ -15,15 +14,10 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { PropertyCard } from "../../components/PropertyCard";
+import { SearchBar } from "../../components/SearchBar";
+import { DealTypeChips, DealKey } from "../../components/DealTypeChips";
+import { useLanguage } from "../../lib/i18n/languages";
 import { recommendedListings, newListings } from "../../lib/mock/listings";
-
-const LANGS = ["az", "ru", "en"] as const;
-
-const DEALS = [
-  { key: "sale", label: "home.dealSale" },
-  { key: "rent", label: "home.dealRent" },
-  { key: "sell", label: "home.dealSell" },
-] as const;
 
 const CATEGORIES = [
   { key: "apartments", label: "home.catApartments", icon: "business-outline" },
@@ -33,21 +27,17 @@ const CATEGORIES = [
 ] as const;
 
 export default function HomeScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
+  const { current, cycleLanguage } = useLanguage();
 
   const [query, setQuery] = useState("");
-  const [deal, setDeal] = useState<"sale" | "rent" | "sell">("sale");
+  const [deal, setDeal] = useState<DealKey>("sale");
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
 
   const toggleFavorite = (id: string) =>
     setFavorites((f) => ({ ...f, [id]: !f[id] }));
-
-  const cycleLanguage = () => {
-    const idx = LANGS.indexOf((i18n.language as (typeof LANGS)[number]) ?? "az");
-    i18n.changeLanguage(LANGS[(idx + 1) % LANGS.length]);
-  };
 
   const openListing = (id: string) => router.push(`/property/${id}`);
 
@@ -84,7 +74,7 @@ export default function HomeScreen() {
           })}
         >
           <Text style={{ color: brand.violet, fontWeight: "800", fontSize: 12, letterSpacing: 1 }}>
-            {i18n.language.toUpperCase().slice(0, 2)}
+            {current.toUpperCase()}
           </Text>
         </Pressable>
       </View>
@@ -99,67 +89,11 @@ export default function HomeScreen() {
             <Ionicons name="location" size={16} color={colors.textSecondary} />
             <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{t("home.location")}</Text>
           </View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              height: 48,
-              borderRadius: 24,
-              paddingHorizontal: 16,
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}
-          >
-            <Ionicons name="search" size={20} color={colors.textSecondary} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder={t("home.searchPlaceholder")}
-              placeholderTextColor={colors.textSecondary}
-              style={{ flex: 1, marginHorizontal: 8, color: colors.text, fontSize: 14 }}
-            />
-            <View style={{ width: 1, height: 24, backgroundColor: colors.border, marginRight: 10 }} />
-            <Pressable hitSlop={8}>
-              <Ionicons name="options-outline" size={22} color={brand.violet} />
-            </Pressable>
-          </View>
+          <SearchBar value={query} onChangeText={setQuery} onPressFilter={() => router.push("/filters")} />
         </View>
 
         {/* Deal-type chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
-        >
-          {DEALS.map((d) => {
-            const active = deal === d.key;
-            return (
-              <Pressable
-                key={d.key}
-                onPress={() => setDeal(d.key)}
-                style={{
-                  paddingHorizontal: 18,
-                  paddingVertical: 9,
-                  borderRadius: 999,
-                  backgroundColor: active ? brand.violet : colors.card,
-                  borderWidth: 1,
-                  borderColor: active ? brand.violet : colors.border,
-                }}
-              >
-                <Text
-                  style={{
-                    color: active ? "#FFFFFF" : colors.text,
-                    fontSize: 13,
-                    fontWeight: "700",
-                  }}
-                >
-                  {t(d.label)}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        <DealTypeChips value={deal} onChange={setDeal} />
 
         {/* Categories */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 16 }}>

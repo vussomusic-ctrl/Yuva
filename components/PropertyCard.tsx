@@ -27,7 +27,10 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
     <Pressable
       onPress={onPress}
       style={({ pressed }) => ({
-        width: carousel ? 260 : "100%",
+        // Carousel = fixed width (horizontal scroll). Feed = stretch to the parent
+        // (list cell / column) so the width is always definite and the image's
+        // aspectRatio can resolve a finite height — full width but not full screen.
+        ...(carousel ? { width: 260 } : { alignSelf: "stretch" }),
         backgroundColor: colors.card,
         borderRadius: 16,
         borderWidth: 1,

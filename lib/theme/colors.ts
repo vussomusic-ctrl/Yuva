@@ -15,6 +15,8 @@ export type Theme = {
   tabBar: string;
   tabInactive: string;
   brandTitle: string;
+  // Destructive actions (e.g. log out). Brighter in dark for legibility.
+  danger: string;
   // Single smooth top→bottom page gradient (no hard seam).
   bgGradient: readonly [string, string];
 };
@@ -29,6 +31,7 @@ export const lightTheme: Theme = {
   tabInactive: "#9E9EA6",
   // Deep violet used for the brand wordmark on light backgrounds.
   brandTitle: "#490081",
+  danger: "#E5484D",
   bgGradient: ["#EBE3F0", "#F7F7F9"],
 };
 
@@ -42,6 +45,7 @@ export const darkTheme: Theme = {
   tabInactive: "#6B6B73",
   // Light violet keeps the wordmark legible on the Obsidian background.
   brandTitle: "#F0DBFF",
+  danger: "#FF6B6B",
   // Violet-tinted Obsidian fading to near-black — same continuous gradient idea.
   bgGradient: ["#1A1320", "#121212"],
 };

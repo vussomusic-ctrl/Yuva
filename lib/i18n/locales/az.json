@@ -50,7 +50,6 @@
     "searchPlaceholder": "Şəhər, rayon, və ya metro axtar...",
     "dealSale": "Satılır",
     "dealRent": "Kirayə",
-    "dealSell": "Sat",
     "catApartments": "Mənzillər",
     "catHouses": "Evlər",
     "catLand": "Torpaq",
@@ -80,5 +79,46 @@
     "amSecurity": "24/7 Mühafizə",
     "amSeaView": "Dəniz mənzərəsi",
     "amKitchen": "Quraşdırılmış mətbəx"
+  },
+  "profile": {
+    "roleUser": "İstifadəçi",
+    "roleAgent": "Agent",
+    "myListings": "Mənim elanlarım",
+    "saved": "Yadda saxlanılanlar",
+    "language": "Dil",
+    "settings": "Ayarlar",
+    "theme": "Tema",
+    "logout": "Hesabdan çıx"
+  },
+  "addListing": {
+    "title": "Elan yerləşdir"
+  },
+  "search": {
+    "resultsCount": "{{count}} elan tapıldı",
+    "viewList": "Siyahı",
+    "viewMap": "Xəritə",
+    "mapSoon": "Xəritə tezliklə əlçatan olacaq",
+    "emptyTitle": "Nəticə tapılmadı",
+    "emptyDesc": "Axtarışı və ya filtrləri dəyişin"
+  },
+  "filters": {
+    "title": "Filtrlər",
+    "clear": "Təmizlə",
+    "apply": "Göstər",
+    "dealType": "Əməliyyat növü",
+    "propertyType": "Əmlak növü",
+    "typeApartment": "Mənzil",
+    "typeHouse": "Ev",
+    "typeLand": "Torpaq",
+    "typeObject": "Obyekt",
+    "price": "Qiymət, ₼",
+    "rooms": "Otaq sayı",
+    "area": "Sahə, m²",
+    "region": "Region / rayon",
+    "floor": "Mərtəbə",
+    "furnished": "Mebellənmiş",
+    "mortgage": "İpoteka",
+    "min": "Min",
+    "max": "Maks"
   }
 }
