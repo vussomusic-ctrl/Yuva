@@ -19,6 +19,7 @@ import { DealTypeChips, DealKey } from "../../components/DealTypeChips";
 import { useLanguage } from "../../lib/i18n/languages";
 import { useFavorites } from "../../lib/favorites";
 import { recommendedListings, newListings } from "../../lib/mock/listings";
+import { hasUnreadNotifications } from "../../lib/mock/notifications";
 
 const CATEGORIES = [
   { key: "apartments", label: "home.catApartments", icon: "business-outline" },
@@ -59,22 +60,48 @@ export default function HomeScreen() {
           resizeMode="contain"
           style={{ width: 92, height: 30 }}
         />
-        <Pressable
-          onPress={cycleLanguage}
-          hitSlop={10}
-          style={({ pressed }) => ({
-            paddingHorizontal: 10,
-            paddingVertical: 6,
-            borderRadius: 999,
-            borderWidth: 1,
-            borderColor: colors.border,
-            opacity: pressed ? 0.6 : 1,
-          })}
-        >
-          <Text style={{ color: brand.violet, fontWeight: "800", fontSize: 12, letterSpacing: 1 }}>
-            {current.toUpperCase()}
-          </Text>
-        </Pressable>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Pressable
+            onPress={() => router.push("/notifications")}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={t("notifications.title")}
+            style={({ pressed }) => ({ padding: 4, opacity: pressed ? 0.6 : 1 })}
+          >
+            <Ionicons name="notifications-outline" size={24} color={colors.text} />
+            {hasUnreadNotifications && (
+              <View
+                style={{
+                  position: "absolute",
+                  top: 2,
+                  right: 2,
+                  width: 9,
+                  height: 9,
+                  borderRadius: 5,
+                  backgroundColor: brand.magenta,
+                  borderWidth: 1.5,
+                  borderColor: colors.bg,
+                }}
+              />
+            )}
+          </Pressable>
+          <Pressable
+            onPress={cycleLanguage}
+            hitSlop={10}
+            style={({ pressed }) => ({
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              borderRadius: 999,
+              borderWidth: 1,
+              borderColor: colors.border,
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Text style={{ color: brand.violet, fontWeight: "800", fontSize: 12, letterSpacing: 1 }}>
+              {current.toUpperCase()}
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView

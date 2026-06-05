@@ -136,5 +136,13 @@
     "title": "Saved",
     "emptyTitle": "Nothing saved yet",
     "emptyDesc": "Tap the heart to save listings you like"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "priceDrop": "Price dropped",
+    "newMatch": "New matching listing",
+    "message": "New message",
+    "emptyTitle": "No notifications",
+    "emptyDesc": "New notifications will appear here"
   }
 }

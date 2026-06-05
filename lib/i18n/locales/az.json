@@ -136,5 +136,13 @@
     "title": "Yadda saxlanılanlar",
     "emptyTitle": "Seçilmişlər boşdur",
     "emptyDesc": "Bəyəndiyiniz elanları ürək düyməsi ilə saxlayın"
+  },
+  "notifications": {
+    "title": "Bildirişlər",
+    "priceDrop": "Qiymət düşdü",
+    "newMatch": "Yeni uyğun elan",
+    "message": "Yeni mesaj",
+    "emptyTitle": "Bildiriş yoxdur",
+    "emptyDesc": "Yeni bildirişlər burada görünəcək"
   }
 }
