@@ -82,13 +82,13 @@ export default function ProfileScreen() {
             colors={colors}
             icon="pricetags-outline"
             label={t("profile.myListings")}
-            onPress={() => { /* TODO: my listings */ }}
+            onPress={() => router.push("/my-listings")}
           />
           <Row
             colors={colors}
             icon="heart-outline"
             label={t("profile.saved")}
-            onPress={() => { /* TODO: favorites */ }}
+            onPress={() => router.push("/saved")}
           />
           <Row
             colors={colors}

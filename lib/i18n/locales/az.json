@@ -120,5 +120,21 @@
     "mortgage": "İpoteka",
     "min": "Min",
     "max": "Maks"
+  },
+  "messages": {
+    "title": "Mesajlar",
+    "emptyTitle": "Hələ mesaj yoxdur",
+    "emptyDesc": "Elan səhifəsindən satıcıya yazın",
+    "inputPlaceholder": "Mesaj yazın..."
+  },
+  "myListings": {
+    "title": "Mənim elanlarım",
+    "emptyTitle": "Hələ elanınız yoxdur",
+    "emptyDesc": "İlk elanınızı yerləşdirin"
+  },
+  "saved": {
+    "title": "Yadda saxlanılanlar",
+    "emptyTitle": "Seçilmişlər boşdur",
+    "emptyDesc": "Bəyəndiyiniz elanları ürək düyməsi ilə saxlayın"
   }
 }

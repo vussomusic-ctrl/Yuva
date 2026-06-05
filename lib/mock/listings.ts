@@ -12,6 +12,9 @@ export type Listing = {
   district: string;
   title: string;
   premium: boolean;
+  // Owner of the listing. Matches currentUser.id ("u1") for the user's own
+  // listings; other ids belong to other (mock) sellers.
+  ownerId: string;
 };
 
 const img = (id: string) =>
@@ -29,6 +32,7 @@ export const listings: Listing[] = [
     district: "Nizami rayonu",
     title: "Nizami rayonu, 3 otaqlı mənzil",
     premium: true,
+    ownerId: "u2",
   },
   {
     id: "2",
@@ -39,6 +43,7 @@ export const listings: Listing[] = [
     district: "Xəzər rayonu",
     title: "Xəzər rayonu, Villa",
     premium: true,
+    ownerId: "u1",
   },
   {
     id: "3",
@@ -51,6 +56,7 @@ export const listings: Listing[] = [
     district: "Yasamal rayonu",
     title: "Yasamal rayonu, 2 otaqlı mənzil",
     premium: true,
+    ownerId: "u3",
   },
   {
     id: "4",
@@ -63,6 +69,7 @@ export const listings: Listing[] = [
     district: "28 May metrosu yaxınlığında",
     title: "Nəsimi r-nu, 2 otaqlı təmirli mənzil",
     premium: false,
+    ownerId: "u4",
   },
   {
     id: "5",
@@ -73,6 +80,7 @@ export const listings: Listing[] = [
     district: "Abşeron, Mərdəkan",
     title: "Mərdəkanda həyət evi, 4 otaq",
     premium: false,
+    ownerId: "u1",
   },
   {
     id: "6",
@@ -85,11 +93,17 @@ export const listings: Listing[] = [
     district: "Xətai rayonu",
     title: "Xətai rayonu, 1 otaqlı yeni tikili",
     premium: false,
+    ownerId: "u5",
   },
 ];
 
 export const recommendedListings = listings.filter((l) => l.premium);
 export const newListings = listings;
+
+export const getListingsByOwner = (ownerId: string) =>
+  listings.filter((l) => l.ownerId === ownerId);
+
+export const getListingById = (id: string) => listings.find((l) => l.id === id);
 
 export const formatPrice = (azn: number) => `${azn.toLocaleString("en-US")} ₼`;
 

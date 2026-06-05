@@ -17,6 +17,7 @@ import { PropertyCard } from "../../components/PropertyCard";
 import { SearchBar } from "../../components/SearchBar";
 import { DealTypeChips, DealKey } from "../../components/DealTypeChips";
 import { useLanguage } from "../../lib/i18n/languages";
+import { useFavorites } from "../../lib/favorites";
 import { recommendedListings, newListings } from "../../lib/mock/listings";
 
 const CATEGORIES = [
@@ -34,10 +35,7 @@ export default function HomeScreen() {
 
   const [query, setQuery] = useState("");
   const [deal, setDeal] = useState<DealKey>("sale");
-  const [favorites, setFavorites] = useState<Record<string, boolean>>({});
-
-  const toggleFavorite = (id: string) =>
-    setFavorites((f) => ({ ...f, [id]: !f[id] }));
+  const { isFavorite, toggle: toggleFavorite } = useFavorites();
 
   const openListing = (id: string) => router.push(`/property/${id}`);
 
@@ -120,7 +118,7 @@ export default function HomeScreen() {
                 key={l.id}
                 listing={l}
                 variant="carousel"
-                favorited={!!favorites[l.id]}
+                favorited={isFavorite(l.id)}
                 onToggleFavorite={() => toggleFavorite(l.id)}
                 onPress={() => openListing(l.id)}
               />
@@ -138,7 +136,7 @@ export default function HomeScreen() {
               key={l.id}
               listing={l}
               variant="feed"
-              favorited={!!favorites[l.id]}
+              favorited={isFavorite(l.id)}
               onToggleFavorite={() => toggleFavorite(l.id)}
               onPress={() => openListing(l.id)}
             />

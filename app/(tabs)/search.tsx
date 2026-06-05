@@ -11,6 +11,7 @@ import { SearchBar } from "../../components/SearchBar";
 import { DealTypeChips, DealKey } from "../../components/DealTypeChips";
 import { Segmented } from "../../components/Segmented";
 import { PropertyCard } from "../../components/PropertyCard";
+import { useFavorites } from "../../lib/favorites";
 import { newListings } from "../../lib/mock/listings";
 
 export default function SearchScreen() {
@@ -21,9 +22,7 @@ export default function SearchScreen() {
   const [query, setQuery] = useState("");
   const [deal, setDeal] = useState<DealKey>("sale");
   const [view, setView] = useState<"list" | "map">("list");
-  const [favorites, setFavorites] = useState<Record<string, boolean>>({});
-
-  const toggleFavorite = (id: string) => setFavorites((f) => ({ ...f, [id]: !f[id] }));
+  const { isFavorite, toggle: toggleFavorite } = useFavorites();
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -84,7 +83,7 @@ export default function SearchScreen() {
             <PropertyCard
               listing={item}
               variant="feed"
-              favorited={!!favorites[item.id]}
+              favorited={isFavorite(item.id)}
               onToggleFavorite={() => toggleFavorite(item.id)}
               onPress={() => router.push(`/property/${item.id}`)}
             />

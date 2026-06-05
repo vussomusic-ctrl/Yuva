@@ -5,6 +5,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider, useTheme } from "../lib/theme/ThemeContext";
+import { FavoritesProvider } from "../lib/favorites";
 
 function RootInner() {
   const { mode, colors } = useTheme();
@@ -22,6 +23,9 @@ function RootInner() {
         <Stack.Screen name="create-account" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="property/[id]" />
+        <Stack.Screen name="chat/[id]" />
+        <Stack.Screen name="my-listings" />
+        <Stack.Screen name="saved" />
         <Stack.Screen name="add-listing" options={{ presentation: "modal" }} />
         <Stack.Screen name="filters" options={{ presentation: "modal" }} />
       </Stack>
@@ -33,7 +37,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <RootInner />
+        <FavoritesProvider>
+          <RootInner />
+        </FavoritesProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

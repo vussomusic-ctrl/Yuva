@@ -120,5 +120,21 @@
     "mortgage": "Mortgage",
     "min": "Min",
     "max": "Max"
+  },
+  "messages": {
+    "title": "Messages",
+    "emptyTitle": "No messages yet",
+    "emptyDesc": "Message a seller from a listing page",
+    "inputPlaceholder": "Type a message..."
+  },
+  "myListings": {
+    "title": "My listings",
+    "emptyTitle": "No listings yet",
+    "emptyDesc": "Post your first listing"
+  },
+  "saved": {
+    "title": "Saved",
+    "emptyTitle": "Nothing saved yet",
+    "emptyDesc": "Tap the heart to save listings you like"
   }
 }
