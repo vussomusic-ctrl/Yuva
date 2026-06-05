@@ -1,10 +1,12 @@
 # Yuva — Progress / Context Handoff
 
-> Snapshot for continuing work in a new chat. Last feature commit: `7437657`
-> (`feat: Notifications screen with bell entry on Home`), on top of `8d8e83d`
-> (`feat: Messages (list + chat), My listings, Saved/Favorites shared state`),
-> `259e34a` (`feat: tab bar, Profile, Search, Filters, deal-types, language
-> picker`) and `83bef97` (`feat: build core screens`).
+> Snapshot for continuing work in a new chat. Last feature commit: `7ee7b2a`
+> (`feat: Add Listing multi-step form + shared PROPERTY_TYPES`), on top of
+> `7437657` (Notifications), `8d8e83d` (Messages / My listings / Saved),
+> `259e34a` (tab bar / Profile / Search / Filters) and `83bef97` (core screens).
+>
+> **All ~13 MVP screens are now built.** What's left is the Search map, wiring
+> polish, and swapping mocks for Supabase (see "REMAINING" + "known gaps").
 
 ## What this is
 **Yuva** ("nest" in Azerbaijani) — a native mobile app for buying, selling and
@@ -46,18 +48,19 @@ The brand/component rules in `CLAUDE.md` override anything inconsistent from Sti
 | My listings | `app/my-listings.tsx` | Back + title header. Vertical `PropertyCard` list of the current user's listings (`getListingsByOwner(currentUser.id)`, via `ownerId`). i18n empty state |
 | Saved / Favorites | `app/saved.tsx` + `lib/favorites.tsx` | **One screen** (Profile "Saved" = Favorites). `FavoritesProvider`/`useFavorites` shared state (`ids`/`isFavorite`/`toggle`) wraps app in root layout; hearts on Home & Search write to it; Saved list reflects it reactively. i18n empty state. In-memory only (no persistence yet) |
 | Notifications | `app/notifications.tsx` + `lib/mock/notifications.ts` | Back + title header (no logo). Entered via bell in Home header. Mock list of 3 types — `price_drop` (old→new ₼, listing preview), `new_match` (saved-search match), `message` (peer + preview); each with brand-colored icon, neutral time, unread row tint + magenta dot. Tap → `/property/[id]` (drop/match) or `/chat/[id]` (message); marks read in local state. i18n empty state |
-
-Add Listing (`app/add-listing.tsx`, center-tab modal) exists as a **stub**
-("coming soon"); the multi-step flow is not built yet.
+| Add Listing | `app/add-listing.tsx` (modal) | 4-step flow with progress bar (`n/4`) + X-close header. **1** Photos (grid; adds from `lib/mock/photos.ts` since web file-picker is unreliable; cover badge; ≥1 required). **2** Deal type + property type (`Segmented`, shared `DEALS` / `PROPERTY_TYPES`). **3** Details (title, price ₼, area, rooms/floor/floorTotal hidden for land, region via `BottomSheet`, description, furnished/mortgage). **4** Preview (`PropertyCard` + summary). Per-step validation gates Next. Publish → `addListing()` (owner = current user) → toast → `/my-listings`. **In-memory only** |
 
 Supporting components: `BrandGlow.tsx` (organic radial glow, no SVG),
 `PropertyCard.tsx` (carousel + feed variants), `BottomTabBar.tsx`,
-`BottomSheet.tsx`, `SearchBar.tsx`, `DealTypeChips.tsx`, `Segmented.tsx`.
+`BottomSheet.tsx`, `SearchBar.tsx`, `DealTypeChips.tsx`, `Segmented.tsx`,
+`Button.tsx` (`PrimaryButton` gradient / `SecondaryButton` outline — reusable).
 Shared state/data/utils: `lib/favorites.tsx` (FavoritesProvider + useFavorites,
-app-wide saved set), `lib/dealTypes.ts` (DEALS + DealKey), `lib/mock/regions.ts`
+app-wide saved set), `lib/dealTypes.ts` (DEALS + DealKey), `lib/propertyTypes.ts`
+(PROPERTY_TYPES — shared by Filters + Add Listing), `lib/mock/regions.ts`
 (Baku rayons), `lib/mock/user.ts` (current mock user), `lib/mock/chats.ts` (mock
-conversations), `lib/i18n/languages.ts`. `lib/mock/listings.ts` now has an
-`ownerId` per listing + `getListingsByOwner` / `getListingById` helpers.
+conversations), `lib/mock/photos.ts` (stock listing photos), `lib/i18n/languages.ts`.
+`lib/mock/listings.ts` has an `ownerId` per listing + `getListingsByOwner` /
+`getListingById` / `addListing` helpers.
 `lib/mock/notifications.ts` (mock notifications + `hasUnreadNotifications`).
 
 ## Project structure
@@ -73,7 +76,7 @@ yuva-app/
     my-listings.tsx        # My listings (DONE)
     saved.tsx              # Saved / Favorites (DONE; shared favorites state)
     notifications.tsx      # Notifications (DONE; entered via Home bell)
-    add-listing.tsx        # Add Listing modal (STUB — center "+" tab)
+    add-listing.tsx        # Add Listing 4-step modal (DONE; center "+" tab; in-memory)
     filters.tsx            # Advanced Filters modal (DONE UI; apply not wired to results)
     (tabs)/
       _layout.tsx          # uses custom BottomTabBar: Home · Search · Add(center gradient) · Chat · Profile
@@ -89,9 +92,11 @@ yuva-app/
     SearchBar.tsx          # search input + filter button
     DealTypeChips.tsx      # Satılır / Kirayə / Sat chips (DealKey)
     Segmented.tsx          # segmented control (List/Map, deal type in Filters)
+    Button.tsx             # PrimaryButton (gradient) / SecondaryButton (outline)
   lib/
     favorites.tsx          # FavoritesProvider + useFavorites (app-wide saved set)
     dealTypes.ts           # DEALS array + DealKey type (sale/rent/...)
+    propertyTypes.ts       # PROPERTY_TYPES (shared by Filters + Add Listing)
     i18n/
       index.ts             # i18next init (default lang = device locale, fallback az)
       languages.ts         # useLanguage() hook: current / setLanguage / language list
@@ -100,11 +105,12 @@ yuva-app/
       colors.ts            # brand, lightTheme, darkTheme, Theme type, bgGradient, brandTitle
       ThemeContext.tsx     # ThemeProvider (system scheme + toggle), useTheme()
     mock/
-      listings.ts          # 6 mock listings (+ownerId) + getListingDetail/getListingById/getListingsByOwner + formatPrice
+      listings.ts          # mock listings (+ownerId) + getListingDetail/getListingById/getListingsByOwner/addListing + formatPrice
       regions.ts           # Baku rayons (filters/region data)
       user.ts              # current mock user (Profile)
       chats.ts             # mock conversations (Messages)
       notifications.ts     # mock notifications (price_drop / new_match / message)
+      photos.ts            # stock listing photos (Add Listing on web)
   assets/yuva-logo.png     # transparent brand logo (Splash + Home header only)
   app.json, tailwind.config.js, metro.config.js, global.css
   CLAUDE.md / AGENTS.md    # project rules
@@ -131,13 +137,16 @@ yuva-app/
 - **Stitch MCP server** — design source; screens fetched from project
   `3844482705456734788`.
 
-## Screens / work REMAINING (MVP)
-- **Search Results — Map** (price pins, clustering; needs react-native-maps) — search.tsx map view is a "coming soon" placeholder
-- **Add Listing** (full multi-step flow: photos → deal type → property type → details → publish) — currently a stub modal
-- **Sync Home bell ↔ read state** — the bell's unread dot is static (`hasUnreadNotifications` from the mock) and does not update when notifications are marked read on the screen; needs shared notifications state (like `useFavorites`)
-- **Wire Filters to results** — Filters UI is built but Apply doesn't filter the Search list yet
-- **Wire "Message" button → conversation** — Property Detail's Message/"Yaz" currently goes to the `/chat` tab; should open/create the conversation for that listing (`/chat/[id]`)
-- **Supabase** — replace all `lib/mock/*` with real DB/auth/storage/realtime; persist favorites, real chat messages, real listings/owners, real notifications
+## Work REMAINING
+
+All ~13 canonical MVP screens are built. What's left:
+
+- **Search Results — Map** (price pins, clustering; needs react-native-maps) — the only unbuilt screen; search.tsx map view is a "coming soon" placeholder
+- **Wiring polish** (UI exists, behaviour not connected):
+  - **Filters → results** — Filters Apply doesn't filter the Search list yet
+  - **"Message" button → conversation** — Property Detail's Message/"Yaz" goes to the `/chat` tab; should open/create the listing's conversation (`/chat/[id]`)
+  - **Home bell ↔ read state** — the bell's unread dot is static (`hasUnreadNotifications` from the mock) and doesn't update when notifications are marked read; needs shared notifications state (like `useFavorites`)
+- **Supabase** — replace all `lib/mock/*` with real DB/auth/storage/realtime; persist favorites, chat messages, listings/owners (Add Listing), notifications
 
 ## NOT done yet / known gaps
 - **Supabase NOT connected.** All data is mocked in `lib/mock/*`
@@ -145,13 +154,13 @@ yuva-app/
   WhatsApp button DOES open `wa.me/...`. Map on Property Detail AND on Search
   are styled placeholders (react-native-maps later).
 - **In-memory only (lost on reload):** Favorites/Saved (shared `useFavorites`
-  state, not persisted), chat messages (conversation send appends to local
-  `useState`, no network), and notification read-state (local to the screen;
-  Home bell dot is static from the mock).
-- **Stubs / not wired:** Add Listing modal ("coming soon"), Profile Settings row
-  + avatar upload (TODOs), Filters Apply (UI complete, doesn't filter results
-  yet), and Property Detail's Message button (→ `/chat` tab, not the listing's
-  conversation).
+  state), chat messages (conversation send appends to local `useState`),
+  published listings (Add Listing → `addListing()` prepends to the in-memory
+  feed), and notification read-state (local to the screen; Home bell dot static).
+- **Stubs / not wired:** Profile Settings row + avatar upload (TODOs), Filters
+  Apply (UI complete, doesn't filter results yet), and Property Detail's Message
+  button (→ `/chat` tab, not the listing's conversation). Add Listing photos use
+  a stock set (no real `expo-image-picker` / upload yet).
 - **git identity** — now set globally to `Vusso <vussomusic@gmail.com>` (commits
   from `7437657` onward). Earlier commits keep the old
   `Vusso <vusso@MacBook-Pro-Vusso.local>` author (not reset).
