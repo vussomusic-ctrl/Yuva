@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 
 import { DealKey } from "./dealTypes";
 import { PropertyTypeKey } from "./propertyTypes";
+import { BuildKey } from "./buildTypes";
 import { Listing } from "./mock/listings";
 
 /**
@@ -13,9 +14,11 @@ import { Listing } from "./mock/listings";
 export type Filters = {
   dealType: DealKey;
   propertyTypes: PropertyTypeKey[];
+  buildType: BuildKey | null; // null = any
   priceMin: string;
   priceMax: string;
   rooms: string[];
+  baths: string[];
   areaMin: string;
   areaMax: string;
   regions: string[];
@@ -28,9 +31,11 @@ export type Filters = {
 export const DEFAULT_FILTERS: Filters = {
   dealType: "sale",
   propertyTypes: [],
+  buildType: null,
   priceMin: "",
   priceMax: "",
   rooms: [],
+  baths: [],
   areaMin: "",
   areaMax: "",
   regions: [],
@@ -48,8 +53,10 @@ export const DEFAULT_FILTERS: Filters = {
 export function activeFilterCount(f: Filters): number {
   let n = 0;
   if (f.propertyTypes.length) n++;
+  if (f.buildType) n++;
   if (f.priceMin || f.priceMax) n++;
   if (f.rooms.length) n++;
+  if (f.baths.length) n++;
   if (f.areaMin || f.areaMax) n++;
   if (f.regions.length) n++;
   if (f.floorMin || f.floorMax) n++;
@@ -63,10 +70,15 @@ export function filterListings(items: Listing[], f: Filters): Listing[] {
   return items.filter((l) => {
     if (l.dealType !== f.dealType) return false;
     if (f.propertyTypes.length && !f.propertyTypes.includes(l.propertyType)) return false;
+    if (f.buildType && l.buildType !== f.buildType) return false;
     if (f.priceMin && l.priceAzn < Number(f.priceMin)) return false;
     if (f.priceMax && l.priceAzn > Number(f.priceMax)) return false;
     if (f.rooms.length) {
       const ok = f.rooms.some((r) => (r === "5+" ? l.rooms >= 5 : Number(r) === l.rooms));
+      if (!ok) return false;
+    }
+    if (f.baths.length) {
+      const ok = f.baths.some((b) => (b === "4+" ? l.baths >= 4 : Number(b) === l.baths));
       if (!ok) return false;
     }
     if (f.areaMin && l.areaM2 < Number(f.areaMin)) return false;

@@ -59,9 +59,15 @@ export default function PropertyDetailScreen() {
   const onShare = () =>
     Share.share({ message: `${listing.title} — ${formatPrice(listing.priceAzn)} · Yuva` }).catch(() => {});
 
+  // Seller phone drives Call + WhatsApp. On desktop web tel:/wa.me may be a no-op;
+  // .catch keeps it from throwing. On a phone both open the native apps.
+  const phoneDigits = listing.ownerPhone.replace(/[^\d]/g, "");
+  const call = () => Linking.openURL(`tel:${listing.ownerPhone}`).catch(() => {});
   const openWhatsApp = () => {
-    const text = encodeURIComponent(`${listing.title} — ${formatPrice(listing.priceAzn)}`);
-    Linking.openURL(`https://wa.me/${listing.agent.phone}?text=${text}`).catch(() => {});
+    const text = encodeURIComponent(
+      t("propertyDetail.waMessage", { title: listing.title, price: formatPrice(listing.priceAzn) }),
+    );
+    Linking.openURL(`https://wa.me/${phoneDigits}?text=${text}`).catch(() => {});
   };
 
   const onGalleryScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
@@ -295,8 +301,49 @@ export default function PropertyDetailScreen() {
           </View>
         </View>
 
-        <View style={{ flexDirection: "row", gap: 12 }}>
-          {/* PRIMARY — message (chat stub) */}
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          {/* SECONDARY — call (outline) */}
+          <Pressable
+            onPress={call}
+            style={({ pressed }) => ({
+              flex: 1,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              paddingVertical: 14,
+              borderRadius: 14,
+              borderWidth: 1.5,
+              borderColor: brand.violet,
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Ionicons name="call-outline" size={18} color={brand.violet} />
+            <Text numberOfLines={1} style={{ color: brand.violet, fontSize: 14, fontWeight: "700" }}>
+              {t("propertyDetail.call")}
+            </Text>
+          </Pressable>
+
+          {/* WhatsApp — primary sales channel */}
+          <Pressable
+            onPress={openWhatsApp}
+            style={({ pressed }) => ({
+              flex: 1,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              paddingVertical: 14,
+              borderRadius: 14,
+              backgroundColor: WHATSAPP_GREEN,
+              opacity: pressed ? 0.9 : 1,
+            })}
+          >
+            <Ionicons name="logo-whatsapp" size={19} color="#FFFFFF" />
+            <Text numberOfLines={1} style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "700" }}>WhatsApp</Text>
+          </Pressable>
+
+          {/* PRIMARY — message (chat stub), brand gradient */}
           <Pressable onPress={() => router.push("/chat")} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.9 : 1 })}>
             <LinearGradient
               colors={brand.gradient}
@@ -308,31 +355,14 @@ export default function PropertyDetailScreen() {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 8,
+                gap: 6,
               }}
             >
               <Ionicons name="chatbubble-ellipses" size={18} color="#FFFFFF" />
-              <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "700" }}>{t("propertyDetail.write")}</Text>
+              <Text numberOfLines={1} style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "700" }}>
+                {t("propertyDetail.write")}
+              </Text>
             </LinearGradient>
-          </Pressable>
-
-          {/* WhatsApp — primary sales channel */}
-          <Pressable
-            onPress={openWhatsApp}
-            style={({ pressed }) => ({
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              paddingVertical: 14,
-              borderRadius: 14,
-              backgroundColor: WHATSAPP_GREEN,
-              opacity: pressed ? 0.9 : 1,
-            })}
-          >
-            <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" />
-            <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "700" }}>WhatsApp</Text>
           </Pressable>
         </View>
       </View>

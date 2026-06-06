@@ -11,10 +11,12 @@ import { brand, Theme } from "../lib/theme/colors";
 import { Segmented } from "../components/Segmented";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
+import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
 import { bakuRayons } from "../lib/mock/regions";
 import { useFilters, DEFAULT_FILTERS } from "../lib/filters-state";
 
 const ROOMS = ["1", "2", "3", "4", "5+"];
+const BATHS = ["1", "2", "3", "4+"];
 
 const toggleIn = (arr: string[], v: string) =>
   arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -29,9 +31,11 @@ export default function FiltersModal() {
   // modal reflects what's applied. Committed to the shared store on "Göstər".
   const [dealType, setDealType] = useState<DealKey>(filters.dealType);
   const [propertyTypes, setPropertyTypes] = useState<string[]>(filters.propertyTypes);
+  const [buildType, setBuildType] = useState<BuildKey | null>(filters.buildType);
   const [priceMin, setPriceMin] = useState(filters.priceMin);
   const [priceMax, setPriceMax] = useState(filters.priceMax);
   const [rooms, setRooms] = useState<string[]>(filters.rooms);
+  const [baths, setBaths] = useState<string[]>(filters.baths);
   const [areaMin, setAreaMin] = useState(filters.areaMin);
   const [areaMax, setAreaMax] = useState(filters.areaMax);
   const [regions, setRegions] = useState<string[]>(filters.regions);
@@ -46,9 +50,11 @@ export default function FiltersModal() {
     apply({
       dealType,
       propertyTypes: propertyTypes as PropertyTypeKey[],
+      buildType,
       priceMin,
       priceMax,
       rooms,
+      baths,
       areaMin,
       areaMax,
       regions,
@@ -64,9 +70,11 @@ export default function FiltersModal() {
   // immediately, so the underlying Search list returns to showing everything.
   const clearAll = () => {
     setPropertyTypes([]);
+    setBuildType(null);
     setPriceMin("");
     setPriceMax("");
     setRooms([]);
+    setBaths([]);
     setAreaMin("");
     setAreaMax("");
     setRegions([]);
@@ -134,6 +142,21 @@ export default function FiltersModal() {
           </ChipWrap>
         </Section>
 
+        {/* Building type (single-select; tap active to reset to "any") */}
+        <Section title={t("filters.buildType")} colors={colors}>
+          <ChipWrap>
+            {BUILD_TYPES.map((b) => (
+              <FilterChip
+                key={b.key}
+                label={t(b.labelKey)}
+                active={buildType === b.key}
+                onPress={() => setBuildType((cur) => (cur === b.key ? null : b.key))}
+                colors={colors}
+              />
+            ))}
+          </ChipWrap>
+        </Section>
+
         {/* Price */}
         <Section title={t("filters.price")} colors={colors}>
           <RangeRow
@@ -156,6 +179,21 @@ export default function FiltersModal() {
                 label={r}
                 active={rooms.includes(r)}
                 onPress={() => setRooms((a) => toggleIn(a, r))}
+                colors={colors}
+              />
+            ))}
+          </ChipWrap>
+        </Section>
+
+        {/* Bathrooms */}
+        <Section title={t("filters.baths")} colors={colors}>
+          <ChipWrap>
+            {BATHS.map((b) => (
+              <FilterChip
+                key={b}
+                label={b}
+                active={baths.includes(b)}
+                onPress={() => setBaths((a) => toggleIn(a, b))}
                 colors={colors}
               />
             ))}

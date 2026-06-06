@@ -96,10 +96,14 @@ export default function AddListingModal() {
       title: title.trim(),
       premium: false,
       ownerId: currentUser.id,
+      ownerPhone: "+994500000000",
       dealType,
       propertyType: propertyType!,
+      buildType: "new",
+      baths: 1,
       furnished: isLand ? false : furnished,
       mortgage,
+      createdAt: new Date().toISOString(),
       ...coordsForDistrict(region!),
     });
     setPublished(true);
@@ -130,8 +134,12 @@ export default function AddListingModal() {
     ownerId: currentUser.id,
     dealType,
     propertyType: propertyType ?? "apartment",
+    buildType: "new",
+    baths: 1,
     furnished: isLand ? false : furnished,
     mortgage,
+    ownerPhone: "+994500000000",
+    createdAt: new Date().toISOString(),
     ...coordsForDistrict(region ?? ""),
   };
 

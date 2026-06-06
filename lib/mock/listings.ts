@@ -3,6 +3,7 @@
 
 import { DealKey } from "../dealTypes";
 import { PropertyTypeKey } from "../propertyTypes";
+import { BuildKey } from "../buildTypes";
 
 export type Listing = {
   id: string;
@@ -18,11 +19,17 @@ export type Listing = {
   // Owner of the listing. Matches currentUser.id ("u1") for the user's own
   // listings; other ids belong to other (mock) sellers.
   ownerId: string;
+  // Seller phone, "+994XXXXXXXXX" — drives Call / WhatsApp on Property Detail.
+  ownerPhone: string;
   // Faceted attributes used by Search filters.
   dealType: DealKey;
   propertyType: PropertyTypeKey;
+  buildType: BuildKey;
+  baths: number;
   furnished: boolean;
   mortgage: boolean;
+  // ISO date — drives "newest first" sort.
+  createdAt: string;
   // Map coordinates (Baku). Used by Search — Map price pins.
   lat: number;
   lng: number;
@@ -46,10 +53,14 @@ export const listings: Listing[] = [
     title: "Nizami rayonu, 3 otaqlı mənzil",
     premium: true,
     ownerId: "u2",
+    ownerPhone: "+994501234567",
     dealType: "sale",
     propertyType: "apartment",
+    buildType: "secondary",
+    baths: 2,
     furnished: true,
     mortgage: true,
+    createdAt: "2026-05-20T10:00:00Z",
   },
   {
     id: "2",
@@ -63,10 +74,14 @@ export const listings: Listing[] = [
     title: "Xəzər rayonu, Villa",
     premium: true,
     ownerId: "u1",
+    ownerPhone: "+994552345678",
     dealType: "sale",
     propertyType: "house",
+    buildType: "new",
+    baths: 4,
     furnished: false,
     mortgage: false,
+    createdAt: "2026-06-01T10:00:00Z",
   },
   {
     id: "3",
@@ -82,10 +97,14 @@ export const listings: Listing[] = [
     title: "Yasamal rayonu, 2 otaqlı mənzil",
     premium: true,
     ownerId: "u3",
+    ownerPhone: "+994703456789",
     dealType: "sale",
     propertyType: "apartment",
+    buildType: "secondary",
+    baths: 1,
     furnished: true,
     mortgage: false,
+    createdAt: "2026-04-15T10:00:00Z",
   },
   {
     id: "4",
@@ -101,10 +120,14 @@ export const listings: Listing[] = [
     title: "Nəsimi r-nu, 2 otaqlı təmirli mənzil",
     premium: false,
     ownerId: "u4",
+    ownerPhone: "+994774567890",
     dealType: "rent",
     propertyType: "apartment",
+    buildType: "secondary",
+    baths: 1,
     furnished: true,
     mortgage: false,
+    createdAt: "2026-06-04T10:00:00Z",
   },
   {
     id: "5",
@@ -118,10 +141,14 @@ export const listings: Listing[] = [
     title: "Mərdəkanda həyət evi, 4 otaq",
     premium: false,
     ownerId: "u1",
+    ownerPhone: "+994505678901",
     dealType: "sale",
     propertyType: "house",
+    buildType: "new",
+    baths: 3,
     furnished: false,
     mortgage: true,
+    createdAt: "2026-05-02T10:00:00Z",
   },
   {
     id: "6",
@@ -137,10 +164,14 @@ export const listings: Listing[] = [
     title: "Xətai rayonu, 1 otaqlı yeni tikili",
     premium: false,
     ownerId: "u5",
+    ownerPhone: "+994556789012",
     dealType: "rent",
     propertyType: "apartment",
+    buildType: "new",
+    baths: 1,
     furnished: false,
     mortgage: false,
+    createdAt: "2026-06-05T10:00:00Z",
   },
 ];
 
