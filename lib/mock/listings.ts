@@ -1,6 +1,9 @@
 // Mock listings for the Home Feed. Replace with Supabase `listings` query later.
 // Titles/districts are user-generated content (Azerbaijani) — not translated.
 
+import { DealKey } from "../dealTypes";
+import { PropertyTypeKey } from "../propertyTypes";
+
 export type Listing = {
   id: string;
   image: string;
@@ -15,6 +18,11 @@ export type Listing = {
   // Owner of the listing. Matches currentUser.id ("u1") for the user's own
   // listings; other ids belong to other (mock) sellers.
   ownerId: string;
+  // Faceted attributes used by Search filters.
+  dealType: DealKey;
+  propertyType: PropertyTypeKey;
+  furnished: boolean;
+  mortgage: boolean;
 };
 
 const img = (id: string) =>
@@ -33,6 +41,10 @@ export const listings: Listing[] = [
     title: "Nizami rayonu, 3 otaqlı mənzil",
     premium: true,
     ownerId: "u2",
+    dealType: "sale",
+    propertyType: "apartment",
+    furnished: true,
+    mortgage: true,
   },
   {
     id: "2",
@@ -44,6 +56,10 @@ export const listings: Listing[] = [
     title: "Xəzər rayonu, Villa",
     premium: true,
     ownerId: "u1",
+    dealType: "sale",
+    propertyType: "house",
+    furnished: false,
+    mortgage: false,
   },
   {
     id: "3",
@@ -57,11 +73,15 @@ export const listings: Listing[] = [
     title: "Yasamal rayonu, 2 otaqlı mənzil",
     premium: true,
     ownerId: "u3",
+    dealType: "sale",
+    propertyType: "apartment",
+    furnished: true,
+    mortgage: false,
   },
   {
     id: "4",
     image: img("1560448204-e02f11c3d0e2"),
-    priceAzn: 185000,
+    priceAzn: 1400,
     areaM2: 65,
     rooms: 2,
     floor: 4,
@@ -70,6 +90,10 @@ export const listings: Listing[] = [
     title: "Nəsimi r-nu, 2 otaqlı təmirli mənzil",
     premium: false,
     ownerId: "u4",
+    dealType: "rent",
+    propertyType: "apartment",
+    furnished: true,
+    mortgage: false,
   },
   {
     id: "5",
@@ -81,11 +105,15 @@ export const listings: Listing[] = [
     title: "Mərdəkanda həyət evi, 4 otaq",
     premium: false,
     ownerId: "u1",
+    dealType: "sale",
+    propertyType: "house",
+    furnished: false,
+    mortgage: true,
   },
   {
     id: "6",
     image: img("1586023492125-27b2c045efd7"),
-    priceAzn: 132000,
+    priceAzn: 850,
     areaM2: 54,
     rooms: 1,
     floor: 9,
@@ -94,6 +122,10 @@ export const listings: Listing[] = [
     title: "Xətai rayonu, 1 otaqlı yeni tikili",
     premium: false,
     ownerId: "u5",
+    dealType: "rent",
+    propertyType: "apartment",
+    furnished: false,
+    mortgage: false,
   },
 ];
 

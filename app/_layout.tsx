@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider, useTheme } from "../lib/theme/ThemeContext";
 import { FavoritesProvider } from "../lib/favorites";
+import { FiltersProvider } from "../lib/filters-state";
 
 function RootInner() {
   const { mode, colors } = useTheme();
@@ -39,7 +40,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         <FavoritesProvider>
-          <RootInner />
+          <FiltersProvider>
+            <RootInner />
+          </FiltersProvider>
         </FavoritesProvider>
       </ThemeProvider>
     </SafeAreaProvider>

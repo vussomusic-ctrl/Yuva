@@ -8,10 +8,11 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { Theme } from "../../lib/theme/colors";
 import { SearchBar } from "../../components/SearchBar";
-import { DealTypeChips, DealKey } from "../../components/DealTypeChips";
+import { DealTypeChips } from "../../components/DealTypeChips";
 import { Segmented } from "../../components/Segmented";
 import { PropertyCard } from "../../components/PropertyCard";
 import { useFavorites } from "../../lib/favorites";
+import { useFilters, filterListings } from "../../lib/filters-state";
 import { newListings } from "../../lib/mock/listings";
 
 export default function SearchScreen() {
@@ -20,23 +21,30 @@ export default function SearchScreen() {
   const router = useRouter();
 
   const [query, setQuery] = useState("");
-  const [deal, setDeal] = useState<DealKey>("sale");
   const [view, setView] = useState<"list" | "map">("list");
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
+  const { filters, setDealType, activeCount } = useFilters();
 
   const results = useMemo(() => {
+    // Active filters first (incl. deal type), then the free-text query on top.
+    const base = filterListings(newListings, filters);
     const q = query.trim().toLowerCase();
-    if (!q) return newListings;
-    return newListings.filter(
+    if (!q) return base;
+    return base.filter(
       (l) => l.title.toLowerCase().includes(q) || l.district.toLowerCase().includes(q),
     );
-  }, [query]);
+  }, [query, filters]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       {/* Contextual header: search + filters (no logo) */}
       <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12, gap: 12 }}>
-        <SearchBar value={query} onChangeText={setQuery} onPressFilter={() => router.push("/filters")} />
+        <SearchBar
+          value={query}
+          onChangeText={setQuery}
+          onPressFilter={() => router.push("/filters")}
+          filterBadge={activeCount}
+        />
         <Segmented
           options={[
             { key: "list", label: t("search.viewList") },
@@ -47,7 +55,7 @@ export default function SearchScreen() {
         />
       </View>
 
-      <DealTypeChips value={deal} onChange={setDeal} />
+      <DealTypeChips value={filters.dealType} onChange={setDealType} />
 
       {view === "map" ? (
         <Placeholder

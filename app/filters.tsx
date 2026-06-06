@@ -10,8 +10,9 @@ import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { Segmented } from "../components/Segmented";
 import { DEALS, DealKey } from "../lib/dealTypes";
-import { PROPERTY_TYPES } from "../lib/propertyTypes";
+import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
 import { bakuRayons } from "../lib/mock/regions";
+import { useFilters, DEFAULT_FILTERS } from "../lib/filters-state";
 
 const ROOMS = ["1", "2", "3", "4", "5+"];
 
@@ -22,24 +23,46 @@ export default function FiltersModal() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
+  const { filters, apply } = useFilters();
 
-  const [dealType, setDealType] = useState<DealKey>("sale");
-  const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
-  const [priceMin, setPriceMin] = useState("");
-  const [priceMax, setPriceMax] = useState("");
-  const [rooms, setRooms] = useState<string[]>([]);
-  const [areaMin, setAreaMin] = useState("");
-  const [areaMax, setAreaMax] = useState("");
-  const [regions, setRegions] = useState<string[]>([]);
-  const [floorMin, setFloorMin] = useState("");
-  const [floorMax, setFloorMax] = useState("");
-  const [furnished, setFurnished] = useState(false);
-  const [mortgage, setMortgage] = useState(false);
+  // Draft state — seeded from the currently active filters so reopening the
+  // modal reflects what's applied. Committed to the shared store on "Göstər".
+  const [dealType, setDealType] = useState<DealKey>(filters.dealType);
+  const [propertyTypes, setPropertyTypes] = useState<string[]>(filters.propertyTypes);
+  const [priceMin, setPriceMin] = useState(filters.priceMin);
+  const [priceMax, setPriceMax] = useState(filters.priceMax);
+  const [rooms, setRooms] = useState<string[]>(filters.rooms);
+  const [areaMin, setAreaMin] = useState(filters.areaMin);
+  const [areaMax, setAreaMax] = useState(filters.areaMax);
+  const [regions, setRegions] = useState<string[]>(filters.regions);
+  const [floorMin, setFloorMin] = useState(filters.floorMin);
+  const [floorMax, setFloorMax] = useState(filters.floorMax);
+  const [furnished, setFurnished] = useState(filters.furnished);
+  const [mortgage, setMortgage] = useState(filters.mortgage);
 
   const close = () => (router.canGoBack() ? router.back() : router.replace("/search"));
 
+  const applyAndClose = () => {
+    apply({
+      dealType,
+      propertyTypes: propertyTypes as PropertyTypeKey[],
+      priceMin,
+      priceMax,
+      rooms,
+      areaMin,
+      areaMax,
+      regions,
+      floorMin,
+      floorMax,
+      furnished,
+      mortgage,
+    });
+    close();
+  };
+
+  // Clear resets the narrowing filters (keeps the chosen deal type) and applies
+  // immediately, so the underlying Search list returns to showing everything.
   const clearAll = () => {
-    setDealType("sale");
     setPropertyTypes([]);
     setPriceMin("");
     setPriceMax("");
@@ -51,6 +74,7 @@ export default function FiltersModal() {
     setFloorMax("");
     setFurnished(false);
     setMortgage(false);
+    apply({ ...DEFAULT_FILTERS, dealType });
   };
 
   return (
@@ -205,7 +229,7 @@ export default function FiltersModal() {
           backgroundColor: colors.bg,
         }}
       >
-        <Pressable onPress={close} style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}>
+        <Pressable onPress={applyAndClose} style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}>
           <LinearGradient
             colors={brand.gradient}
             start={{ x: 0, y: 0 }}

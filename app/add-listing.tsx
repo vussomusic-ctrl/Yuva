@@ -96,6 +96,10 @@ export default function AddListingModal() {
       title: title.trim(),
       premium: false,
       ownerId: currentUser.id,
+      dealType,
+      propertyType: propertyType!,
+      furnished: isLand ? false : furnished,
+      mortgage,
     });
     setPublished(true);
     // Confirm, then land on My listings so the new listing is visible.
@@ -123,6 +127,10 @@ export default function AddListingModal() {
     title: title.trim() || t("addListing.titlePlaceholder"),
     premium: false,
     ownerId: currentUser.id,
+    dealType,
+    propertyType: propertyType ?? "apartment",
+    furnished: isLand ? false : furnished,
+    mortgage,
   };
 
   return (

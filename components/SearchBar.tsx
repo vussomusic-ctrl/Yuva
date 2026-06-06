@@ -1,4 +1,4 @@
-import { View, TextInput, Pressable } from "react-native";
+import { View, TextInput, Pressable, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 
@@ -10,10 +10,12 @@ type Props = {
   onChangeText: (s: string) => void;
   onPressFilter?: () => void;
   placeholder?: string;
+  // Number of active filters; shows a count badge on the filter icon when > 0.
+  filterBadge?: number;
 };
 
 /** Rounded search field with a trailing filter button. Shared by Home & Search. */
-export function SearchBar({ value, onChangeText, onPressFilter, placeholder }: Props) {
+export function SearchBar({ value, onChangeText, onPressFilter, placeholder, filterBadge = 0 }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
 
@@ -40,7 +42,27 @@ export function SearchBar({ value, onChangeText, onPressFilter, placeholder }: P
       />
       <View style={{ width: 1, height: 24, backgroundColor: colors.border, marginRight: 10 }} />
       <Pressable hitSlop={8} onPress={onPressFilter}>
-        <Ionicons name="options-outline" size={22} color={brand.violet} />
+        <View>
+          <Ionicons name="options-outline" size={22} color={brand.violet} />
+          {filterBadge > 0 && (
+            <View
+              style={{
+                position: "absolute",
+                top: -8,
+                right: -10,
+                minWidth: 16,
+                height: 16,
+                borderRadius: 8,
+                paddingHorizontal: 4,
+                backgroundColor: brand.magenta,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "800" }}>{filterBadge}</Text>
+            </View>
+          )}
+        </View>
       </Pressable>
     </View>
   );
