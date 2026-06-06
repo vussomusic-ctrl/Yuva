@@ -1,9 +1,9 @@
 # Yuva — Progress / Context Handoff
 
-> Snapshot for continuing work in a new chat. Last feature commit: `a00326f`
-> (`feat: home category filters + remove header menu + phone field on signup +
-> settings screen`), on top of `fd6f478` (Search map), `7c66163`
-> (Filters→results), `7ee7b2a` (Add Listing) and earlier.
+> Snapshot for continuing work in a new chat. Last feature commit: `eb3709a`
+> (`feat: listing contact actions (call/whatsapp), search sort, build-type &
+> baths filters + i18n fixes`), on top of `a00326f` (home category filters /
+> phone field / settings), `fd6f478` (Search map), `7c66163` (Filters→results).
 >
 > **All ~13 MVP screens are now built (incl. Search map + Settings).** What's
 > left is wiring polish + swapping mocks for Supabase (see "REMAINING" + "gaps").
@@ -37,13 +37,13 @@ The brand/component rules in `CLAUDE.md` override anything inconsistent from Sti
 | Welcome | `app/welcome.tsx` | Single smooth gradient bg, glow, primary/secondary/tertiary buttons, legal footer |
 | Create Account | `app/create-account.tsx` | Controlled inputs + validation (name, email regex, **phone +994 required**, password), show/hide password, gradient CTA, Google/Apple **stubs**. Phone is UI-only (persists with Supabase later) |
 | Home Feed | `app/(tabs)/home.tsx` | Header = logo (left) + bell (→ `/notifications`, unread dot) + AZ/RU/EN pill (no hamburger menu). Search, deal chips, **tappable category tiles** (Apartments/Houses/Land/Objects → set `propertyTypes` + carry deal type into `filters-state`, jump to Search), "recommended" carousel, "new listings" feed, favorite hearts (shared state) |
-| Property Detail | `app/property/[id].tsx` | Photo gallery + overlay back/share/favorite, price/specs, description, amenities, **map stub**, fixed seller panel (Message + WhatsApp). Reads listing by `id` |
+| Property Detail | `app/property/[id].tsx` | Photo gallery + overlay back/share/favorite, price/specs, description, amenities, **map stub**, fixed seller panel with **3 contact actions** — Call (`tel:`), WhatsApp (`wa.me` + prefilled i18n text w/ title+price), Message (chat). Uses `listing.ownerPhone`; `.catch` keeps web safe. Reads listing by `id` |
 | Custom bottom tab bar | `components/BottomTabBar.tsx` + `app/(tabs)/_layout.tsx` | Home · Search · Add(center gradient circle, opens `/add-listing` modal) · Chat · Profile. Themeable, no logo |
 | Profile | `app/(tabs)/profile.tsx` | Contextual header: avatar (camera upload affordance, **TODO picker**) + name + role. Settings card: My listings (→ `/my-listings`) / Saved (→ `/saved`) / Language / Settings (→ `/settings`) / dark-mode toggle. Logout → `/welcome` |
 | Language picker (bottom-sheet) | `components/BottomSheet.tsx` + `lib/i18n/languages.ts` | `useLanguage()` hook (current/setLanguage/list); az/ru/en selectable from Profile, persists via i18n. Reusable sheet |
-| Search Results — List | `app/(tabs)/search.tsx` | Search bar (→ Filters, with active-filter count badge), List/Map `Segmented`, `DealTypeChips` (bound to shared `filters.dealType`), live results count, real filtering (`filterListings` + text query) over mock `newListings`, feed cards, favorite hearts. i18n empty state when nothing matches |
+| Search Results — List | `app/(tabs)/search.tsx` | Search bar (→ Filters, with active-filter count badge), List/Map `Segmented`, `DealTypeChips` (bound to shared `filters.dealType`), **Sort** button → `BottomSheet` (default / price ↑ / price ↓ / newest by `createdAt`; local `useState`, applied on top of filters), live results count, real filtering (`filterListings` + text query) over mock `newListings`, feed cards, favorite hearts. i18n empty state |
 | Search Results — Map | `components/SearchMap.tsx` (+ `.web.tsx`) | `react-native-maps` 1.27.2 centred on Baku. Price-pin markers for the SAME filtered set as the list; tap pin → mini preview card → Property Detail. Pins/preview use theme + brand tokens. **Web fallback** (`.web.tsx`) shows a themed placeholder — native module isn't bundled for web, browser doesn't crash. No clustering yet |
-| Advanced Filters | `app/filters.tsx` (modal) | Full UI: deal type, property type, price AZN range, rooms, area, region/district (Baku rayons), floor range, furnished + mortgage toggles. X / title / Clear header, sticky gradient Apply. **Wired to results** via `lib/filters-state.tsx` — Apply commits the draft, Clear resets narrowing facets (keeps deal type) and applies immediately |
+| Advanced Filters | `app/filters.tsx` (modal) | Full UI: deal type, property type, **build type (New build / Secondary, single-select + reset)**, price AZN range, rooms, **baths (1/2/3/4+)**, area, region/district (Baku rayons), floor range, furnished + mortgage toggles. X / title / Clear header, sticky gradient Apply. **Wired to results** via `lib/filters-state.tsx` — Apply commits the draft, Clear resets narrowing facets (keeps deal type), applies immediately. `buildType` from shared `lib/buildTypes.ts` |
 | Messages — chat list | `app/(tabs)/chat.tsx` | Contextual title header (no logo). Mock chats (`lib/mock/chats.ts`): avatar, peer name, one-line last-message preview, time, gradient unread badge. i18n empty state. Tap → conversation |
 | Messages — conversation | `app/chat/[id].tsx` | Header back + avatar + peer name. Bubbles: mine right (violet), theirs left (card token), time under each, auto-scroll. Composer + send. **Send is LOCAL-ONLY** (in-memory `useState`, no backend) |
 | My listings | `app/my-listings.tsx` | Back + title header. Vertical `PropertyCard` list of the current user's listings (`getListingsByOwner(currentUser.id)`, via `ownerId`). i18n empty state |
@@ -61,12 +61,14 @@ Shared state/data/utils: `lib/favorites.tsx` (FavoritesProvider + useFavorites,
 app-wide saved set), `lib/filters-state.tsx` (FiltersProvider + useFilters +
 `filterListings` / `activeFilterCount` — shared Search filter state, wraps app in
 root layout), `lib/dealTypes.ts` (DEALS + DealKey), `lib/propertyTypes.ts`
-(PROPERTY_TYPES — shared by Filters + Add Listing), `lib/mock/regions.ts`
+(PROPERTY_TYPES — shared by Filters + Add Listing), `lib/buildTypes.ts`
+(BUILD_TYPES + BuildKey — new build / secondary), `lib/mock/regions.ts`
 (Baku rayons), `lib/mock/user.ts` (current mock user), `lib/mock/chats.ts` (mock
 conversations), `lib/mock/photos.ts` (stock listing photos), `lib/i18n/languages.ts`.
-`lib/mock/listings.ts` listings now carry `dealType` / `propertyType` / `furnished`
-/ `mortgage` (faceted for filters) + `lat` / `lng` (map pins) + `ownerId`, with
-`getListingsByOwner` / `getListingById` / `addListing` helpers.
+`lib/mock/listings.ts` listings now carry `dealType` / `propertyType` /
+`buildType` / `baths` / `furnished` / `mortgage` (faceted for filters) +
+`ownerPhone` (call/WhatsApp) + `createdAt` (sort) + `lat` / `lng` (map pins) +
+`ownerId`, with `getListingsByOwner` / `getListingById` / `addListing` helpers.
 `lib/mock/regions.ts` also exports `BAKU_CENTER` / `rayonCoords` / `coordsForDistrict`.
 `lib/mock/notifications.ts` (mock notifications + `hasUnreadNotifications`).
 
@@ -108,6 +110,7 @@ yuva-app/
     filters-state.tsx      # FiltersProvider + useFilters + filterListings/activeFilterCount
     dealTypes.ts           # DEALS array + DealKey type (sale/rent/...)
     propertyTypes.ts       # PROPERTY_TYPES (shared by Filters + Add Listing)
+    buildTypes.ts          # BUILD_TYPES + BuildKey (new / secondary)
     i18n/
       index.ts             # i18next init (default lang = device locale, fallback az)
       languages.ts         # useLanguage() hook: current / setLanguage / language list
@@ -174,6 +177,12 @@ All ~13 canonical MVP screens are built (incl. Search map). What's left:
   (Edit profile / Change contact / Delete account) and About rows (Terms /
   Privacy / Support) are placeholders. Add Listing photos use a stock set
   (no real `expo-image-picker` / upload yet).
+- **Add Listing doesn't capture new fields yet (fix next build):** the create
+  flow has no inputs for `buildType`, `baths`, or a contact phone — published
+  listings get defaults (`buildType:"new"`, `baths:1`, `ownerPhone` placeholder,
+  `createdAt: now`). So a user-created listing can't be filtered by build-type /
+  baths and shows a placeholder phone for Call/WhatsApp until those fields are
+  added to the Add Listing steps.
 - **git identity** — now set globally to `Vusso <vussomusic@gmail.com>` (commits
   from `7437657` onward). Earlier commits keep the old
   `Vusso <vusso@MacBook-Pro-Vusso.local>` author (not reset).
