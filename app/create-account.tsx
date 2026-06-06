@@ -27,9 +27,10 @@ export default function CreateAccountScreen() {
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("+994");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; email?: string; phone?: string; password?: string }>({});
   const [submitted, setSubmitted] = useState(false);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/welcome"));
@@ -38,6 +39,7 @@ export default function CreateAccountScreen() {
     const next: typeof errors = {};
     if (!fullName.trim()) next.name = t("createAccount.errName");
     if (!EMAIL_RE.test(email.trim())) next.email = t("createAccount.errEmail");
+    if (phone.replace(/[^\d]/g, "").length < 9) next.phone = t("createAccount.errPhone");
     if (!password) next.password = t("createAccount.errPassword");
 
     setErrors(next);
@@ -138,6 +140,20 @@ export default function CreateAccountScreen() {
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
+            />
+            <Field
+              colors={colors}
+              label={t("createAccount.phoneLabel")}
+              icon="call-outline"
+              placeholder={t("createAccount.phonePlaceholder")}
+              value={phone}
+              onChangeText={(v) => {
+                setPhone(v);
+                if (errors.phone) setErrors((e) => ({ ...e, phone: undefined }));
+              }}
+              error={errors.phone}
+              keyboardType="phone-pad"
+              autoComplete="tel"
             />
             <Field
               colors={colors}

@@ -108,7 +108,7 @@ export default function ProfileScreen() {
             colors={colors}
             icon="settings-outline"
             label={t("profile.settings")}
-            onPress={() => { /* TODO: settings */ }}
+            onPress={() => router.push("/settings")}
           />
           <Row
             colors={colors}

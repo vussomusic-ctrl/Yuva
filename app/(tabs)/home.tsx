@@ -18,15 +18,17 @@ import { SearchBar } from "../../components/SearchBar";
 import { DealTypeChips, DealKey } from "../../components/DealTypeChips";
 import { useLanguage } from "../../lib/i18n/languages";
 import { useFavorites } from "../../lib/favorites";
+import { useFilters } from "../../lib/filters-state";
+import { PropertyTypeKey } from "../../lib/propertyTypes";
 import { recommendedListings, newListings } from "../../lib/mock/listings";
 import { hasUnreadNotifications } from "../../lib/mock/notifications";
 
-const CATEGORIES = [
-  { key: "apartments", label: "home.catApartments", icon: "business-outline" },
-  { key: "houses", label: "home.catHouses", icon: "home-outline" },
-  { key: "land", label: "home.catLand", icon: "map-outline" },
-  { key: "objects", label: "home.catObjects", icon: "storefront-outline" },
-] as const;
+const CATEGORIES: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; type: PropertyTypeKey }[] = [
+  { key: "apartments", label: "home.catApartments", icon: "business-outline", type: "apartment" },
+  { key: "houses", label: "home.catHouses", icon: "home-outline", type: "house" },
+  { key: "land", label: "home.catLand", icon: "map-outline", type: "land" },
+  { key: "objects", label: "home.catObjects", icon: "storefront-outline", type: "object" },
+];
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -37,8 +39,16 @@ export default function HomeScreen() {
   const [query, setQuery] = useState("");
   const [deal, setDeal] = useState<DealKey>("sale");
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
+  const { filters, apply } = useFilters();
 
   const openListing = (id: string) => router.push(`/property/${id}`);
+
+  // Tap a category → carry the current deal type + chosen property type into the
+  // shared filter state, then jump to the Search tab (list + map both filter).
+  const openCategory = (type: PropertyTypeKey) => {
+    apply({ ...filters, dealType: deal, propertyTypes: [type] });
+    router.push("/search");
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
@@ -52,9 +62,6 @@ export default function HomeScreen() {
           paddingHorizontal: 16,
         }}
       >
-        <Pressable hitSlop={10} style={{ padding: 4 }}>
-          <Ionicons name="menu" size={26} color={colors.text} />
-        </Pressable>
         <Image
           source={require("../../assets/yuva-logo.png")}
           resizeMode="contain"
@@ -123,7 +130,7 @@ export default function HomeScreen() {
         {/* Categories */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 16 }}>
           {CATEGORIES.map((c) => (
-            <Category key={c.key} icon={c.icon} label={t(c.label)} colors={colors} />
+            <Category key={c.key} icon={c.icon} label={t(c.label)} colors={colors} onPress={() => openCategory(c.type)} />
           ))}
         </View>
 
@@ -206,13 +213,15 @@ function Category({
   icon,
   label,
   colors,
+  onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   colors: Theme;
+  onPress: () => void;
 }) {
   return (
-    <Pressable style={({ pressed }) => ({ alignItems: "center", gap: 8, opacity: pressed ? 0.6 : 1 })}>
+    <Pressable onPress={onPress} style={({ pressed }) => ({ alignItems: "center", gap: 8, opacity: pressed ? 0.6 : 1 })}>
       <View
         style={{
           width: 60,

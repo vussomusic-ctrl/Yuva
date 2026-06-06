@@ -28,6 +28,7 @@ function RootInner() {
         <Stack.Screen name="my-listings" />
         <Stack.Screen name="saved" />
         <Stack.Screen name="notifications" />
+        <Stack.Screen name="settings" />
         <Stack.Screen name="add-listing" options={{ presentation: "modal" }} />
         <Stack.Screen name="filters" options={{ presentation: "modal" }} />
       </Stack>

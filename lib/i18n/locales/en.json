@@ -32,6 +32,8 @@
     "fullNamePlaceholder": "John Doe",
     "emailLabel": "Email",
     "emailPlaceholder": "john@example.com",
+    "phoneLabel": "Phone",
+    "phonePlaceholder": "+994 50 123 45 67",
     "passwordLabel": "Password",
     "passwordPlaceholder": "••••••••",
     "submit": "Sign up",
@@ -42,6 +44,7 @@
     "login": "Log in",
     "errName": "Enter your name",
     "errEmail": "Enter a valid email",
+    "errPhone": "Enter a valid phone number",
     "errPassword": "Enter a password",
     "success": "All set! We'll connect sign-up to Supabase later."
   },
@@ -163,5 +166,21 @@
     "message": "New message",
     "emptyTitle": "No notifications",
     "emptyDesc": "New notifications will appear here"
+  },
+  "settings": {
+    "title": "Settings",
+    "notifications": "Notifications",
+    "notifNewMatches": "New matches",
+    "notifPriceDrop": "Price drops",
+    "notifMessages": "Messages",
+    "account": "Account",
+    "editProfile": "Edit profile",
+    "editContact": "Change phone/email",
+    "deleteAccount": "Delete account",
+    "about": "About",
+    "version": "Version",
+    "terms": "Terms of Use",
+    "privacy": "Privacy Policy",
+    "support": "Contact support"
   }
 }

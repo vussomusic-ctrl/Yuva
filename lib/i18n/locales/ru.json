@@ -32,6 +32,8 @@
     "fullNamePlaceholder": "Иван Иванов",
     "emailLabel": "Электронная почта",
     "emailPlaceholder": "ivan@example.com",
+    "phoneLabel": "Телефон",
+    "phonePlaceholder": "+994 50 123 45 67",
     "passwordLabel": "Пароль",
     "passwordPlaceholder": "••••••••",
     "submit": "Зарегистрироваться",
@@ -42,6 +44,7 @@
     "login": "Войти",
     "errName": "Введите имя",
     "errEmail": "Введите корректный email",
+    "errPhone": "Введите корректный номер телефона",
     "errPassword": "Введите пароль",
     "success": "Готово! Регистрацию подключим к Supabase позже."
   },
@@ -163,5 +166,21 @@
     "message": "Новое сообщение",
     "emptyTitle": "Нет уведомлений",
     "emptyDesc": "Новые уведомления появятся здесь"
+  },
+  "settings": {
+    "title": "Настройки",
+    "notifications": "Уведомления",
+    "notifNewMatches": "Новые совпадения",
+    "notifPriceDrop": "Снижение цены",
+    "notifMessages": "Сообщения",
+    "account": "Аккаунт",
+    "editProfile": "Изменить профиль",
+    "editContact": "Изменить телефон/email",
+    "deleteAccount": "Удалить аккаунт",
+    "about": "О приложении",
+    "version": "Версия",
+    "terms": "Условия использования",
+    "privacy": "Политика конфиденциальности",
+    "support": "Связаться с поддержкой"
   }
 }

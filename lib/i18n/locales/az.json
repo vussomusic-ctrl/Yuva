@@ -32,6 +32,8 @@
     "fullNamePlaceholder": "Əli Məmmədov",
     "emailLabel": "E-poçt",
     "emailPlaceholder": "ali@example.com",
+    "phoneLabel": "Telefon",
+    "phonePlaceholder": "+994 50 123 45 67",
     "passwordLabel": "Şifrə",
     "passwordPlaceholder": "••••••••",
     "submit": "Qeydiyyatdan keç",
@@ -42,6 +44,7 @@
     "login": "Daxil ol",
     "errName": "Adınızı daxil edin",
     "errEmail": "Düzgün e-poçt daxil edin",
+    "errPhone": "Düzgün telefon nömrəsi daxil edin",
     "errPassword": "Şifrəni daxil edin",
     "success": "Hazırdır! Qeydiyyatı sonra Supabase ilə qoşacağıq."
   },
@@ -163,5 +166,21 @@
     "message": "Yeni mesaj",
     "emptyTitle": "Bildiriş yoxdur",
     "emptyDesc": "Yeni bildirişlər burada görünəcək"
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "notifications": "Bildirişlər",
+    "notifNewMatches": "Yeni uyğun elanlar",
+    "notifPriceDrop": "Qiymət düşməsi",
+    "notifMessages": "Mesajlar",
+    "account": "Hesab",
+    "editProfile": "Profili redaktə et",
+    "editContact": "Telefon/e-poçtu dəyiş",
+    "deleteAccount": "Hesabı sil",
+    "about": "Tətbiq haqqında",
+    "version": "Versiya",
+    "terms": "İstifadə şərtləri",
+    "privacy": "Məxfilik siyasəti",
+    "support": "Dəstək ilə əlaqə"
   }
 }
