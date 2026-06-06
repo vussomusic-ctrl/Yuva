@@ -11,6 +11,7 @@ import { SearchBar } from "../../components/SearchBar";
 import { DealTypeChips } from "../../components/DealTypeChips";
 import { Segmented } from "../../components/Segmented";
 import { PropertyCard } from "../../components/PropertyCard";
+import { SearchMap } from "../../components/SearchMap";
 import { useFavorites } from "../../lib/favorites";
 import { useFilters, filterListings } from "../../lib/filters-state";
 import { newListings } from "../../lib/mock/listings";
@@ -58,12 +59,7 @@ export default function SearchScreen() {
       <DealTypeChips value={filters.dealType} onChange={setDealType} />
 
       {view === "map" ? (
-        <Placeholder
-          colors={colors}
-          icon="map-outline"
-          title={t("search.viewMap")}
-          desc={t("search.mapSoon")}
-        />
+        <SearchMap listings={results} onOpen={(id) => router.push(`/property/${id}`)} />
       ) : (
         <FlatList
           style={{ flex: 1, marginTop: 12 }}

@@ -23,6 +23,9 @@ export type Listing = {
   propertyType: PropertyTypeKey;
   furnished: boolean;
   mortgage: boolean;
+  // Map coordinates (Baku). Used by Search — Map price pins.
+  lat: number;
+  lng: number;
 };
 
 const img = (id: string) =>
@@ -38,6 +41,8 @@ export const listings: Listing[] = [
     floor: 7,
     floorTotal: 16,
     district: "Nizami rayonu",
+    lat: 40.379,
+    lng: 49.949,
     title: "Nizami rayonu, 3 otaqlı mənzil",
     premium: true,
     ownerId: "u2",
@@ -53,6 +58,8 @@ export const listings: Listing[] = [
     areaM2: 210,
     rooms: 5,
     district: "Xəzər rayonu",
+    lat: 40.422,
+    lng: 50.048,
     title: "Xəzər rayonu, Villa",
     premium: true,
     ownerId: "u1",
@@ -70,6 +77,8 @@ export const listings: Listing[] = [
     floor: 3,
     floorTotal: 9,
     district: "Yasamal rayonu",
+    lat: 40.378,
+    lng: 49.815,
     title: "Yasamal rayonu, 2 otaqlı mənzil",
     premium: true,
     ownerId: "u3",
@@ -87,6 +96,8 @@ export const listings: Listing[] = [
     floor: 4,
     floorTotal: 12,
     district: "28 May metrosu yaxınlığında",
+    lat: 40.379,
+    lng: 49.849,
     title: "Nəsimi r-nu, 2 otaqlı təmirli mənzil",
     premium: false,
     ownerId: "u4",
@@ -102,6 +113,8 @@ export const listings: Listing[] = [
     areaM2: 140,
     rooms: 4,
     district: "Abşeron, Mərdəkan",
+    lat: 40.49,
+    lng: 50.13,
     title: "Mərdəkanda həyət evi, 4 otaq",
     premium: false,
     ownerId: "u1",
@@ -119,6 +132,8 @@ export const listings: Listing[] = [
     floor: 9,
     floorTotal: 14,
     district: "Xətai rayonu",
+    lat: 40.394,
+    lng: 49.905,
     title: "Xətai rayonu, 1 otaqlı yeni tikili",
     premium: false,
     ownerId: "u5",

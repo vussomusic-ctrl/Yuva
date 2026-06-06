@@ -25,7 +25,7 @@ import { PropertyCard } from "../components/PropertyCard";
 import { PrimaryButton, SecondaryButton } from "../components/Button";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
-import { bakuRayons } from "../lib/mock/regions";
+import { bakuRayons, coordsForDistrict } from "../lib/mock/regions";
 import { stockListingPhotos } from "../lib/mock/photos";
 import { addListing, formatPrice, Listing } from "../lib/mock/listings";
 import { currentUser } from "../lib/mock/user";
@@ -100,6 +100,7 @@ export default function AddListingModal() {
       propertyType: propertyType!,
       furnished: isLand ? false : furnished,
       mortgage,
+      ...coordsForDistrict(region!),
     });
     setPublished(true);
     // Confirm, then land on My listings so the new listing is visible.
@@ -131,6 +132,7 @@ export default function AddListingModal() {
     propertyType: propertyType ?? "apartment",
     furnished: isLand ? false : furnished,
     mortgage,
+    ...coordsForDistrict(region ?? ""),
   };
 
   return (
