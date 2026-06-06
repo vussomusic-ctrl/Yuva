@@ -1,12 +1,12 @@
 # Yuva — Progress / Context Handoff
 
-> Snapshot for continuing work in a new chat. Last feature commit: `fd6f478`
-> (`feat: Search map with price pins (native) + web fallback`), on top of
-> `7c66163` (Filters→results), `7ee7b2a` (Add Listing), `7437657`
-> (Notifications), `8d8e83d` (Messages / My listings / Saved) and earlier.
+> Snapshot for continuing work in a new chat. Last feature commit: `a00326f`
+> (`feat: home category filters + remove header menu + phone field on signup +
+> settings screen`), on top of `fd6f478` (Search map), `7c66163`
+> (Filters→results), `7ee7b2a` (Add Listing) and earlier.
 >
-> **All ~13 MVP screens are now built (incl. Search map).** What's left is
-> wiring polish + swapping mocks for Supabase (see "REMAINING" + "known gaps").
+> **All ~13 MVP screens are now built (incl. Search map + Settings).** What's
+> left is wiring polish + swapping mocks for Supabase (see "REMAINING" + "gaps").
 
 ## What this is
 **Yuva** ("nest" in Azerbaijani) — a native mobile app for buying, selling and
@@ -35,11 +35,11 @@ The brand/component rules in `CLAUDE.md` override anything inconsistent from Sti
 |---|---|---|
 | Splash + language select | `app/index.tsx` (route `/`) | Transparent logo + organic brand glow, az/ru/en picker drives i18n → Welcome |
 | Welcome | `app/welcome.tsx` | Single smooth gradient bg, glow, primary/secondary/tertiary buttons, legal footer |
-| Create Account | `app/create-account.tsx` | Controlled inputs + validation (email regex, password required), show/hide password, gradient CTA, Google/Apple **stubs** |
-| Home Feed | `app/(tabs)/home.tsx` | Logo header + bell (→ `/notifications`, unread dot) + AZ/RU/EN cycle, search, deal chips, category grid, "recommended" carousel, "new listings" feed, favorite hearts (shared state) |
+| Create Account | `app/create-account.tsx` | Controlled inputs + validation (name, email regex, **phone +994 required**, password), show/hide password, gradient CTA, Google/Apple **stubs**. Phone is UI-only (persists with Supabase later) |
+| Home Feed | `app/(tabs)/home.tsx` | Header = logo (left) + bell (→ `/notifications`, unread dot) + AZ/RU/EN pill (no hamburger menu). Search, deal chips, **tappable category tiles** (Apartments/Houses/Land/Objects → set `propertyTypes` + carry deal type into `filters-state`, jump to Search), "recommended" carousel, "new listings" feed, favorite hearts (shared state) |
 | Property Detail | `app/property/[id].tsx` | Photo gallery + overlay back/share/favorite, price/specs, description, amenities, **map stub**, fixed seller panel (Message + WhatsApp). Reads listing by `id` |
 | Custom bottom tab bar | `components/BottomTabBar.tsx` + `app/(tabs)/_layout.tsx` | Home · Search · Add(center gradient circle, opens `/add-listing` modal) · Chat · Profile. Themeable, no logo |
-| Profile | `app/(tabs)/profile.tsx` | Contextual header: avatar (camera upload affordance, **TODO picker**) + name + role. Settings card: My listings (→ `/my-listings`) / Saved (→ `/saved`) / Language / Settings (**TODO**) / dark-mode toggle. Logout → `/welcome` |
+| Profile | `app/(tabs)/profile.tsx` | Contextual header: avatar (camera upload affordance, **TODO picker**) + name + role. Settings card: My listings (→ `/my-listings`) / Saved (→ `/saved`) / Language / Settings (→ `/settings`) / dark-mode toggle. Logout → `/welcome` |
 | Language picker (bottom-sheet) | `components/BottomSheet.tsx` + `lib/i18n/languages.ts` | `useLanguage()` hook (current/setLanguage/list); az/ru/en selectable from Profile, persists via i18n. Reusable sheet |
 | Search Results — List | `app/(tabs)/search.tsx` | Search bar (→ Filters, with active-filter count badge), List/Map `Segmented`, `DealTypeChips` (bound to shared `filters.dealType`), live results count, real filtering (`filterListings` + text query) over mock `newListings`, feed cards, favorite hearts. i18n empty state when nothing matches |
 | Search Results — Map | `components/SearchMap.tsx` (+ `.web.tsx`) | `react-native-maps` 1.27.2 centred on Baku. Price-pin markers for the SAME filtered set as the list; tap pin → mini preview card → Property Detail. Pins/preview use theme + brand tokens. **Web fallback** (`.web.tsx`) shows a themed placeholder — native module isn't bundled for web, browser doesn't crash. No clustering yet |
@@ -50,6 +50,7 @@ The brand/component rules in `CLAUDE.md` override anything inconsistent from Sti
 | Saved / Favorites | `app/saved.tsx` + `lib/favorites.tsx` | **One screen** (Profile "Saved" = Favorites). `FavoritesProvider`/`useFavorites` shared state (`ids`/`isFavorite`/`toggle`) wraps app in root layout; hearts on Home & Search write to it; Saved list reflects it reactively. i18n empty state. In-memory only (no persistence yet) |
 | Notifications | `app/notifications.tsx` + `lib/mock/notifications.ts` | Back + title header (no logo). Entered via bell in Home header. Mock list of 3 types — `price_drop` (old→new ₼, listing preview), `new_match` (saved-search match), `message` (peer + preview); each with brand-colored icon, neutral time, unread row tint + magenta dot. Tap → `/property/[id]` (drop/match) or `/chat/[id]` (message); marks read in local state. i18n empty state |
 | Add Listing | `app/add-listing.tsx` (modal) | 4-step flow with progress bar (`n/4`) + X-close header. **1** Photos (grid; adds from `lib/mock/photos.ts` since web file-picker is unreliable; cover badge; ≥1 required). **2** Deal type + property type (`Segmented`, shared `DEALS` / `PROPERTY_TYPES`). **3** Details (title, price ₼, area, rooms/floor/floorTotal hidden for land, region via `BottomSheet`, description, furnished/mortgage). **4** Preview (`PropertyCard` + summary). Per-step validation gates Next. Publish → `addListing()` (owner = current user) → toast → `/my-listings`. **In-memory only** |
+| Settings | `app/settings.tsx` | Back + title header (no logo), reached from Profile → Settings. Sections: **Notifications** (3 local-state toggles: new matches / price drops / messages), **Account** (Edit profile / Change phone-email / Delete account [red] — stub rows), **About** (Version from `expo-constants`, Terms / Privacy / Support — stubs). Language & Theme intentionally NOT duplicated (live in Profile) |
 
 Supporting components: `BrandGlow.tsx` (organic radial glow, no SVG),
 `PropertyCard.tsx` (carousel + feed variants), `BottomTabBar.tsx`,
@@ -73,7 +74,7 @@ conversations), `lib/mock/photos.ts` (stock listing photos), `lib/i18n/languages
 ```
 yuva-app/
   app/
-    _layout.tsx            # root Stack: index, welcome, create-account, (tabs), property/[id], chat/[id], my-listings, saved, notifications, add-listing(modal), filters(modal). Wraps app in FavoritesProvider + FiltersProvider
+    _layout.tsx            # root Stack: index, welcome, create-account, (tabs), property/[id], chat/[id], my-listings, saved, notifications, settings, add-listing(modal), filters(modal). Wraps app in FavoritesProvider + FiltersProvider
     index.tsx              # Splash (owns "/")
     welcome.tsx
     create-account.tsx
@@ -82,6 +83,7 @@ yuva-app/
     my-listings.tsx        # My listings (DONE)
     saved.tsx              # Saved / Favorites (DONE; shared favorites state)
     notifications.tsx      # Notifications (DONE; entered via Home bell)
+    settings.tsx           # Settings (DONE; reached from Profile; local-state toggles + stub rows)
     add-listing.tsx        # Add Listing 4-step modal (DONE; center "+" tab; in-memory)
     filters.tsx            # Advanced Filters modal (DONE; wired to Search via filters-state)
     (tabs)/
@@ -165,11 +167,13 @@ All ~13 canonical MVP screens are built (incl. Search map). What's left:
 - **In-memory only (lost on reload):** Favorites/Saved (shared `useFavorites`
   state), chat messages (conversation send appends to local `useState`),
   published listings (Add Listing → `addListing()` prepends to the in-memory
-  feed), and notification read-state (local to the screen; Home bell dot static).
-- **Stubs / not wired:** Profile Settings row + avatar upload (TODOs), and
-  Property Detail's Message button (→ `/chat` tab, not the listing's
-  conversation). Add Listing photos use a stock set (no real
-  `expo-image-picker` / upload yet). Active Search filters are session-only.
+  feed), notification read-state (local), Settings toggles (local `useState`),
+  and the signup phone field. Active Search filters are session-only.
+- **Stubs / not wired:** Profile avatar upload (TODO); Property Detail's Message
+  button (→ `/chat` tab, not the listing's conversation); Settings Account rows
+  (Edit profile / Change contact / Delete account) and About rows (Terms /
+  Privacy / Support) are placeholders. Add Listing photos use a stock set
+  (no real `expo-image-picker` / upload yet).
 - **git identity** — now set globally to `Vusso <vussomusic@gmail.com>` (commits
   from `7437657` onward). Earlier commits keep the old
   `Vusso <vusso@MacBook-Pro-Vusso.local>` author (not reset).
