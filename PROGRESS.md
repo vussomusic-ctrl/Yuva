@@ -1,12 +1,12 @@
 # Yuva — Progress / Context Handoff
 
-> Snapshot for continuing work in a new chat. Last feature commit: `7ee7b2a`
-> (`feat: Add Listing multi-step form + shared PROPERTY_TYPES`), on top of
-> `7437657` (Notifications), `8d8e83d` (Messages / My listings / Saved),
-> `259e34a` (tab bar / Profile / Search / Filters) and `83bef97` (core screens).
+> Snapshot for continuing work in a new chat. Last feature commit: `fd6f478`
+> (`feat: Search map with price pins (native) + web fallback`), on top of
+> `7c66163` (Filters→results), `7ee7b2a` (Add Listing), `7437657`
+> (Notifications), `8d8e83d` (Messages / My listings / Saved) and earlier.
 >
-> **All ~13 MVP screens are now built.** What's left is the Search map, wiring
-> polish, and swapping mocks for Supabase (see "REMAINING" + "known gaps").
+> **All ~13 MVP screens are now built (incl. Search map).** What's left is
+> wiring polish + swapping mocks for Supabase (see "REMAINING" + "known gaps").
 
 ## What this is
 **Yuva** ("nest" in Azerbaijani) — a native mobile app for buying, selling and
@@ -22,8 +22,8 @@ marketplace on the level of Bayut / Bina.az / Zillow.
 - **i18next + react-i18next + expo-localization** — trilingual strings.
 - **Theme** — LIGHT + DARK ("Obsidian") via tokens; `ThemeProvider` follows the
   system color scheme and exposes `toggleTheme` (for a future Settings screen).
-- Planned but NOT yet added: **Supabase** (DB/auth/storage/realtime),
-  **react-native-maps**, **EAS Build**.
+- **react-native-maps** 1.27.2 — Search map (price pins), native only (web fallback).
+- Planned but NOT yet added: **Supabase** (DB/auth/storage/realtime), **EAS Build**.
 
 ## Design source
 Screens designed in **Google Stitch**, pulled via the **Stitch MCP server**.
@@ -41,7 +41,8 @@ The brand/component rules in `CLAUDE.md` override anything inconsistent from Sti
 | Custom bottom tab bar | `components/BottomTabBar.tsx` + `app/(tabs)/_layout.tsx` | Home · Search · Add(center gradient circle, opens `/add-listing` modal) · Chat · Profile. Themeable, no logo |
 | Profile | `app/(tabs)/profile.tsx` | Contextual header: avatar (camera upload affordance, **TODO picker**) + name + role. Settings card: My listings (→ `/my-listings`) / Saved (→ `/saved`) / Language / Settings (**TODO**) / dark-mode toggle. Logout → `/welcome` |
 | Language picker (bottom-sheet) | `components/BottomSheet.tsx` + `lib/i18n/languages.ts` | `useLanguage()` hook (current/setLanguage/list); az/ru/en selectable from Profile, persists via i18n. Reusable sheet |
-| Search Results — List | `app/(tabs)/search.tsx` | Search bar (→ Filters, with active-filter count badge), List/Map `Segmented`, `DealTypeChips` (bound to shared `filters.dealType`), live results count, real filtering (`filterListings` + text query) over mock `newListings`, feed cards, favorite hearts. i18n empty state when nothing matches. **Map view = "coming soon" placeholder** |
+| Search Results — List | `app/(tabs)/search.tsx` | Search bar (→ Filters, with active-filter count badge), List/Map `Segmented`, `DealTypeChips` (bound to shared `filters.dealType`), live results count, real filtering (`filterListings` + text query) over mock `newListings`, feed cards, favorite hearts. i18n empty state when nothing matches |
+| Search Results — Map | `components/SearchMap.tsx` (+ `.web.tsx`) | `react-native-maps` 1.27.2 centred on Baku. Price-pin markers for the SAME filtered set as the list; tap pin → mini preview card → Property Detail. Pins/preview use theme + brand tokens. **Web fallback** (`.web.tsx`) shows a themed placeholder — native module isn't bundled for web, browser doesn't crash. No clustering yet |
 | Advanced Filters | `app/filters.tsx` (modal) | Full UI: deal type, property type, price AZN range, rooms, area, region/district (Baku rayons), floor range, furnished + mortgage toggles. X / title / Clear header, sticky gradient Apply. **Wired to results** via `lib/filters-state.tsx` — Apply commits the draft, Clear resets narrowing facets (keeps deal type) and applies immediately |
 | Messages — chat list | `app/(tabs)/chat.tsx` | Contextual title header (no logo). Mock chats (`lib/mock/chats.ts`): avatar, peer name, one-line last-message preview, time, gradient unread badge. i18n empty state. Tap → conversation |
 | Messages — conversation | `app/chat/[id].tsx` | Header back + avatar + peer name. Bubbles: mine right (violet), theirs left (card token), time under each, auto-scroll. Composer + send. **Send is LOCAL-ONLY** (in-memory `useState`, no backend) |
@@ -53,7 +54,8 @@ The brand/component rules in `CLAUDE.md` override anything inconsistent from Sti
 Supporting components: `BrandGlow.tsx` (organic radial glow, no SVG),
 `PropertyCard.tsx` (carousel + feed variants), `BottomTabBar.tsx`,
 `BottomSheet.tsx`, `SearchBar.tsx`, `DealTypeChips.tsx`, `Segmented.tsx`,
-`Button.tsx` (`PrimaryButton` gradient / `SecondaryButton` outline — reusable).
+`Button.tsx` (`PrimaryButton` gradient / `SecondaryButton` outline — reusable),
+`SearchMap.tsx` + `SearchMap.web.tsx` (native price-pin map / web placeholder).
 Shared state/data/utils: `lib/favorites.tsx` (FavoritesProvider + useFavorites,
 app-wide saved set), `lib/filters-state.tsx` (FiltersProvider + useFilters +
 `filterListings` / `activeFilterCount` — shared Search filter state, wraps app in
@@ -62,8 +64,9 @@ root layout), `lib/dealTypes.ts` (DEALS + DealKey), `lib/propertyTypes.ts`
 (Baku rayons), `lib/mock/user.ts` (current mock user), `lib/mock/chats.ts` (mock
 conversations), `lib/mock/photos.ts` (stock listing photos), `lib/i18n/languages.ts`.
 `lib/mock/listings.ts` listings now carry `dealType` / `propertyType` / `furnished`
-/ `mortgage` (faceted for filters) + `ownerId`, with `getListingsByOwner` /
-`getListingById` / `addListing` helpers.
+/ `mortgage` (faceted for filters) + `lat` / `lng` (map pins) + `ownerId`, with
+`getListingsByOwner` / `getListingById` / `addListing` helpers.
+`lib/mock/regions.ts` also exports `BAKU_CENTER` / `rayonCoords` / `coordsForDistrict`.
 `lib/mock/notifications.ts` (mock notifications + `hasUnreadNotifications`).
 
 ## Project structure
@@ -84,7 +87,7 @@ yuva-app/
     (tabs)/
       _layout.tsx          # uses custom BottomTabBar: Home · Search · Add(center gradient) · Chat · Profile
       home.tsx             # Home Feed (DONE; was index.tsx, moved off "/" so Splash owns it)
-      search.tsx           # Search Results — List (DONE; real filtering; map view = placeholder)
+      search.tsx           # Search Results — List + Map (DONE; real filtering; map = SearchMap)
       chat.tsx             # Messages — chat list (DONE)
       profile.tsx          # Profile (DONE; Settings row + avatar upload still TODO)
   components/
@@ -92,7 +95,9 @@ yuva-app/
     PropertyCard.tsx
     BottomTabBar.tsx       # custom themed tab bar w/ center gradient Add button
     BottomSheet.tsx        # reusable bottom-sheet (used by language picker)
-    SearchBar.tsx          # search input + filter button
+    SearchBar.tsx          # search input + filter button (active-filter badge)
+    SearchMap.tsx          # native price-pin map (react-native-maps)
+    SearchMap.web.tsx      # web fallback placeholder (no native module)
     DealTypeChips.tsx      # Satılır / Kirayə / Sat chips (DealKey)
     Segmented.tsx          # segmented control (List/Map, deal type in Filters)
     Button.tsx             # PrimaryButton (gradient) / SecondaryButton (outline)
@@ -143,19 +148,20 @@ yuva-app/
 
 ## Work REMAINING
 
-All ~13 canonical MVP screens are built. What's left:
+All ~13 canonical MVP screens are built (incl. Search map). What's left:
 
-- **Search Results — Map** (price pins, clustering; needs react-native-maps) — the only unbuilt screen; search.tsx map view is a "coming soon" placeholder
 - **Wiring polish** (UI exists, behaviour not connected):
   - **"Message" button → conversation** — Property Detail's Message/"Yaz" goes to the `/chat` tab; should open/create the listing's conversation (`/chat/[id]`)
   - **Home bell ↔ read state** — the bell's unread dot is static (`hasUnreadNotifications` from the mock) and doesn't update when notifications are marked read; needs shared notifications state (like `useFavorites`)
-- **Supabase** — replace all `lib/mock/*` with real DB/auth/storage/realtime; persist favorites, filters are session-only, chat messages, listings/owners (Add Listing), notifications
+- **Search map nice-to-haves:** marker clustering on zoom-out (skipped — not bundled with SDK), and an Android dark `customMapStyle` (pins/preview already themed).
+- **Supabase** — replace all `lib/mock/*` with real DB/auth/storage/realtime; persist favorites, session-only filters, chat messages, listings/owners (Add Listing), notifications
+- **Google Maps API key for production Android** — `react-native-maps` needs the config-plugin key (`androidGoogleMapsApiKey` in `app.json`) for a release Android build; iOS uses Apple Maps (no key). Not needed for dev / Expo Go.
 
 ## NOT done yet / known gaps
 - **Supabase NOT connected.** All data is mocked in `lib/mock/*`
   (no DB, auth, photo storage, or realtime). Google/Apple sign-in is a stub.
-  WhatsApp button DOES open `wa.me/...`. Map on Property Detail AND on Search
-  are styled placeholders (react-native-maps later).
+  WhatsApp button DOES open `wa.me/...`. Map on Property Detail is still a
+  styled placeholder (the Search map is real via react-native-maps).
 - **In-memory only (lost on reload):** Favorites/Saved (shared `useFavorites`
   state), chat messages (conversation send appends to local `useState`),
   published listings (Add Listing → `addListing()` prepends to the in-memory
