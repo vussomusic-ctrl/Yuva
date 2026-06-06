@@ -41,8 +41,8 @@ The brand/component rules in `CLAUDE.md` override anything inconsistent from Sti
 | Custom bottom tab bar | `components/BottomTabBar.tsx` + `app/(tabs)/_layout.tsx` | Home · Search · Add(center gradient circle, opens `/add-listing` modal) · Chat · Profile. Themeable, no logo |
 | Profile | `app/(tabs)/profile.tsx` | Contextual header: avatar (camera upload affordance, **TODO picker**) + name + role. Settings card: My listings (→ `/my-listings`) / Saved (→ `/saved`) / Language / Settings (**TODO**) / dark-mode toggle. Logout → `/welcome` |
 | Language picker (bottom-sheet) | `components/BottomSheet.tsx` + `lib/i18n/languages.ts` | `useLanguage()` hook (current/setLanguage/list); az/ru/en selectable from Profile, persists via i18n. Reusable sheet |
-| Search Results — List | `app/(tabs)/search.tsx` | Search bar (→ Filters), List/Map `Segmented`, `DealTypeChips`, results count, live text filter over mock `newListings`, feed cards, favorite hearts (shared state). **Map view = "coming soon" placeholder** |
-| Advanced Filters | `app/filters.tsx` (modal) | Full UI: deal type, property type, price AZN range, rooms, area, region/district (Baku rayons), floor range, furnished + mortgage toggles. X / title / Clear header, sticky gradient Apply. **Apply currently just closes — does not yet filter results** |
+| Search Results — List | `app/(tabs)/search.tsx` | Search bar (→ Filters, with active-filter count badge), List/Map `Segmented`, `DealTypeChips` (bound to shared `filters.dealType`), live results count, real filtering (`filterListings` + text query) over mock `newListings`, feed cards, favorite hearts. i18n empty state when nothing matches. **Map view = "coming soon" placeholder** |
+| Advanced Filters | `app/filters.tsx` (modal) | Full UI: deal type, property type, price AZN range, rooms, area, region/district (Baku rayons), floor range, furnished + mortgage toggles. X / title / Clear header, sticky gradient Apply. **Wired to results** via `lib/filters-state.tsx` — Apply commits the draft, Clear resets narrowing facets (keeps deal type) and applies immediately |
 | Messages — chat list | `app/(tabs)/chat.tsx` | Contextual title header (no logo). Mock chats (`lib/mock/chats.ts`): avatar, peer name, one-line last-message preview, time, gradient unread badge. i18n empty state. Tap → conversation |
 | Messages — conversation | `app/chat/[id].tsx` | Header back + avatar + peer name. Bubbles: mine right (violet), theirs left (card token), time under each, auto-scroll. Composer + send. **Send is LOCAL-ONLY** (in-memory `useState`, no backend) |
 | My listings | `app/my-listings.tsx` | Back + title header. Vertical `PropertyCard` list of the current user's listings (`getListingsByOwner(currentUser.id)`, via `ownerId`). i18n empty state |
@@ -55,11 +55,14 @@ Supporting components: `BrandGlow.tsx` (organic radial glow, no SVG),
 `BottomSheet.tsx`, `SearchBar.tsx`, `DealTypeChips.tsx`, `Segmented.tsx`,
 `Button.tsx` (`PrimaryButton` gradient / `SecondaryButton` outline — reusable).
 Shared state/data/utils: `lib/favorites.tsx` (FavoritesProvider + useFavorites,
-app-wide saved set), `lib/dealTypes.ts` (DEALS + DealKey), `lib/propertyTypes.ts`
+app-wide saved set), `lib/filters-state.tsx` (FiltersProvider + useFilters +
+`filterListings` / `activeFilterCount` — shared Search filter state, wraps app in
+root layout), `lib/dealTypes.ts` (DEALS + DealKey), `lib/propertyTypes.ts`
 (PROPERTY_TYPES — shared by Filters + Add Listing), `lib/mock/regions.ts`
 (Baku rayons), `lib/mock/user.ts` (current mock user), `lib/mock/chats.ts` (mock
 conversations), `lib/mock/photos.ts` (stock listing photos), `lib/i18n/languages.ts`.
-`lib/mock/listings.ts` has an `ownerId` per listing + `getListingsByOwner` /
+`lib/mock/listings.ts` listings now carry `dealType` / `propertyType` / `furnished`
+/ `mortgage` (faceted for filters) + `ownerId`, with `getListingsByOwner` /
 `getListingById` / `addListing` helpers.
 `lib/mock/notifications.ts` (mock notifications + `hasUnreadNotifications`).
 
@@ -67,7 +70,7 @@ conversations), `lib/mock/photos.ts` (stock listing photos), `lib/i18n/languages
 ```
 yuva-app/
   app/
-    _layout.tsx            # root Stack: index, welcome, create-account, (tabs), property/[id], chat/[id], my-listings, saved, notifications, add-listing(modal), filters(modal). Wraps app in FavoritesProvider
+    _layout.tsx            # root Stack: index, welcome, create-account, (tabs), property/[id], chat/[id], my-listings, saved, notifications, add-listing(modal), filters(modal). Wraps app in FavoritesProvider + FiltersProvider
     index.tsx              # Splash (owns "/")
     welcome.tsx
     create-account.tsx
@@ -77,11 +80,11 @@ yuva-app/
     saved.tsx              # Saved / Favorites (DONE; shared favorites state)
     notifications.tsx      # Notifications (DONE; entered via Home bell)
     add-listing.tsx        # Add Listing 4-step modal (DONE; center "+" tab; in-memory)
-    filters.tsx            # Advanced Filters modal (DONE UI; apply not wired to results)
+    filters.tsx            # Advanced Filters modal (DONE; wired to Search via filters-state)
     (tabs)/
       _layout.tsx          # uses custom BottomTabBar: Home · Search · Add(center gradient) · Chat · Profile
       home.tsx             # Home Feed (DONE; was index.tsx, moved off "/" so Splash owns it)
-      search.tsx           # Search Results — List (DONE; map view = placeholder)
+      search.tsx           # Search Results — List (DONE; real filtering; map view = placeholder)
       chat.tsx             # Messages — chat list (DONE)
       profile.tsx          # Profile (DONE; Settings row + avatar upload still TODO)
   components/
@@ -95,6 +98,7 @@ yuva-app/
     Button.tsx             # PrimaryButton (gradient) / SecondaryButton (outline)
   lib/
     favorites.tsx          # FavoritesProvider + useFavorites (app-wide saved set)
+    filters-state.tsx      # FiltersProvider + useFilters + filterListings/activeFilterCount
     dealTypes.ts           # DEALS array + DealKey type (sale/rent/...)
     propertyTypes.ts       # PROPERTY_TYPES (shared by Filters + Add Listing)
     i18n/
@@ -143,10 +147,9 @@ All ~13 canonical MVP screens are built. What's left:
 
 - **Search Results — Map** (price pins, clustering; needs react-native-maps) — the only unbuilt screen; search.tsx map view is a "coming soon" placeholder
 - **Wiring polish** (UI exists, behaviour not connected):
-  - **Filters → results** — Filters Apply doesn't filter the Search list yet
   - **"Message" button → conversation** — Property Detail's Message/"Yaz" goes to the `/chat` tab; should open/create the listing's conversation (`/chat/[id]`)
   - **Home bell ↔ read state** — the bell's unread dot is static (`hasUnreadNotifications` from the mock) and doesn't update when notifications are marked read; needs shared notifications state (like `useFavorites`)
-- **Supabase** — replace all `lib/mock/*` with real DB/auth/storage/realtime; persist favorites, chat messages, listings/owners (Add Listing), notifications
+- **Supabase** — replace all `lib/mock/*` with real DB/auth/storage/realtime; persist favorites, filters are session-only, chat messages, listings/owners (Add Listing), notifications
 
 ## NOT done yet / known gaps
 - **Supabase NOT connected.** All data is mocked in `lib/mock/*`
@@ -157,10 +160,10 @@ All ~13 canonical MVP screens are built. What's left:
   state), chat messages (conversation send appends to local `useState`),
   published listings (Add Listing → `addListing()` prepends to the in-memory
   feed), and notification read-state (local to the screen; Home bell dot static).
-- **Stubs / not wired:** Profile Settings row + avatar upload (TODOs), Filters
-  Apply (UI complete, doesn't filter results yet), and Property Detail's Message
-  button (→ `/chat` tab, not the listing's conversation). Add Listing photos use
-  a stock set (no real `expo-image-picker` / upload yet).
+- **Stubs / not wired:** Profile Settings row + avatar upload (TODOs), and
+  Property Detail's Message button (→ `/chat` tab, not the listing's
+  conversation). Add Listing photos use a stock set (no real
+  `expo-image-picker` / upload yet). Active Search filters are session-only.
 - **git identity** — now set globally to `Vusso <vussomusic@gmail.com>` (commits
   from `7437657` onward). Earlier commits keep the old
   `Vusso <vusso@MacBook-Pro-Vusso.local>` author (not reset).
