@@ -1,9 +1,9 @@
 # Yuva — Progress / Context Handoff
 
-> Snapshot for continuing work in a new chat. Last feature commit: `27ebb0e`
-> (`feat: add-listing supports build-type, baths & contact phone`), on top of
-> `eb3709a` (contact actions / sort / build-type & baths filters), `a00326f`
-> (home category filters / phone / settings), `fd6f478` (Search map).
+> Snapshot for continuing work in a new chat. Last feature commit: `878c5e3`
+> (`feat: map picker for add-listing — drag-to-pin location`), on top of
+> `27ebb0e` (add-listing build-type/baths/phone), `eb3709a` (contact actions /
+> sort / build-type & baths filters), `a00326f`, `fd6f478` (Search map).
 >
 > **All ~13 MVP screens are now built (incl. Search map + Settings).** What's
 > left is wiring polish + swapping mocks for Supabase (see "REMAINING" + "gaps").
@@ -22,7 +22,8 @@ marketplace on the level of Bayut / Bina.az / Zillow.
 - **i18next + react-i18next + expo-localization** — trilingual strings.
 - **Theme** — LIGHT + DARK ("Obsidian") via tokens; `ThemeProvider` follows the
   system color scheme and exposes `toggleTheme` (for a future Settings screen).
-- **react-native-maps** 1.27.2 — Search map (price pins), native only (web fallback).
+- **react-native-maps** 1.27.2 — Search map (price pins) + Add Listing map picker; native only (web fallback).
+- **expo-location** ~56.0.16 — device location for the Map Picker start centre.
 - Planned but NOT yet added: **Supabase** (DB/auth/storage/realtime), **EAS Build**.
 
 ## Design source
@@ -49,7 +50,8 @@ The brand/component rules in `CLAUDE.md` override anything inconsistent from Sti
 | My listings | `app/my-listings.tsx` | Back + title header. Vertical `PropertyCard` list of the current user's listings (`getListingsByOwner(currentUser.id)`, via `ownerId`). i18n empty state |
 | Saved / Favorites | `app/saved.tsx` + `lib/favorites.tsx` | **One screen** (Profile "Saved" = Favorites). `FavoritesProvider`/`useFavorites` shared state (`ids`/`isFavorite`/`toggle`) wraps app in root layout; hearts on Home & Search write to it; Saved list reflects it reactively. i18n empty state. In-memory only (no persistence yet) |
 | Notifications | `app/notifications.tsx` + `lib/mock/notifications.ts` | Back + title header (no logo). Entered via bell in Home header. Mock list of 3 types — `price_drop` (old→new ₼, listing preview), `new_match` (saved-search match), `message` (peer + preview); each with brand-colored icon, neutral time, unread row tint + magenta dot. Tap → `/property/[id]` (drop/match) or `/chat/[id]` (message); marks read in local state. i18n empty state |
-| Add Listing | `app/add-listing.tsx` (modal) | 4-step flow with progress bar (`n/4`) + X-close header. **1** Photos (grid; adds from `lib/mock/photos.ts` since web file-picker is unreliable; cover badge; ≥1 required). **2** Deal type + property type + **build type** (New build / Secondary, hidden for land) — `Segmented`, shared `DEALS` / `PROPERTY_TYPES` / `BUILD_TYPES`. **3** Details (title, price ₼, area, rooms/baths + floor/floorTotal hidden for land, region via `BottomSheet`, **required contact phone +994**, description, furnished/mortgage). **4** Preview (`PropertyCard` + summary incl. build type / baths / phone). Per-step validation gates Next (phone digits ≥ 9). Publish → `addListing()` (owner = current user, `buildType`/`baths`/`ownerPhone` from form, `createdAt = now`) → toast → `/my-listings`. **In-memory only** |
+| Add Listing | `app/add-listing.tsx` (modal) | 4-step flow with progress bar (`n/4`) + X-close header. **1** Photos (grid; adds from `lib/mock/photos.ts` since web file-picker is unreliable; cover badge; ≥1 required). **2** Deal type + property type + **build type** (New build / Secondary, hidden for land) — `Segmented`, shared `DEALS` / `PROPERTY_TYPES` / `BUILD_TYPES`. **3** Details (title, price ₼, area, rooms/baths + floor/floorTotal hidden for land, region via `BottomSheet`, **map pin via Map Picker** [exact building point, overrides rayon centre], **required contact phone +994**, description, furnished/mortgage). **4** Preview (`PropertyCard` + summary incl. build type / baths / map point / phone). Per-step validation gates Next (rayon OR pin; phone digits ≥ 9). Publish → `addListing()` (coords = pin ?? rayon centre, `createdAt = now`) → toast → `/my-listings`. **In-memory only** |
+| Map Picker | `app/map-picker.tsx` (+ `.web.tsx`) | Fixed centre crosshair over `MapView` (PROVIDER_DEFAULT / Apple Maps, no key); map pans under the pin, coord from `onRegionChangeComplete` (Uber/Bolt pattern). Header X + title, hint chip, sticky «Set here» (gradient). Start centre: prev pin → `coordsForDistrict(region)` → else `expo-location` (within AZ bbox, else `BAKU_CENTER`). Returns coord to the still-mounted Add Listing via `lib/map-pick.tsx` (`useMapPick`); `clear()` runs only on form mount. **Web fallback** = themed placeholder (no native module) |
 | Settings | `app/settings.tsx` | Back + title header (no logo), reached from Profile → Settings. Sections: **Notifications** (3 local-state toggles: new matches / price drops / messages), **Account** (Edit profile / Change phone-email / Delete account [red] — stub rows), **About** (Version from `expo-constants`, Terms / Privacy / Support — stubs). Language & Theme intentionally NOT duplicated (live in Profile) |
 
 Supporting components: `BrandGlow.tsx` (organic radial glow, no SVG),
@@ -76,7 +78,7 @@ conversations), `lib/mock/photos.ts` (stock listing photos), `lib/i18n/languages
 ```
 yuva-app/
   app/
-    _layout.tsx            # root Stack: index, welcome, create-account, (tabs), property/[id], chat/[id], my-listings, saved, notifications, settings, add-listing(modal), filters(modal). Wraps app in FavoritesProvider + FiltersProvider
+    _layout.tsx            # root Stack: index, welcome, create-account, (tabs), property/[id], chat/[id], my-listings, saved, notifications, settings, add-listing(modal), filters(modal), map-picker(modal). Wraps app in FavoritesProvider + FiltersProvider + MapPickProvider
     index.tsx              # Splash (owns "/")
     welcome.tsx
     create-account.tsx
@@ -87,6 +89,7 @@ yuva-app/
     notifications.tsx      # Notifications (DONE; entered via Home bell)
     settings.tsx           # Settings (DONE; reached from Profile; local-state toggles + stub rows)
     add-listing.tsx        # Add Listing 4-step modal (DONE; center "+" tab; in-memory)
+    map-picker.tsx         # Map Picker (DONE; crosshair pin) + .web.tsx fallback
     filters.tsx            # Advanced Filters modal (DONE; wired to Search via filters-state)
     (tabs)/
       _layout.tsx          # uses custom BottomTabBar: Home · Search · Add(center gradient) · Chat · Profile
@@ -108,6 +111,7 @@ yuva-app/
   lib/
     favorites.tsx          # FavoritesProvider + useFavorites (app-wide saved set)
     filters-state.tsx      # FiltersProvider + useFilters + filterListings/activeFilterCount
+    map-pick.tsx           # MapPickProvider + useMapPick (returns picked coord to Add Listing)
     dealTypes.ts           # DEALS array + DealKey type (sale/rent/...)
     propertyTypes.ts       # PROPERTY_TYPES (shared by Filters + Add Listing)
     buildTypes.ts          # BUILD_TYPES + BuildKey (new / secondary)
@@ -184,7 +188,8 @@ All ~13 canonical MVP screens are built (incl. Search map). What's left:
 - **git identity** — now set globally to `Vusso <vussomusic@gmail.com>` (commits
   from `7437657` onward). Earlier commits keep the old
   `Vusso <vusso@MacBook-Pro-Vusso.local>` author (not reset).
-- **NOT pushed to GitHub** — no remote configured; all work is local on `main`.
+- **GitHub:** pushed to `origin` (https://github.com/vussomusic-ctrl/Yuva), branch
+  `main` tracks `origin/main`; auth via `gh` credential helper.
 
 ## Running the app (web preview)
 `cd yuva-app && npx expo start --web --port 8081` → open `http://localhost:8081`.
