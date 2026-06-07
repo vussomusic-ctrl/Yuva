@@ -25,6 +25,7 @@ import { PropertyCard } from "../components/PropertyCard";
 import { PrimaryButton, SecondaryButton } from "../components/Button";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
+import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
 import { bakuRayons, coordsForDistrict } from "../lib/mock/regions";
 import { stockListingPhotos } from "../lib/mock/photos";
 import { addListing, formatPrice, Listing } from "../lib/mock/listings";
@@ -45,13 +46,16 @@ export default function AddListingModal() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [dealType, setDealType] = useState<DealKey>("sale");
   const [propertyType, setPropertyType] = useState<PropertyTypeKey | null>(null);
+  const [buildType, setBuildType] = useState<BuildKey>("new");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [area, setArea] = useState("");
   const [rooms, setRooms] = useState("");
+  const [baths, setBaths] = useState("");
   const [floor, setFloor] = useState("");
   const [floorTotal, setFloorTotal] = useState("");
   const [region, setRegion] = useState<string | null>(null);
+  const [phone, setPhone] = useState("+994");
   const [furnished, setFurnished] = useState(false);
   const [mortgage, setMortgage] = useState(false);
   const [description, setDescription] = useState("");
@@ -69,6 +73,7 @@ export default function AddListingModal() {
   const removePhoto = (u: string) => setPhotos((p) => p.filter((x) => x !== u));
 
   // --- Validation (gates the Next button per step) ---
+  const phoneOk = phone.replace(/[^\d]/g, "").length >= 9;
   const step1Valid = photos.length > 0;
   const step2Valid = propertyType != null;
   const step3Valid =
@@ -76,6 +81,7 @@ export default function AddListingModal() {
     Number(price) > 0 &&
     Number(area) > 0 &&
     region != null &&
+    phoneOk &&
     (isLand || Number(rooms) > 0);
   const canNext =
     step === 1 ? step1Valid : step === 2 ? step2Valid : step === 3 ? step3Valid : true;
@@ -96,11 +102,11 @@ export default function AddListingModal() {
       title: title.trim(),
       premium: false,
       ownerId: currentUser.id,
-      ownerPhone: "+994500000000",
+      ownerPhone: phone.trim(),
       dealType,
       propertyType: propertyType!,
-      buildType: "new",
-      baths: 1,
+      buildType,
+      baths: isLand ? 0 : Number(baths) || 1,
       furnished: isLand ? false : furnished,
       mortgage,
       createdAt: new Date().toISOString(),
@@ -134,11 +140,11 @@ export default function AddListingModal() {
     ownerId: currentUser.id,
     dealType,
     propertyType: propertyType ?? "apartment",
-    buildType: "new",
-    baths: 1,
+    buildType,
+    baths: isLand ? 0 : Number(baths) || 1,
     furnished: isLand ? false : furnished,
     mortgage,
-    ownerPhone: "+994500000000",
+    ownerPhone: phone.trim(),
     createdAt: new Date().toISOString(),
     ...coordsForDistrict(region ?? ""),
   };
@@ -215,6 +221,15 @@ export default function AddListingModal() {
                   onChange={(k) => setPropertyType(k as PropertyTypeKey)}
                 />
               </Section>
+              {!isLand && (
+                <Section title={t("filters.buildType")} colors={colors}>
+                  <Segmented
+                    options={BUILD_TYPES.map((b) => ({ key: b.key, label: t(b.labelKey) }))}
+                    value={buildType}
+                    onChange={(k) => setBuildType(k as BuildKey)}
+                  />
+                </Section>
+              )}
             </View>
           )}
 
@@ -239,23 +254,30 @@ export default function AddListingModal() {
               </View>
 
               {!isLand && (
-                <View style={{ flexDirection: "row", gap: 12 }}>
-                  <Field label={t("filters.rooms")} colors={colors} style={{ flex: 1 }}>
-                    <Input colors={colors} value={rooms} onChangeText={setRooms} placeholder="0" keyboardType="numeric" />
-                  </Field>
-                  <Field label={t("filters.floor")} colors={colors} style={{ flex: 1 }}>
-                    <Input colors={colors} value={floor} onChangeText={setFloor} placeholder="0" keyboardType="numeric" />
-                  </Field>
-                  <Field label={t("addListing.floorTotal")} colors={colors} style={{ flex: 1 }}>
-                    <Input
-                      colors={colors}
-                      value={floorTotal}
-                      onChangeText={setFloorTotal}
-                      placeholder="0"
-                      keyboardType="numeric"
-                    />
-                  </Field>
-                </View>
+                <>
+                  <View style={{ flexDirection: "row", gap: 12 }}>
+                    <Field label={t("filters.rooms")} colors={colors} style={{ flex: 1 }}>
+                      <Input colors={colors} value={rooms} onChangeText={setRooms} placeholder="0" keyboardType="numeric" />
+                    </Field>
+                    <Field label={t("filters.baths")} colors={colors} style={{ flex: 1 }}>
+                      <Input colors={colors} value={baths} onChangeText={setBaths} placeholder="0" keyboardType="numeric" />
+                    </Field>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 12 }}>
+                    <Field label={t("filters.floor")} colors={colors} style={{ flex: 1 }}>
+                      <Input colors={colors} value={floor} onChangeText={setFloor} placeholder="0" keyboardType="numeric" />
+                    </Field>
+                    <Field label={t("addListing.floorTotal")} colors={colors} style={{ flex: 1 }}>
+                      <Input
+                        colors={colors}
+                        value={floorTotal}
+                        onChangeText={setFloorTotal}
+                        placeholder="0"
+                        keyboardType="numeric"
+                      />
+                    </Field>
+                  </View>
+                </>
               )}
 
               <Field label={t("filters.region")} colors={colors}>
@@ -279,6 +301,16 @@ export default function AddListingModal() {
                   </Text>
                   <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
                 </Pressable>
+              </Field>
+
+              <Field label={t("addListing.phoneLabel")} colors={colors}>
+                <Input
+                  colors={colors}
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder={t("addListing.phonePlaceholder")}
+                  keyboardType="phone-pad"
+                />
               </Field>
 
               <Field label={t("addListing.descriptionLabel")} colors={colors}>
@@ -331,10 +363,20 @@ export default function AddListingModal() {
                   label={t("filters.propertyType")}
                   value={propertyType ? t(PROPERTY_TYPES.find((p) => p.key === propertyType)!.labelKey) : "—"}
                 />
+                {!isLand && (
+                  <SummaryRow
+                    colors={colors}
+                    label={t("filters.buildType")}
+                    value={t(BUILD_TYPES.find((b) => b.key === buildType)!.labelKey)}
+                  />
+                )}
                 <SummaryRow colors={colors} label={t("filters.price")} value={formatPrice(Number(price) || 0)} />
                 <SummaryRow colors={colors} label={t("filters.area")} value={`${Number(area) || 0} m²`} />
                 {!isLand && (
                   <SummaryRow colors={colors} label={t("filters.rooms")} value={rooms || "—"} />
+                )}
+                {!isLand && (
+                  <SummaryRow colors={colors} label={t("filters.baths")} value={baths || "—"} />
                 )}
                 {!isLand && floor !== "" && (
                   <SummaryRow
@@ -344,6 +386,7 @@ export default function AddListingModal() {
                   />
                 )}
                 <SummaryRow colors={colors} label={t("filters.region")} value={region ?? "—"} />
+                <SummaryRow colors={colors} label={t("addListing.phoneLabel")} value={phone.trim()} />
                 {!isLand && (
                   <SummaryRow colors={colors} label={t("filters.furnished")} value={furnished ? "✓" : "—"} />
                 )}
@@ -583,7 +626,7 @@ function Input({
   value: string;
   onChangeText: (s: string) => void;
   placeholder?: string;
-  keyboardType?: "numeric" | "default";
+  keyboardType?: "numeric" | "default" | "phone-pad";
   multiline?: boolean;
 }) {
   return (

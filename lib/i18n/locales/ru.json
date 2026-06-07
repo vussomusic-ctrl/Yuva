@@ -112,6 +112,8 @@
     "descriptionLabel": "Описание",
     "descriptionPlaceholder": "Подробнее об объекте...",
     "selectRegion": "Выберите район",
+    "phoneLabel": "Контактный телефон",
+    "phonePlaceholder": "+994 50 123 45 67",
     "floorTotal": "Этажность",
     "reviewTitle": "Так будет выглядеть объявление",
     "publishedTitle": "Объявление опубликовано!",

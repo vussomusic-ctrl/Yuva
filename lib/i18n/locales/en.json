@@ -112,6 +112,8 @@
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "More about the property...",
     "selectRegion": "Select district",
+    "phoneLabel": "Contact phone",
+    "phonePlaceholder": "+994 50 123 45 67",
     "floorTotal": "Total floors",
     "reviewTitle": "How your listing will look",
     "publishedTitle": "Listing published!",
