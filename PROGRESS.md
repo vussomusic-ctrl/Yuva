@@ -1,12 +1,14 @@
 # Yuva — Progress / Context Handoff
 
-> Snapshot for continuing work in a new chat. Last feature commit: `878c5e3`
-> (`feat: map picker for add-listing — drag-to-pin location`), on top of
-> `27ebb0e` (add-listing build-type/baths/phone), `eb3709a` (contact actions /
-> sort / build-type & baths filters), `a00326f`, `fd6f478` (Search map).
+> Snapshot for continuing work in a new chat. Last feature commit: `06489c4`
+> (`feat: Baku places directory (OSM) — id-based matching, on-the-fly trilingual
+> titles, metro picker, Район label`), on top of `878c5e3` (map picker),
+> `27ebb0e` (build-type/baths/phone), `eb3709a` (contacts/sort/filters).
 >
-> **All ~13 MVP screens are now built (incl. Search map + Settings).** What's
-> left is wiring polish + swapping mocks for Supabase (see "REMAINING" + "gaps").
+> **All ~13 MVP screens are now built (incl. Search map + Settings).** Baku has a
+> real OSM **places directory** (`lib/places.ts`); listing titles are generated
+> **on the fly** per UI language (no stored title). What's left: fill ru/en place
+> translations, all-Azerbaijan hierarchy (phase 2), wiring polish, Supabase.
 
 ## What this is
 **Yuva** ("nest" in Azerbaijani) — a native mobile app for buying, selling and
@@ -44,34 +46,37 @@ The brand/component rules in `CLAUDE.md` override anything inconsistent from Sti
 | Language picker (bottom-sheet) | `components/BottomSheet.tsx` + `lib/i18n/languages.ts` | `useLanguage()` hook (current/setLanguage/list); az/ru/en selectable from Profile, persists via i18n. Reusable sheet |
 | Search Results — List | `app/(tabs)/search.tsx` | Search bar (→ Filters, with active-filter count badge), List/Map `Segmented`, `DealTypeChips` (bound to shared `filters.dealType`), **Sort** button → `BottomSheet` (default / price ↑ / price ↓ / newest by `createdAt`; local `useState`, applied on top of filters), live results count, real filtering (`filterListings` + text query) over mock `newListings`, feed cards, favorite hearts. i18n empty state |
 | Search Results — Map | `components/SearchMap.tsx` (+ `.web.tsx`) | `react-native-maps` 1.27.2 centred on Baku. Price-pin markers for the SAME filtered set as the list; tap pin → mini preview card → Property Detail. Pins/preview use theme + brand tokens. **Web fallback** (`.web.tsx`) shows a themed placeholder — native module isn't bundled for web, browser doesn't crash. No clustering yet |
-| Advanced Filters | `app/filters.tsx` (modal) | Full UI: deal type, property type, **build type (New build / Secondary, single-select + reset)**, price AZN range, rooms, **baths (1/2/3/4+)**, area, region/district (Baku rayons), floor range, furnished + mortgage toggles. X / title / Clear header, sticky gradient Apply. **Wired to results** via `lib/filters-state.tsx` — Apply commits the draft, Clear resets narrowing facets (keeps deal type), applies immediately. `buildType` from shared `lib/buildTypes.ts` |
+| Advanced Filters | `app/filters.tsx` (modal) | Full UI: deal type, property type, **build type (New build / Secondary, single-select + reset)**, price AZN range, rooms, **baths (1/2/3/4+)**, **Район** (multi-chips from `AREAS`), **Metro** (multi-chips from `METRO`), floor range, furnished + mortgage toggles. X / title / Clear header, sticky gradient Apply. **Wired to results** via `lib/filters-state.tsx` (id-based matching on `regionId`/`metroId`). Apply commits draft, Clear resets facets. *(Chips → searchable sheet is a planned phase-2 polish.)* |
 | Messages — chat list | `app/(tabs)/chat.tsx` | Contextual title header (no logo). Mock chats (`lib/mock/chats.ts`): avatar, peer name, one-line last-message preview, time, gradient unread badge. i18n empty state. Tap → conversation |
 | Messages — conversation | `app/chat/[id].tsx` | Header back + avatar + peer name. Bubbles: mine right (violet), theirs left (card token), time under each, auto-scroll. Composer + send. **Send is LOCAL-ONLY** (in-memory `useState`, no backend) |
 | My listings | `app/my-listings.tsx` | Back + title header. Vertical `PropertyCard` list of the current user's listings (`getListingsByOwner(currentUser.id)`, via `ownerId`). i18n empty state |
 | Saved / Favorites | `app/saved.tsx` + `lib/favorites.tsx` | **One screen** (Profile "Saved" = Favorites). `FavoritesProvider`/`useFavorites` shared state (`ids`/`isFavorite`/`toggle`) wraps app in root layout; hearts on Home & Search write to it; Saved list reflects it reactively. i18n empty state. In-memory only (no persistence yet) |
 | Notifications | `app/notifications.tsx` + `lib/mock/notifications.ts` | Back + title header (no logo). Entered via bell in Home header. Mock list of 3 types — `price_drop` (old→new ₼, listing preview), `new_match` (saved-search match), `message` (peer + preview); each with brand-colored icon, neutral time, unread row tint + magenta dot. Tap → `/property/[id]` (drop/match) or `/chat/[id]` (message); marks read in local state. i18n empty state |
-| Add Listing | `app/add-listing.tsx` (modal) | 4-step flow with progress bar (`n/4`) + X-close header. **1** Photos (grid; adds from `lib/mock/photos.ts` since web file-picker is unreliable; cover badge; ≥1 required). **2** Deal type + property type + **build type** (New build / Secondary, hidden for land) — `Segmented`, shared `DEALS` / `PROPERTY_TYPES` / `BUILD_TYPES`. **3** Details (title, price ₼, area, rooms/baths + floor/floorTotal hidden for land, region via `BottomSheet`, **map pin via Map Picker** [exact building point, overrides rayon centre], **required contact phone +994**, description, furnished/mortgage). **4** Preview (`PropertyCard` + summary incl. build type / baths / map point / phone). Per-step validation gates Next (rayon OR pin; phone digits ≥ 9). Publish → `addListing()` (coords = pin ?? rayon centre, `createdAt = now`) → toast → `/my-listings`. **In-memory only** |
-| Map Picker | `app/map-picker.tsx` (+ `.web.tsx`) | Fixed centre crosshair over `MapView` (PROVIDER_DEFAULT / Apple Maps, no key); map pans under the pin, coord from `onRegionChangeComplete` (Uber/Bolt pattern). Header X + title, hint chip, sticky «Set here» (gradient). Start centre: prev pin → `coordsForDistrict(region)` → else `expo-location` (within AZ bbox, else `BAKU_CENTER`). Returns coord to the still-mounted Add Listing via `lib/map-pick.tsx` (`useMapPick`); `clear()` runs only on form mount. **Web fallback** = themed placeholder (no native module) |
+| Add Listing | `app/add-listing.tsx` (modal) | 4-step flow with progress bar (`n/4`) + X-close header. **1** Photos (stock set via `lib/mock/photos.ts`; cover badge; ≥1 required). **2** Deal type + property type + **build type** (hidden for land). **3** Details — **auto-title live preview** (no manual title field), price ₼, area, rooms/baths + floor/floorTotal (hidden for land), **Район via `PlacePickerSheet`** (search, single-select, from `AREAS`), **Metro** (optional, `PlacePickerSheet`, clearable), **map pin via Map Picker** (overrides place centre), **contact phone +994**, description, furnished/mortgage. **4** Preview (`PropertyCard` + summary). Validation: place OR pin, price/area, phone ≥ 9 digits. Publish → `addListing()` (`regionId`/`metroId`, coords = pin ?? `coordsForPlace`, `createdAt = now`) → toast → `/my-listings`. **No stored title** (derived). In-memory |
+| Map Picker | `app/map-picker.tsx` (+ `.web.tsx`) | Fixed centre crosshair over `MapView` (PROVIDER_DEFAULT / Apple Maps, no key); map pans under the pin, coord from `onRegionChangeComplete` (Uber/Bolt pattern). Header X + title, hint chip, sticky «Set here» (gradient). Start centre: prev pin → `coordsForPlace(regionId)` → else `expo-location` (within AZ bbox, else `BAKU_CENTER`). Returns coord to the still-mounted Add Listing via `lib/map-pick.tsx` (`useMapPick`); `clear()` runs only on form mount. **Web fallback** = themed placeholder (no native module) |
 | Settings | `app/settings.tsx` | Back + title header (no logo), reached from Profile → Settings. Sections: **Notifications** (3 local-state toggles: new matches / price drops / messages), **Account** (Edit profile / Change phone-email / Delete account [red] — stub rows), **About** (Version from `expo-constants`, Terms / Privacy / Support — stubs). Language & Theme intentionally NOT duplicated (live in Profile) |
 
 Supporting components: `BrandGlow.tsx` (organic radial glow, no SVG),
 `PropertyCard.tsx` (carousel + feed variants), `BottomTabBar.tsx`,
 `BottomSheet.tsx`, `SearchBar.tsx`, `DealTypeChips.tsx`, `Segmented.tsx`,
 `Button.tsx` (`PrimaryButton` gradient / `SecondaryButton` outline — reusable),
-`SearchMap.tsx` + `SearchMap.web.tsx` (native price-pin map / web placeholder).
-Shared state/data/utils: `lib/favorites.tsx` (FavoritesProvider + useFavorites,
-app-wide saved set), `lib/filters-state.tsx` (FiltersProvider + useFilters +
-`filterListings` / `activeFilterCount` — shared Search filter state, wraps app in
-root layout), `lib/dealTypes.ts` (DEALS + DealKey), `lib/propertyTypes.ts`
-(PROPERTY_TYPES — shared by Filters + Add Listing), `lib/buildTypes.ts`
-(BUILD_TYPES + BuildKey — new build / secondary), `lib/mock/regions.ts`
-(Baku rayons), `lib/mock/user.ts` (current mock user), `lib/mock/chats.ts` (mock
-conversations), `lib/mock/photos.ts` (stock listing photos), `lib/i18n/languages.ts`.
-`lib/mock/listings.ts` listings now carry `dealType` / `propertyType` /
-`buildType` / `baths` / `furnished` / `mortgage` (faceted for filters) +
-`ownerPhone` (call/WhatsApp) + `createdAt` (sort) + `lat` / `lng` (map pins) +
-`ownerId`, with `getListingsByOwner` / `getListingById` / `addListing` helpers.
-`lib/mock/regions.ts` also exports `BAKU_CENTER` / `rayonCoords` / `coordsForDistrict`.
+`SearchMap.tsx` + `SearchMap.web.tsx` (native price-pin map / web placeholder),
+`PlacePickerSheet.tsx` (search + single-select sheet for Район/Metro).
+Shared state/data/utils: `lib/favorites.tsx` (FavoritesProvider + useFavorites),
+`lib/filters-state.tsx` (FiltersProvider + useFilters + `filterListings` /
+`activeFilterCount`; id-based region/metro matching), `lib/places.ts` (**Baku
+places directory from OSM** — `Place {id,az,ru,en,lat,lng,type}`, `AREAS` /
+`RAYONS` / `METRO`, `placeById` / `placeName` / `coordsForPlace`, `BAKU_CENTER`;
+92 entries), `lib/listingTitle.ts` (`buildListingTitle(listing,t,lang)` — derives
+title on the fly, no verb), `lib/dealTypes.ts`, `lib/propertyTypes.ts`,
+`lib/buildTypes.ts`, `lib/map-pick.tsx`, `lib/mock/user.ts`, `lib/mock/chats.ts`,
+`lib/mock/photos.ts`, `lib/i18n/languages.ts`. *(`lib/mock/regions.ts` removed —
+superseded by `lib/places.ts`.)*
+`lib/mock/listings.ts` listings carry `regionId` (+ opt `metroId`) → `places.ts`,
+`dealType` / `propertyType` / `buildType` / `baths` / `furnished` / `mortgage`
+(filters) + `ownerPhone` + `createdAt` + `lat` / `lng`. **No `title` field** — the
+title is generated on the fly via `buildListingTitle`. Helpers: `getListingById` /
+`getListingsByOwner` / `addListing`.
 `lib/mock/notifications.ts` (mock notifications + `hasUnreadNotifications`).
 
 ## Project structure
@@ -108,23 +113,25 @@ yuva-app/
     DealTypeChips.tsx      # Satılır / Kirayə / Sat chips (DealKey)
     Segmented.tsx          # segmented control (List/Map, deal type in Filters)
     Button.tsx             # PrimaryButton (gradient) / SecondaryButton (outline)
+    PlacePickerSheet.tsx   # search + single-select sheet (Район / Metro in Add Listing)
   lib/
     favorites.tsx          # FavoritesProvider + useFavorites (app-wide saved set)
-    filters-state.tsx      # FiltersProvider + useFilters + filterListings/activeFilterCount
+    filters-state.tsx      # FiltersProvider + useFilters + filterListings (id-based)
     map-pick.tsx           # MapPickProvider + useMapPick (returns picked coord to Add Listing)
+    places.ts              # Baku places directory (OSM): Place[], AREAS/RAYONS/METRO, placeById/placeName/coordsForPlace, BAKU_CENTER
+    listingTitle.ts        # buildListingTitle(listing,t,lang) — on-the-fly trilingual title
     dealTypes.ts           # DEALS array + DealKey type (sale/rent/...)
     propertyTypes.ts       # PROPERTY_TYPES (shared by Filters + Add Listing)
     buildTypes.ts          # BUILD_TYPES + BuildKey (new / secondary)
     i18n/
       index.ts             # i18next init (default lang = device locale, fallback az)
       languages.ts         # useLanguage() hook: current / setLanguage / language list
-      locales/{az,ru,en}.json   # namespaces: tabs, common, splash, welcome, createAccount, home, propertyDetail, profile, search, filters, addListing, messages, myListings, saved, notifications
+      locales/{az,ru,en}.json   # namespaces: …, filters, addListing, mapPicker, listingTitle, messages, myListings, saved, notifications, settings
     theme/
       colors.ts            # brand, lightTheme, darkTheme, Theme type, bgGradient, brandTitle
       ThemeContext.tsx     # ThemeProvider (system scheme + toggle), useTheme()
     mock/
-      listings.ts          # mock listings (+ownerId) + getListingDetail/getListingById/getListingsByOwner/addListing + formatPrice
-      regions.ts           # Baku rayons (filters/region data)
+      listings.ts          # mock listings (regionId/metroId, no title) + getListingDetail/getListingById/getListingsByOwner/addListing + formatPrice
       user.ts              # current mock user (Profile)
       chats.ts             # mock conversations (Messages)
       notifications.ts     # mock notifications (price_drop / new_match / message)
@@ -159,6 +166,15 @@ yuva-app/
 
 All ~13 canonical MVP screens are built (incl. Search map). What's left:
 
+- **Finish Baku place translations** — fill `ru` / `en` for entries that fall back
+  to az in `lib/places.ts` (Nərimanov + most qəsəbə/metro). Full checklist:
+  `docs/places-translations-todo.md` (26 missing ru, 63 missing en).
+- **Interactive map on Property Detail** — the detail map is still a styled stub;
+  tapping the pin should open a full map with the listing's `lat`/`lng`.
+- **Places phase 2 — all-Azerbaijan hierarchy** — extend `lib/places.ts` to
+  City/region → district/settlement (`parentId`); ~77 top-level rayon/şəhər now,
+  settlements of non-Baku regions on demand. UX: search on top, cascade, Baku
+  first, metro as its own block. (Filter chips → searchable multi-select sheet.)
 - **Wiring polish** (UI exists, behaviour not connected):
   - **"Message" button → conversation** — Property Detail's Message/"Yaz" goes to the `/chat` tab; should open/create the listing's conversation (`/chat/[id]`)
   - **Home bell ↔ read state** — the bell's unread dot is static (`hasUnreadNotifications` from the mock) and doesn't update when notifications are marked read; needs shared notifications state (like `useFavorites`)
