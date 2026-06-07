@@ -1,9 +1,9 @@
 # Yuva — Progress / Context Handoff
 
-> Snapshot for continuing work in a new chat. Last feature commit: `eb3709a`
-> (`feat: listing contact actions (call/whatsapp), search sort, build-type &
-> baths filters + i18n fixes`), on top of `a00326f` (home category filters /
-> phone field / settings), `fd6f478` (Search map), `7c66163` (Filters→results).
+> Snapshot for continuing work in a new chat. Last feature commit: `27ebb0e`
+> (`feat: add-listing supports build-type, baths & contact phone`), on top of
+> `eb3709a` (contact actions / sort / build-type & baths filters), `a00326f`
+> (home category filters / phone / settings), `fd6f478` (Search map).
 >
 > **All ~13 MVP screens are now built (incl. Search map + Settings).** What's
 > left is wiring polish + swapping mocks for Supabase (see "REMAINING" + "gaps").
@@ -49,7 +49,7 @@ The brand/component rules in `CLAUDE.md` override anything inconsistent from Sti
 | My listings | `app/my-listings.tsx` | Back + title header. Vertical `PropertyCard` list of the current user's listings (`getListingsByOwner(currentUser.id)`, via `ownerId`). i18n empty state |
 | Saved / Favorites | `app/saved.tsx` + `lib/favorites.tsx` | **One screen** (Profile "Saved" = Favorites). `FavoritesProvider`/`useFavorites` shared state (`ids`/`isFavorite`/`toggle`) wraps app in root layout; hearts on Home & Search write to it; Saved list reflects it reactively. i18n empty state. In-memory only (no persistence yet) |
 | Notifications | `app/notifications.tsx` + `lib/mock/notifications.ts` | Back + title header (no logo). Entered via bell in Home header. Mock list of 3 types — `price_drop` (old→new ₼, listing preview), `new_match` (saved-search match), `message` (peer + preview); each with brand-colored icon, neutral time, unread row tint + magenta dot. Tap → `/property/[id]` (drop/match) or `/chat/[id]` (message); marks read in local state. i18n empty state |
-| Add Listing | `app/add-listing.tsx` (modal) | 4-step flow with progress bar (`n/4`) + X-close header. **1** Photos (grid; adds from `lib/mock/photos.ts` since web file-picker is unreliable; cover badge; ≥1 required). **2** Deal type + property type (`Segmented`, shared `DEALS` / `PROPERTY_TYPES`). **3** Details (title, price ₼, area, rooms/floor/floorTotal hidden for land, region via `BottomSheet`, description, furnished/mortgage). **4** Preview (`PropertyCard` + summary). Per-step validation gates Next. Publish → `addListing()` (owner = current user) → toast → `/my-listings`. **In-memory only** |
+| Add Listing | `app/add-listing.tsx` (modal) | 4-step flow with progress bar (`n/4`) + X-close header. **1** Photos (grid; adds from `lib/mock/photos.ts` since web file-picker is unreliable; cover badge; ≥1 required). **2** Deal type + property type + **build type** (New build / Secondary, hidden for land) — `Segmented`, shared `DEALS` / `PROPERTY_TYPES` / `BUILD_TYPES`. **3** Details (title, price ₼, area, rooms/baths + floor/floorTotal hidden for land, region via `BottomSheet`, **required contact phone +994**, description, furnished/mortgage). **4** Preview (`PropertyCard` + summary incl. build type / baths / phone). Per-step validation gates Next (phone digits ≥ 9). Publish → `addListing()` (owner = current user, `buildType`/`baths`/`ownerPhone` from form, `createdAt = now`) → toast → `/my-listings`. **In-memory only** |
 | Settings | `app/settings.tsx` | Back + title header (no logo), reached from Profile → Settings. Sections: **Notifications** (3 local-state toggles: new matches / price drops / messages), **Account** (Edit profile / Change phone-email / Delete account [red] — stub rows), **About** (Version from `expo-constants`, Terms / Privacy / Support — stubs). Language & Theme intentionally NOT duplicated (live in Profile) |
 
 Supporting components: `BrandGlow.tsx` (organic radial glow, no SVG),
@@ -177,12 +177,10 @@ All ~13 canonical MVP screens are built (incl. Search map). What's left:
   (Edit profile / Change contact / Delete account) and About rows (Terms /
   Privacy / Support) are placeholders. Add Listing photos use a stock set
   (no real `expo-image-picker` / upload yet).
-- **Add Listing doesn't capture new fields yet (fix next build):** the create
-  flow has no inputs for `buildType`, `baths`, or a contact phone — published
-  listings get defaults (`buildType:"new"`, `baths:1`, `ownerPhone` placeholder,
-  `createdAt: now`). So a user-created listing can't be filtered by build-type /
-  baths and shows a placeholder phone for Call/WhatsApp until those fields are
-  added to the Add Listing steps.
+- **(CLOSED `27ebb0e`)** Add Listing now captures `buildType` (New/Secondary,
+  hidden for land), `baths`, and a required contact phone — published listings
+  filter correctly by build-type / baths and Call/WhatsApp use the real number.
+  `createdAt = now` (sorts as newest).
 - **git identity** — now set globally to `Vusso <vussomusic@gmail.com>` (commits
   from `7437657` onward). Earlier commits keep the old
   `Vusso <vusso@MacBook-Pro-Vusso.local>` author (not reset).
