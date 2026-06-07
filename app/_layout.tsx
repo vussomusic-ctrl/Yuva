@@ -7,6 +7,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider, useTheme } from "../lib/theme/ThemeContext";
 import { FavoritesProvider } from "../lib/favorites";
 import { FiltersProvider } from "../lib/filters-state";
+import { MapPickProvider } from "../lib/map-pick";
 
 function RootInner() {
   const { mode, colors } = useTheme();
@@ -31,6 +32,7 @@ function RootInner() {
         <Stack.Screen name="settings" />
         <Stack.Screen name="add-listing" options={{ presentation: "modal" }} />
         <Stack.Screen name="filters" options={{ presentation: "modal" }} />
+        <Stack.Screen name="map-picker" options={{ presentation: "modal" }} />
       </Stack>
     </>
   );
@@ -42,7 +44,9 @@ export default function RootLayout() {
       <ThemeProvider>
         <FavoritesProvider>
           <FiltersProvider>
-            <RootInner />
+            <MapPickProvider>
+              <RootInner />
+            </MapPickProvider>
           </FiltersProvider>
         </FavoritesProvider>
       </ThemeProvider>

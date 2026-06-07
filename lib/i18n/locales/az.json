@@ -112,6 +112,9 @@
     "descriptionLabel": "Təsvir",
     "descriptionPlaceholder": "Obyekt haqqında ətraflı...",
     "selectRegion": "Rayon seçin",
+    "mapPointLabel": "Xəritədə nöqtə",
+    "pickOnMap": "Xəritədə göstər",
+    "pointSelected": "Nöqtə seçildi",
     "phoneLabel": "Əlaqə nömrəsi",
     "phonePlaceholder": "+994 50 123 45 67",
     "floorTotal": "Mərtəbə (ümumi)",
@@ -195,5 +198,11 @@
     "terms": "İstifadə şərtləri",
     "privacy": "Məxfilik siyasəti",
     "support": "Dəstək ilə əlaqə"
+  },
+  "mapPicker": {
+    "title": "Yeri seçin",
+    "confirm": "Burada qoy",
+    "hint": "Nöqtəni qoymaq üçün xəritəni hərəkət etdirin",
+    "webOnly": "Xəritədə seçim tətbiqdə mövcuddur"
   }
 }

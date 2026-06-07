@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -30,6 +30,7 @@ import { bakuRayons, coordsForDistrict } from "../lib/mock/regions";
 import { stockListingPhotos } from "../lib/mock/photos";
 import { addListing, formatPrice, Listing } from "../lib/mock/listings";
 import { currentUser } from "../lib/mock/user";
+import { useMapPick } from "../lib/map-pick";
 
 const TOTAL_STEPS = 4;
 const GRID_GAP = 12;
@@ -63,7 +64,26 @@ export default function AddListingModal() {
   const [regionSheet, setRegionSheet] = useState(false);
   const [published, setPublished] = useState(false);
 
+  // Map-picked coordinates come back via the shared store (router can't return a
+  // value). `clear()` runs ONLY on mount = start of a new listing — NOT on focus
+  // /return from the picker (this screen stays mounted under the picker), so a
+  // freshly placed pin is never wiped.
+  const { picked, clear: clearPick } = useMapPick();
+  useEffect(() => {
+    clearPick();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const isLand = propertyType === "land";
+
+  const openMapPicker = () =>
+    router.push({
+      pathname: "/map-picker",
+      params: {
+        ...(region ? { region } : {}),
+        ...(picked ? { lat: String(picked.lat), lng: String(picked.lng) } : {}),
+      },
+    });
 
   // --- Photos ---
   const addPhoto = () => {
@@ -80,7 +100,7 @@ export default function AddListingModal() {
     title.trim() !== "" &&
     Number(price) > 0 &&
     Number(area) > 0 &&
-    region != null &&
+    (region != null || picked != null) && // a rayon OR a map pin is enough
     phoneOk &&
     (isLand || Number(rooms) > 0);
   const canNext =
@@ -98,7 +118,7 @@ export default function AddListingModal() {
       rooms: isLand ? 0 : Number(rooms || 0),
       floor: !isLand && floor ? Number(floor) : undefined,
       floorTotal: !isLand && floorTotal ? Number(floorTotal) : undefined,
-      district: region!,
+      district: region ?? "",
       title: title.trim(),
       premium: false,
       ownerId: currentUser.id,
@@ -110,7 +130,8 @@ export default function AddListingModal() {
       furnished: isLand ? false : furnished,
       mortgage,
       createdAt: new Date().toISOString(),
-      ...coordsForDistrict(region!),
+      // Map pin wins; otherwise fall back to the rayon centre (also the web path).
+      ...(picked ?? coordsForDistrict(region ?? "")),
     });
     setPublished(true);
     // Confirm, then land on My listings so the new listing is visible.
@@ -146,7 +167,7 @@ export default function AddListingModal() {
     mortgage,
     ownerPhone: phone.trim(),
     createdAt: new Date().toISOString(),
-    ...coordsForDistrict(region ?? ""),
+    ...(picked ?? coordsForDistrict(region ?? "")),
   };
 
   return (
@@ -303,6 +324,42 @@ export default function AddListingModal() {
                 </Pressable>
               </Field>
 
+              {/* Map pin picker — exact building point (overrides rayon centre) */}
+              <Field label={t("addListing.mapPointLabel")} colors={colors}>
+                <Pressable
+                  onPress={openMapPicker}
+                  style={({ pressed }) => ({
+                    minHeight: 48,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: picked ? brand.violet : colors.border,
+                    backgroundColor: colors.card,
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 10,
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
+                    <Ionicons name={picked ? "location" : "map-outline"} size={20} color={brand.violet} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: colors.text, fontSize: 15, fontWeight: picked ? "700" : "500" }}>
+                        {picked ? t("addListing.pointSelected") : t("addListing.pickOnMap")}
+                      </Text>
+                      {picked && (
+                        <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                          {picked.lat.toFixed(5)}, {picked.lng.toFixed(5)}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+                </Pressable>
+              </Field>
+
               <Field label={t("addListing.phoneLabel")} colors={colors}>
                 <Input
                   colors={colors}
@@ -386,6 +443,11 @@ export default function AddListingModal() {
                   />
                 )}
                 <SummaryRow colors={colors} label={t("filters.region")} value={region ?? "—"} />
+                <SummaryRow
+                  colors={colors}
+                  label={t("addListing.mapPointLabel")}
+                  value={picked ? `${picked.lat.toFixed(5)}, ${picked.lng.toFixed(5)}` : "—"}
+                />
                 <SummaryRow colors={colors} label={t("addListing.phoneLabel")} value={phone.trim()} />
                 {!isLand && (
                   <SummaryRow colors={colors} label={t("filters.furnished")} value={furnished ? "✓" : "—"} />

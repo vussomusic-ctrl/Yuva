@@ -112,6 +112,9 @@
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "More about the property...",
     "selectRegion": "Select district",
+    "mapPointLabel": "Map location",
+    "pickOnMap": "Pick on map",
+    "pointSelected": "Location selected",
     "phoneLabel": "Contact phone",
     "phonePlaceholder": "+994 50 123 45 67",
     "floorTotal": "Total floors",
@@ -195,5 +198,11 @@
     "terms": "Terms of Use",
     "privacy": "Privacy Policy",
     "support": "Contact support"
+  },
+  "mapPicker": {
+    "title": "Choose location",
+    "confirm": "Set here",
+    "hint": "Move the map to place the pin",
+    "webOnly": "Map selection is available in the app"
   }
 }
