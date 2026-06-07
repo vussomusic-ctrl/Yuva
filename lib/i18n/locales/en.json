@@ -115,6 +115,9 @@
     "mapPointLabel": "Map location",
     "pickOnMap": "Pick on map",
     "pointSelected": "Location selected",
+    "search": "Search...",
+    "notSelected": "Not selected",
+    "titlePreview": "Title (auto)",
     "phoneLabel": "Contact phone",
     "phonePlaceholder": "+994 50 123 45 67",
     "floorTotal": "Total floors",
@@ -152,7 +155,8 @@
     "price": "Price, ₼",
     "rooms": "Rooms",
     "area": "Area, m²",
-    "region": "Region / district",
+    "region": "District",
+    "metro": "Metro",
     "floor": "Floor",
     "furnished": "Furnished",
     "mortgage": "Mortgage",
@@ -204,5 +208,12 @@
     "confirm": "Set here",
     "hint": "Move the map to place the pin",
     "webOnly": "Map selection is available in the app"
+  },
+  "listingTitle": {
+    "rooms": "{{n}}-room",
+    "newBuild": "new build",
+    "secondary": "secondary",
+    "areaUnit": "m²",
+    "metroPrefix": "m."
   }
 }

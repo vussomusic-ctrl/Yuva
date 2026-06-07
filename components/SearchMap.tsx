@@ -7,7 +7,9 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { Listing, formatPrice } from "../lib/mock/listings";
-import { BAKU_CENTER } from "../lib/mock/regions";
+import { BAKU_CENTER } from "../lib/places";
+import { buildListingTitle } from "../lib/listingTitle";
+import { useLanguage } from "../lib/i18n/languages";
 
 type Props = {
   listings: Listing[];
@@ -33,6 +35,7 @@ const INITIAL_REGION = {
 export function SearchMap({ listings, onOpen }: Props) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const { current: lang } = useLanguage();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = listings.find((l) => l.id === selectedId) ?? null;
@@ -138,7 +141,7 @@ export function SearchMap({ listings, onOpen }: Props) {
                 {formatPrice(selected.priceAzn)}
               </Text>
               <Text numberOfLines={1} style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>
-                {selected.title}
+                {buildListingTitle(selected, t, lang)}
               </Text>
               <Text numberOfLines={1} style={{ color: colors.textSecondary, fontSize: 13 }}>
                 {selected.areaM2} m² · {selected.rooms} {t("home.roomsUnit")}

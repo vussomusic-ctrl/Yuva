@@ -115,6 +115,9 @@
     "mapPointLabel": "Xəritədə nöqtə",
     "pickOnMap": "Xəritədə göstər",
     "pointSelected": "Nöqtə seçildi",
+    "search": "Axtar...",
+    "notSelected": "Seçilməyib",
+    "titlePreview": "Başlıq (avtomatik)",
     "phoneLabel": "Əlaqə nömrəsi",
     "phonePlaceholder": "+994 50 123 45 67",
     "floorTotal": "Mərtəbə (ümumi)",
@@ -152,7 +155,8 @@
     "price": "Qiymət, ₼",
     "rooms": "Otaq sayı",
     "area": "Sahə, m²",
-    "region": "Region / rayon",
+    "region": "Rayon",
+    "metro": "Metro",
     "floor": "Mərtəbə",
     "furnished": "Mebellənmiş",
     "mortgage": "İpoteka",
@@ -204,5 +208,12 @@
     "confirm": "Burada qoy",
     "hint": "Nöqtəni qoymaq üçün xəritəni hərəkət etdirin",
     "webOnly": "Xəritədə seçim tətbiqdə mövcuddur"
+  },
+  "listingTitle": {
+    "rooms": "{{n}} otaqlı",
+    "newBuild": "yeni tikili",
+    "secondary": "köhnə tikili",
+    "areaUnit": "m²",
+    "metroPrefix": "m."
   }
 }

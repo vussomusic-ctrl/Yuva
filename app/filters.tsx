@@ -12,7 +12,8 @@ import { Segmented } from "../components/Segmented";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
 import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
-import { bakuRayons } from "../lib/mock/regions";
+import { AREAS, METRO, placeName } from "../lib/places";
+import { useLanguage } from "../lib/i18n/languages";
 import { useFilters, DEFAULT_FILTERS } from "../lib/filters-state";
 
 const ROOMS = ["1", "2", "3", "4", "5+"];
@@ -25,6 +26,7 @@ export default function FiltersModal() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
+  const { current: lang } = useLanguage();
   const { filters, apply } = useFilters();
 
   // Draft state — seeded from the currently active filters so reopening the
@@ -39,6 +41,7 @@ export default function FiltersModal() {
   const [areaMin, setAreaMin] = useState(filters.areaMin);
   const [areaMax, setAreaMax] = useState(filters.areaMax);
   const [regions, setRegions] = useState<string[]>(filters.regions);
+  const [metro, setMetro] = useState<string[]>(filters.metro);
   const [floorMin, setFloorMin] = useState(filters.floorMin);
   const [floorMax, setFloorMax] = useState(filters.floorMax);
   const [furnished, setFurnished] = useState(filters.furnished);
@@ -58,6 +61,7 @@ export default function FiltersModal() {
       areaMin,
       areaMax,
       regions,
+      metro,
       floorMin,
       floorMax,
       furnished,
@@ -78,6 +82,7 @@ export default function FiltersModal() {
     setAreaMin("");
     setAreaMax("");
     setRegions([]);
+    setMetro([]);
     setFloorMin("");
     setFloorMax("");
     setFurnished(false);
@@ -213,15 +218,30 @@ export default function FiltersModal() {
           />
         </Section>
 
-        {/* Region / district */}
+        {/* Region / district (rayon + qəsəbə + microrayon) */}
         <Section title={t("filters.region")} colors={colors}>
           <ChipWrap>
-            {bakuRayons.map((r) => (
+            {AREAS.map((p) => (
               <FilterChip
-                key={r}
-                label={r}
-                active={regions.includes(r)}
-                onPress={() => setRegions((a) => toggleIn(a, r))}
+                key={p.id}
+                label={placeName(p, lang)}
+                active={regions.includes(p.id)}
+                onPress={() => setRegions((a) => toggleIn(a, p.id))}
+                colors={colors}
+              />
+            ))}
+          </ChipWrap>
+        </Section>
+
+        {/* Metro */}
+        <Section title={t("filters.metro")} colors={colors}>
+          <ChipWrap>
+            {METRO.map((p) => (
+              <FilterChip
+                key={p.id}
+                label={placeName(p, lang)}
+                active={metro.includes(p.id)}
+                onPress={() => setMetro((a) => toggleIn(a, p.id))}
                 colors={colors}
               />
             ))}

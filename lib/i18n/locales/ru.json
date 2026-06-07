@@ -115,6 +115,9 @@
     "mapPointLabel": "Точка на карте",
     "pickOnMap": "Указать на карте",
     "pointSelected": "Точка выбрана",
+    "search": "Поиск...",
+    "notSelected": "Не выбрано",
+    "titlePreview": "Заголовок (авто)",
     "phoneLabel": "Контактный телефон",
     "phonePlaceholder": "+994 50 123 45 67",
     "floorTotal": "Этажность",
@@ -152,7 +155,8 @@
     "price": "Цена, ₼",
     "rooms": "Комнаты",
     "area": "Площадь, m²",
-    "region": "Регион / район",
+    "region": "Район",
+    "metro": "Метро",
     "floor": "Этаж",
     "furnished": "С мебелью",
     "mortgage": "Ипотека",
@@ -204,5 +208,12 @@
     "confirm": "Поставить здесь",
     "hint": "Двигайте карту, чтобы поставить точку",
     "webOnly": "Выбор на карте доступен в приложении"
+  },
+  "listingTitle": {
+    "rooms": "{{n}}-комн.",
+    "newBuild": "новостройка",
+    "secondary": "вторичка",
+    "areaUnit": "м²",
+    "metroPrefix": "м."
   }
 }

@@ -21,7 +21,8 @@ export type Filters = {
   baths: string[];
   areaMin: string;
   areaMax: string;
-  regions: string[];
+  regions: string[]; // Place ids (rayon/qəsəbə/microrayon)
+  metro: string[]; // metro Place ids
   floorMin: string;
   floorMax: string;
   furnished: boolean;
@@ -39,6 +40,7 @@ export const DEFAULT_FILTERS: Filters = {
   areaMin: "",
   areaMax: "",
   regions: [],
+  metro: [],
   floorMin: "",
   floorMax: "",
   furnished: false,
@@ -59,6 +61,7 @@ export function activeFilterCount(f: Filters): number {
   if (f.baths.length) n++;
   if (f.areaMin || f.areaMax) n++;
   if (f.regions.length) n++;
+  if (f.metro.length) n++;
   if (f.floorMin || f.floorMax) n++;
   if (f.furnished) n++;
   if (f.mortgage) n++;
@@ -83,7 +86,8 @@ export function filterListings(items: Listing[], f: Filters): Listing[] {
     }
     if (f.areaMin && l.areaM2 < Number(f.areaMin)) return false;
     if (f.areaMax && l.areaM2 > Number(f.areaMax)) return false;
-    if (f.regions.length && !f.regions.some((r) => l.district.includes(r))) return false;
+    if (f.regions.length && !(l.regionId && f.regions.includes(l.regionId))) return false;
+    if (f.metro.length && !(l.metroId && f.metro.includes(l.metroId))) return false;
     if (f.floorMin && (l.floor == null || l.floor < Number(f.floorMin))) return false;
     if (f.floorMax && (l.floor == null || l.floor > Number(f.floorMax))) return false;
     if (f.furnished && !l.furnished) return false;

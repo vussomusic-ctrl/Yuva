@@ -20,6 +20,8 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { getListingDetail, formatPrice } from "../../lib/mock/listings";
+import { buildListingTitle } from "../../lib/listingTitle";
+import { useLanguage } from "../../lib/i18n/languages";
 
 const WHATSAPP_GREEN = "#25D366";
 
@@ -36,6 +38,7 @@ const AMENITY_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; label
 
 export default function PropertyDetailScreen() {
   const { t } = useTranslation();
+  const { current: lang } = useLanguage();
   const { colors, mode } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -56,8 +59,11 @@ export default function PropertyDetailScreen() {
     );
   }
 
+  // Title is derived on the fly in the current language (no stored string).
+  const title = buildListingTitle(listing, t, lang);
+
   const onShare = () =>
-    Share.share({ message: `${listing.title} — ${formatPrice(listing.priceAzn)} · Yuva` }).catch(() => {});
+    Share.share({ message: `${title} — ${formatPrice(listing.priceAzn)} · Yuva` }).catch(() => {});
 
   // Seller phone drives Call + WhatsApp. On desktop web tel:/wa.me may be a no-op;
   // .catch keeps it from throwing. On a phone both open the native apps.
@@ -65,7 +71,7 @@ export default function PropertyDetailScreen() {
   const call = () => Linking.openURL(`tel:${listing.ownerPhone}`).catch(() => {});
   const openWhatsApp = () => {
     const text = encodeURIComponent(
-      t("propertyDetail.waMessage", { title: listing.title, price: formatPrice(listing.priceAzn) }),
+      t("propertyDetail.waMessage", { title, price: formatPrice(listing.priceAzn) }),
     );
     Linking.openURL(`https://wa.me/${phoneDigits}?text=${text}`).catch(() => {});
   };
@@ -147,7 +153,7 @@ export default function PropertyDetailScreen() {
             {formatPrice(listing.priceAzn)}
           </Text>
           <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700", marginTop: 4 }}>
-            {listing.title}
+            {title}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 8 }}>
             <Ionicons name="location-outline" size={16} color={colors.textSecondary} />

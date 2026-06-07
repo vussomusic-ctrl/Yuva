@@ -16,6 +16,8 @@ import { BottomSheet } from "../../components/BottomSheet";
 import { useFavorites } from "../../lib/favorites";
 import { useFilters, filterListings } from "../../lib/filters-state";
 import { newListings } from "../../lib/mock/listings";
+import { buildListingTitle } from "../../lib/listingTitle";
+import { useLanguage } from "../../lib/i18n/languages";
 
 type SortKey = "default" | "priceAsc" | "priceDesc" | "newest";
 
@@ -28,6 +30,7 @@ const SORTS: { key: SortKey; labelKey: string }[] = [
 
 export default function SearchScreen() {
   const { t } = useTranslation();
+  const { current: lang } = useLanguage();
   const { colors } = useTheme();
   const router = useRouter();
 
@@ -44,7 +47,11 @@ export default function SearchScreen() {
     const q = query.trim().toLowerCase();
     const filtered = !q
       ? base
-      : base.filter((l) => l.title.toLowerCase().includes(q) || l.district.toLowerCase().includes(q));
+      : base.filter(
+          (l) =>
+            buildListingTitle(l, t, lang).toLowerCase().includes(q) ||
+            l.district.toLowerCase().includes(q),
+        );
 
     // Sort is a view concern (local state), applied on top of the filtered set.
     const arr = [...filtered];
@@ -52,7 +59,7 @@ export default function SearchScreen() {
     else if (sort === "priceDesc") arr.sort((a, b) => b.priceAzn - a.priceAzn);
     else if (sort === "newest") arr.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     return arr;
-  }, [query, filters, sort]);
+  }, [query, filters, sort, t, lang]);
 
   const sortLabel = t(SORTS.find((s) => s.key === sort)!.labelKey);
 

@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { PrimaryButton } from "../components/Button";
-import { coordsForDistrict, BAKU_CENTER } from "../lib/mock/regions";
+import { coordsForPlace, BAKU_CENTER } from "../lib/places";
 import { useMapPick } from "../lib/map-pick";
 
 // Rough Azerbaijan bounding box — device location outside it falls back to Baku.
@@ -29,26 +29,26 @@ export default function MapPickerScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const { setPicked } = useMapPick();
-  const params = useLocalSearchParams<{ region?: string; lat?: string; lng?: string }>();
+  const params = useLocalSearchParams<{ regionId?: string; lat?: string; lng?: string }>();
 
   const mapRef = useRef<MapView>(null);
 
-  // Synchronous best-guess start: previous pin → selected rayon → Baku centre.
+  // Synchronous best-guess start: previous pin → selected place → Baku centre.
   const startLat = params.lat ? Number(params.lat) : null;
   const startLng = params.lng ? Number(params.lng) : null;
   const start =
     startLat != null && startLng != null && !Number.isNaN(startLat) && !Number.isNaN(startLng)
       ? { lat: startLat, lng: startLng }
-      : params.region
-        ? coordsForDistrict(params.region)
+      : params.regionId
+        ? coordsForPlace(params.regionId)
         : BAKU_CENTER;
 
   // The map centre = pin position (crosshair is fixed to screen centre).
   const [center, setCenter] = useState({ lat: start.lat, lng: start.lng });
 
   useEffect(() => {
-    // No explicit start (no rayon, no previous pin) → try device location.
-    if (params.lat || params.lng || params.region) return;
+    // No explicit start (no place, no previous pin) → try device location.
+    if (params.lat || params.lng || params.regionId) return;
     let cancelled = false;
     (async () => {
       try {

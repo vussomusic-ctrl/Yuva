@@ -10,7 +10,7 @@ import { SecondaryButton } from "../components/Button";
 /**
  * Map Picker — web fallback. react-native-maps is a native module and crashes on
  * web, so the browser shows a themed placeholder. No coordinate is picked here;
- * Add Listing falls back to `coordsForDistrict(region)` on web.
+ * Add Listing falls back to `coordsForPlace(regionId)` on web.
  */
 export default function MapPickerWeb() {
   const { t } = useTranslation();

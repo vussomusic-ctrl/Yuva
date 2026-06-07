@@ -6,6 +6,8 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { Listing, formatPrice } from "../lib/mock/listings";
+import { buildListingTitle } from "../lib/listingTitle";
+import { useLanguage } from "../lib/i18n/languages";
 
 type Props = {
   listing: Listing;
@@ -17,8 +19,10 @@ type Props = {
 
 export function PropertyCard({ listing, variant = "feed", favorited, onToggleFavorite, onPress }: Props) {
   const { t } = useTranslation();
+  const { current: lang } = useLanguage();
   const { colors, mode } = useTheme();
   const carousel = variant === "carousel";
+  const title = buildListingTitle(listing, t, lang);
 
   const glassBg = mode === "dark" ? "rgba(20,18,24,0.72)" : "rgba(255,255,255,0.85)";
   const heartBg = mode === "dark" ? "rgba(20,18,24,0.6)" : "rgba(255,255,255,0.85)";
@@ -108,7 +112,7 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
       {/* Body */}
       <View style={{ padding: carousel ? 12 : 16, gap: carousel ? 4 : 8 }}>
         <Text numberOfLines={1} style={{ color: colors.text, fontSize: carousel ? 15 : 17, fontWeight: carousel ? "600" : "700" }}>
-          {listing.title}
+          {title}
         </Text>
 
         {!carousel && (

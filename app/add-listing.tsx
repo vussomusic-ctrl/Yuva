@@ -20,13 +20,15 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { Segmented } from "../components/Segmented";
-import { BottomSheet } from "../components/BottomSheet";
+import { PlacePickerSheet } from "../components/PlacePickerSheet";
 import { PropertyCard } from "../components/PropertyCard";
 import { PrimaryButton, SecondaryButton } from "../components/Button";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
 import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
-import { bakuRayons, coordsForDistrict } from "../lib/mock/regions";
+import { AREAS, METRO, placeById, placeName, coordsForPlace } from "../lib/places";
+import { useLanguage } from "../lib/i18n/languages";
+import { buildListingTitle } from "../lib/listingTitle";
 import { stockListingPhotos } from "../lib/mock/photos";
 import { addListing, formatPrice, Listing } from "../lib/mock/listings";
 import { currentUser } from "../lib/mock/user";
@@ -38,6 +40,7 @@ const PHOTO_SIZE = (Dimensions.get("window").width - 32 - GRID_GAP * 2) / 3;
 
 export default function AddListingModal() {
   const { t } = useTranslation();
+  const { current: lang } = useLanguage();
   const { colors } = useTheme();
   const router = useRouter();
 
@@ -48,20 +51,21 @@ export default function AddListingModal() {
   const [dealType, setDealType] = useState<DealKey>("sale");
   const [propertyType, setPropertyType] = useState<PropertyTypeKey | null>(null);
   const [buildType, setBuildType] = useState<BuildKey>("new");
-  const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [area, setArea] = useState("");
   const [rooms, setRooms] = useState("");
   const [baths, setBaths] = useState("");
   const [floor, setFloor] = useState("");
   const [floorTotal, setFloorTotal] = useState("");
-  const [region, setRegion] = useState<string | null>(null);
+  const [regionId, setRegionId] = useState<string | null>(null);
+  const [metroId, setMetroId] = useState<string | null>(null);
   const [phone, setPhone] = useState("+994");
   const [furnished, setFurnished] = useState(false);
   const [mortgage, setMortgage] = useState(false);
   const [description, setDescription] = useState("");
 
   const [regionSheet, setRegionSheet] = useState(false);
+  const [metroSheet, setMetroSheet] = useState(false);
   const [published, setPublished] = useState(false);
 
   // Map-picked coordinates come back via the shared store (router can't return a
@@ -76,11 +80,18 @@ export default function AddListingModal() {
 
   const isLand = propertyType === "land";
 
+  // Auto-generated title (bina.az style), live in the current UI language.
+  const generatedTitle = buildListingTitle(
+    { buildType, propertyType, rooms, areaM2: area, regionId, metroId },
+    t,
+    lang,
+  );
+
   const openMapPicker = () =>
     router.push({
       pathname: "/map-picker",
       params: {
-        ...(region ? { region } : {}),
+        ...(regionId ? { regionId } : {}),
         ...(picked ? { lat: String(picked.lat), lng: String(picked.lng) } : {}),
       },
     });
@@ -97,10 +108,9 @@ export default function AddListingModal() {
   const step1Valid = photos.length > 0;
   const step2Valid = propertyType != null;
   const step3Valid =
-    title.trim() !== "" &&
     Number(price) > 0 &&
     Number(area) > 0 &&
-    (region != null || picked != null) && // a rayon OR a map pin is enough
+    (regionId != null || picked != null) && // a place OR a map pin is enough
     phoneOk &&
     (isLand || Number(rooms) > 0);
   const canNext =
@@ -118,8 +128,9 @@ export default function AddListingModal() {
       rooms: isLand ? 0 : Number(rooms || 0),
       floor: !isLand && floor ? Number(floor) : undefined,
       floorTotal: !isLand && floorTotal ? Number(floorTotal) : undefined,
-      district: region ?? "",
-      title: title.trim(),
+      district: regionId ? placeName(placeById(regionId)!, "az") : "",
+      regionId: regionId ?? "",
+      metroId: metroId ?? undefined,
       premium: false,
       ownerId: currentUser.id,
       ownerPhone: phone.trim(),
@@ -130,8 +141,8 @@ export default function AddListingModal() {
       furnished: isLand ? false : furnished,
       mortgage,
       createdAt: new Date().toISOString(),
-      // Map pin wins; otherwise fall back to the rayon centre (also the web path).
-      ...(picked ?? coordsForDistrict(region ?? "")),
+      // Map pin wins; otherwise fall back to the place centre (also the web path).
+      ...(picked ?? coordsForPlace(regionId)),
     });
     setPublished(true);
     // Confirm, then land on My listings so the new listing is visible.
@@ -155,8 +166,9 @@ export default function AddListingModal() {
     rooms: isLand ? 0 : Number(rooms) || 0,
     floor: !isLand && floor ? Number(floor) : undefined,
     floorTotal: !isLand && floorTotal ? Number(floorTotal) : undefined,
-    district: region ?? "",
-    title: title.trim() || t("addListing.titlePlaceholder"),
+    district: regionId ? placeName(placeById(regionId)!, lang) : "",
+    regionId: regionId ?? "",
+    metroId: metroId ?? undefined,
     premium: false,
     ownerId: currentUser.id,
     dealType,
@@ -167,7 +179,7 @@ export default function AddListingModal() {
     mortgage,
     ownerPhone: phone.trim(),
     createdAt: new Date().toISOString(),
-    ...(picked ?? coordsForDistrict(region ?? "")),
+    ...(picked ?? coordsForPlace(regionId)),
   };
 
   return (
@@ -256,14 +268,32 @@ export default function AddListingModal() {
 
           {step === 3 && (
             <View style={{ gap: 18, paddingTop: 4 }}>
-              <Field label={t("addListing.titleLabel")} colors={colors}>
-                <Input
-                  colors={colors}
-                  value={title}
-                  onChangeText={setTitle}
-                  placeholder={t("addListing.titlePlaceholder")}
-                />
-              </Field>
+              {/* Auto-generated title — read-only live preview */}
+              <View
+                style={{
+                  backgroundColor: colors.card,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  padding: 12,
+                  gap: 4,
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.textSecondary,
+                    fontSize: 11,
+                    fontWeight: "700",
+                    textTransform: "uppercase",
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  {t("addListing.titlePreview")}
+                </Text>
+                <Text style={{ color: colors.text, fontSize: 15, fontWeight: "600" }}>
+                  {generatedTitle || t("addListing.titlePlaceholder")}
+                </Text>
+              </View>
 
               <View style={{ flexDirection: "row", gap: 12 }}>
                 <Field label={t("filters.price")} colors={colors} style={{ flex: 1 }}>
@@ -317,8 +347,32 @@ export default function AddListingModal() {
                     opacity: pressed ? 0.7 : 1,
                   })}
                 >
-                  <Text style={{ color: region ? colors.text : colors.textSecondary, fontSize: 15 }}>
-                    {region ?? t("addListing.selectRegion")}
+                  <Text style={{ color: regionId ? colors.text : colors.textSecondary, fontSize: 15 }}>
+                    {regionId ? placeName(placeById(regionId)!, lang) : t("addListing.selectRegion")}
+                  </Text>
+                  <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
+                </Pressable>
+              </Field>
+
+              {/* Metro — optional */}
+              <Field label={t("filters.metro")} colors={colors}>
+                <Pressable
+                  onPress={() => setMetroSheet(true)}
+                  style={({ pressed }) => ({
+                    height: 48,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                    paddingHorizontal: 14,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <Text style={{ color: metroId ? colors.text : colors.textSecondary, fontSize: 15 }}>
+                    {metroId ? placeName(placeById(metroId)!, lang) : t("addListing.notSelected")}
                   </Text>
                   <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
                 </Pressable>
@@ -442,7 +496,8 @@ export default function AddListingModal() {
                     value={floorTotal ? `${floor}/${floorTotal}` : floor}
                   />
                 )}
-                <SummaryRow colors={colors} label={t("filters.region")} value={region ?? "—"} />
+                <SummaryRow colors={colors} label={t("filters.region")} value={regionId ? placeName(placeById(regionId)!, lang) : "—"} />
+                <SummaryRow colors={colors} label={t("filters.metro")} value={metroId ? placeName(placeById(metroId)!, lang) : "—"} />
                 <SummaryRow
                   colors={colors}
                   label={t("addListing.mapPointLabel")}
@@ -484,44 +539,31 @@ export default function AddListingModal() {
         </View>
       </KeyboardAvoidingView>
 
-      {/* Region picker (reuses BottomSheet) */}
-      <BottomSheet visible={regionSheet} onClose={() => setRegionSheet(false)}>
-        <Text
-          style={{ color: colors.text, fontSize: 17, fontWeight: "700", textAlign: "center", paddingTop: 6, paddingBottom: 8 }}
-        >
-          {t("filters.region")}
-        </Text>
-        <ScrollView style={{ maxHeight: 360 }}>
-          {bakuRayons.map((r, i) => {
-            const active = r === region;
-            return (
-              <Pressable
-                key={r}
-                onPress={() => {
-                  setRegion(r);
-                  setRegionSheet(false);
-                }}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  paddingHorizontal: 20,
-                  paddingVertical: 15,
-                  borderTopWidth: i === 0 ? 1 : 0,
-                  borderBottomWidth: 1,
-                  borderColor: colors.border,
-                  opacity: pressed ? 0.6 : 1,
-                })}
-              >
-                <Text style={{ color: active ? brand.violet : colors.text, fontSize: 16, fontWeight: active ? "700" : "500" }}>
-                  {r}
-                </Text>
-                {active && <Ionicons name="checkmark-circle" size={22} color={brand.violet} />}
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </BottomSheet>
+      {/* Region picker — single-select with search */}
+      <PlacePickerSheet
+        visible={regionSheet}
+        onClose={() => setRegionSheet(false)}
+        title={t("filters.region")}
+        searchPlaceholder={t("addListing.search")}
+        places={AREAS}
+        selectedId={regionId}
+        onSelect={(id) => setRegionId(id)}
+        lang={lang}
+      />
+
+      {/* Metro picker — single-select with search, optional (clearable) */}
+      <PlacePickerSheet
+        visible={metroSheet}
+        onClose={() => setMetroSheet(false)}
+        title={t("filters.metro")}
+        searchPlaceholder={t("addListing.search")}
+        places={METRO}
+        selectedId={metroId}
+        onSelect={(id) => setMetroId(id)}
+        lang={lang}
+        allowClear
+        clearLabel={t("addListing.notSelected")}
+      />
 
       {/* Publish confirmation toast */}
       {published && (

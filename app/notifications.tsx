@@ -10,6 +10,8 @@ import { brand } from "../lib/theme/colors";
 import { Header, EmptyState } from "./my-listings";
 import { notifications as seed, AppNotification } from "../lib/mock/notifications";
 import { getListingById, formatPrice } from "../lib/mock/listings";
+import { buildListingTitle } from "../lib/listingTitle";
+import { useLanguage } from "../lib/i18n/languages";
 
 const META: Record<
   AppNotification["type"],
@@ -76,13 +78,17 @@ export default function NotificationsScreen() {
 
 function Row({ item, onPress }: { item: AppNotification; onPress: () => void }) {
   const { t } = useTranslation();
+  const { current: lang } = useLanguage();
   const { colors, mode } = useTheme();
   const meta = META[item.type];
 
   const subtitle =
     item.type === "message"
       ? `${item.peerName}: ${item.preview}`
-      : getListingById(item.listingId)?.title ?? "";
+      : (() => {
+          const l = getListingById(item.listingId);
+          return l ? buildListingTitle(l, t, lang) : "";
+        })();
 
   // Unread rows get a subtle violet wash (brand color, low opacity — not a border).
   const unreadBg = mode === "dark" ? "rgba(139,63,214,0.14)" : "rgba(139,63,214,0.06)";
