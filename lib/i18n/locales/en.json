@@ -48,6 +48,20 @@
     "errPassword": "Enter a password",
     "success": "All set! We'll connect sign-up to Supabase later."
   },
+  "auth": {
+    "loginTitle": "Log in",
+    "loginSubtitle": "Sign in to your account.",
+    "loginSubmit": "Log in",
+    "noAccount": "Don't have an account?",
+    "signUpLink": "Sign up",
+    "signingIn": "Signing in...",
+    "signingUp": "Signing up...",
+    "errEmailTaken": "This email is already registered",
+    "errInvalidCredentials": "Invalid email or password",
+    "errWeakPassword": "Password must be at least 6 characters",
+    "errInvalidEmail": "Enter a valid email",
+    "errGeneric": "Something went wrong. Please try again"
+  },
   "home": {
     "location": "Baku, Azerbaijan",
     "searchPlaceholder": "City, district or metro...",
@@ -93,7 +107,9 @@
     "language": "Language",
     "settings": "Settings",
     "theme": "Theme",
-    "logout": "Log out"
+    "logout": "Log out",
+    "guest": "Guest",
+    "login": "Log in"
   },
   "addListing": {
     "title": "Add listing",

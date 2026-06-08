@@ -99,9 +99,7 @@ export default function WelcomeScreen() {
 
               {/* SECONDARY — outlined */}
               <Pressable
-                onPress={() => {
-                  // TODO: Login flow — stub for now.
-                }}
+                onPress={() => router.push("/login")}
                 style={({ pressed }) => ({
                   paddingVertical: 16,
                   borderRadius: 14,

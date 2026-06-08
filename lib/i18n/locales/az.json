@@ -48,6 +48,20 @@
     "errPassword": "Şifrəni daxil edin",
     "success": "Hazırdır! Qeydiyyatı sonra Supabase ilə qoşacağıq."
   },
+  "auth": {
+    "loginTitle": "Daxil ol",
+    "loginSubtitle": "Hesabınıza daxil olun.",
+    "loginSubmit": "Daxil ol",
+    "noAccount": "Hesabınız yoxdur?",
+    "signUpLink": "Qeydiyyatdan keç",
+    "signingIn": "Daxil olunur...",
+    "signingUp": "Qeydiyyat...",
+    "errEmailTaken": "Bu e-poçt artıq qeydiyyatdadır",
+    "errInvalidCredentials": "E-poçt və ya şifrə yanlışdır",
+    "errWeakPassword": "Şifrə ən azı 6 simvol olmalıdır",
+    "errInvalidEmail": "Düzgün e-poçt daxil edin",
+    "errGeneric": "Xəta baş verdi. Yenidən cəhd edin"
+  },
   "home": {
     "location": "Bakı, Azərbaycan",
     "searchPlaceholder": "Şəhər, rayon, və ya metro axtar...",
@@ -93,7 +107,9 @@
     "language": "Dil",
     "settings": "Ayarlar",
     "theme": "Tema",
-    "logout": "Hesabdan çıx"
+    "logout": "Hesabdan çıx",
+    "guest": "Qonaq",
+    "login": "Daxil ol"
   },
   "addListing": {
     "title": "Elan yerləşdir",

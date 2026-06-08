@@ -10,7 +10,7 @@ import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { useLanguage } from "../../lib/i18n/languages";
 import { BottomSheet } from "../../components/BottomSheet";
-import { currentUser } from "../../lib/mock/user";
+import { useAuth } from "../../lib/auth";
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
@@ -18,8 +18,17 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { current, currentName, languages, setLanguage } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
+  const { session, profile, signOut } = useAuth();
 
-  const roleLabel = currentUser.role === "agent" ? t("profile.roleAgent") : t("profile.roleUser");
+  const loggedIn = !!session;
+  const displayName = profile?.full_name || session?.user?.email || t("profile.guest");
+  const roleLabel = profile?.role === "agent" ? t("profile.roleAgent") : t("profile.roleUser");
+  const avatarUrl = profile?.avatar_url ?? null;
+
+  const onLogout = async () => {
+    await signOut();
+    router.replace("/welcome");
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
@@ -27,17 +36,34 @@ export default function ProfileScreen() {
         {/* Contextual header: avatar (with upload affordance) + name + role. No logo. */}
         <View style={{ alignItems: "center", paddingTop: 16, paddingBottom: 8, gap: 10 }}>
           <Pressable onPress={() => { /* TODO: image picker upload */ }}>
-            <Image
-              source={{ uri: currentUser.avatar }}
-              style={{
-                width: 96,
-                height: 96,
-                borderRadius: 48,
-                backgroundColor: colors.card,
-                borderWidth: 3,
-                borderColor: colors.card,
-              }}
-            />
+            {avatarUrl ? (
+              <Image
+                source={{ uri: avatarUrl }}
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: 48,
+                  backgroundColor: colors.card,
+                  borderWidth: 3,
+                  borderColor: colors.card,
+                }}
+              />
+            ) : (
+              <View
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: 48,
+                  backgroundColor: brand.violet,
+                  borderWidth: 3,
+                  borderColor: colors.card,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons name="person" size={46} color="#FFFFFF" />
+              </View>
+            )}
             <LinearGradient
               colors={brand.gradient}
               start={{ x: 0, y: 0 }}
@@ -60,9 +86,11 @@ export default function ProfileScreen() {
           </Pressable>
           <View style={{ alignItems: "center", gap: 2 }}>
             <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>
-              {currentUser.name}
+              {displayName}
             </Text>
-            <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{roleLabel}</Text>
+            {loggedIn && (
+              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{roleLabel}</Text>
+            )}
           </View>
         </View>
 
@@ -139,21 +167,39 @@ export default function ProfileScreen() {
             overflow: "hidden",
           }}
         >
-          <Pressable
-            onPress={() => router.replace("/welcome")}
-            style={({ pressed }) => ({
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              padding: 16,
-              opacity: pressed ? 0.6 : 1,
-            })}
-          >
-            <Ionicons name="log-out-outline" size={22} color={colors.danger} />
-            <Text style={{ color: colors.danger, fontSize: 16, fontWeight: "600" }}>
-              {t("profile.logout")}
-            </Text>
-          </Pressable>
+          {loggedIn ? (
+            <Pressable
+              onPress={onLogout}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                padding: 16,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Ionicons name="log-out-outline" size={22} color={colors.danger} />
+              <Text style={{ color: colors.danger, fontSize: 16, fontWeight: "600" }}>
+                {t("profile.logout")}
+              </Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={() => router.replace("/login")}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                padding: 16,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Ionicons name="log-in-outline" size={22} color={brand.violet} />
+              <Text style={{ color: brand.violet, fontSize: 16, fontWeight: "600" }}>
+                {t("profile.login")}
+              </Text>
+            </Pressable>
+          )}
         </View>
       </ScrollView>
 

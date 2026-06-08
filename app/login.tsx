@@ -22,18 +22,16 @@ import { useAuth, authErrorKey } from "../lib/auth";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function CreateAccountScreen() {
+export default function LoginScreen() {
   const { t } = useTranslation();
   const { colors, mode } = useTheme();
   const router = useRouter();
-  const { signUp } = useAuth();
+  const { signIn } = useAuth();
 
-  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("+994");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; email?: string; phone?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [submitting, setSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -41,9 +39,7 @@ export default function CreateAccountScreen() {
 
   const onSubmit = async () => {
     const next: typeof errors = {};
-    if (!fullName.trim()) next.name = t("createAccount.errName");
     if (!EMAIL_RE.test(email.trim())) next.email = t("createAccount.errEmail");
-    if (phone.replace(/[^\d]/g, "").length < 9) next.phone = t("createAccount.errPhone");
     if (!password) next.password = t("createAccount.errPassword");
 
     setErrors(next);
@@ -51,14 +47,13 @@ export default function CreateAccountScreen() {
     if (Object.keys(next).length > 0) return;
 
     setSubmitting(true);
-    const { error } = await signUp({ fullName, email, phone, password });
+    const { error } = await signIn(email, password);
     setSubmitting(false);
 
     if (error) {
       setAuthError(t(authErrorKey(error)));
       return;
     }
-    // Confirm email is OFF → session is live now; go straight into the app.
     router.replace("/home");
   };
 
@@ -98,7 +93,6 @@ export default function CreateAccountScreen() {
               elevation: 6,
             }}
           >
-            {/* Title */}
             <Text
               style={{
                 fontSize: 30,
@@ -108,7 +102,7 @@ export default function CreateAccountScreen() {
                 color: colors.text,
               }}
             >
-              {t("createAccount.title")}
+              {t("auth.loginTitle")}
             </Text>
             <Text
               style={{
@@ -120,23 +114,9 @@ export default function CreateAccountScreen() {
                 color: colors.textSecondary,
               }}
             >
-              {t("createAccount.subtitle")}
+              {t("auth.loginSubtitle")}
             </Text>
 
-            {/* Fields */}
-            <Field
-              colors={colors}
-              label={t("createAccount.fullNameLabel")}
-              icon="person-outline"
-              placeholder={t("createAccount.fullNamePlaceholder")}
-              value={fullName}
-              onChangeText={(v) => {
-                setFullName(v);
-                if (errors.name) setErrors((e) => ({ ...e, name: undefined }));
-              }}
-              error={errors.name}
-              autoCapitalize="words"
-            />
             <Field
               colors={colors}
               label={t("createAccount.emailLabel")}
@@ -151,20 +131,6 @@ export default function CreateAccountScreen() {
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
-            />
-            <Field
-              colors={colors}
-              label={t("createAccount.phoneLabel")}
-              icon="call-outline"
-              placeholder={t("createAccount.phonePlaceholder")}
-              value={phone}
-              onChangeText={(v) => {
-                setPhone(v);
-                if (errors.phone) setErrors((e) => ({ ...e, phone: undefined }));
-              }}
-              error={errors.phone}
-              keyboardType="phone-pad"
-              autoComplete="tel"
             />
             <Field
               colors={colors}
@@ -183,14 +149,14 @@ export default function CreateAccountScreen() {
               onRightIconPress={() => setShowPassword((s) => !s)}
             />
 
-            {/* Auth error (e.g. email already registered) */}
+            {/* Auth error (e.g. invalid credentials) */}
             {authError && (
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 8,
-                  marginTop: 16,
+                  marginTop: 8,
                   backgroundColor: mode === "dark" ? "#2A1416" : "#FCE8E8",
                   borderRadius: 12,
                   padding: 12,
@@ -229,61 +195,24 @@ export default function CreateAccountScreen() {
               >
                 {submitting && <ActivityIndicator size="small" color="#FFFFFF" />}
                 <Text style={{ color: "#FFFFFF", fontSize: 17, fontWeight: "700" }}>
-                  {submitting ? t("auth.signingUp") : t("createAccount.submit")}
+                  {submitting ? t("auth.signingIn") : t("auth.loginSubmit")}
                 </Text>
                 {!submitting && <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />}
               </LinearGradient>
             </Pressable>
 
-            {/* Divider */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 24 }}>
-              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "700",
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  color: colors.textSecondary,
-                }}
-              >
-                {t("createAccount.or")}
-              </Text>
-              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-            </View>
-
-            {/* Social — stubs */}
-            <View style={{ gap: 12 }}>
-              <SocialButton
-                colors={colors}
-                icon="logo-google"
-                label={t("createAccount.google")}
-                onPress={() => {
-                  // TODO: Google OAuth via Supabase.
-                }}
-              />
-              <SocialButton
-                colors={colors}
-                icon="logo-apple"
-                label={t("createAccount.apple")}
-                onPress={() => {
-                  // TODO: Apple sign-in via Supabase.
-                }}
-              />
-            </View>
-
-            {/* Footer — already have an account */}
+            {/* Footer — no account yet */}
             <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 24 }}>
               <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-                {t("createAccount.haveAccount")}{" "}
+                {t("auth.noAccount")}{" "}
               </Text>
               <Pressable
-                onPress={() => router.replace("/login")}
+                onPress={() => router.replace("/create-account")}
                 hitSlop={8}
                 style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
               >
                 <Text style={{ color: brand.violet, fontSize: 15, fontWeight: "700" }}>
-                  {t("createAccount.login")}
+                  {t("auth.signUpLink")}
                 </Text>
               </Pressable>
             </View>
@@ -360,38 +289,5 @@ function Field({ colors, label, icon, error, rightIcon, onRightIconPress, ...inp
         <Text style={{ color: "#BA1A1A", fontSize: 12, marginTop: 6, marginLeft: 4 }}>{error}</Text>
       )}
     </View>
-  );
-}
-
-function SocialButton({
-  colors,
-  icon,
-  label,
-  onPress,
-}: {
-  colors: Theme;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 12,
-        paddingVertical: 15,
-        borderRadius: 16,
-        borderWidth: 1.5,
-        borderColor: colors.border,
-        backgroundColor: colors.bg,
-        opacity: pressed ? 0.6 : 1,
-      })}
-    >
-      <Ionicons name={icon} size={20} color={colors.text} />
-      <Text style={{ color: colors.text, fontSize: 16, fontWeight: "600" }}>{label}</Text>
-    </Pressable>
   );
 }

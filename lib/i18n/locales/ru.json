@@ -48,6 +48,20 @@
     "errPassword": "Введите пароль",
     "success": "Готово! Регистрацию подключим к Supabase позже."
   },
+  "auth": {
+    "loginTitle": "Войти",
+    "loginSubtitle": "Войдите в свой аккаунт.",
+    "loginSubmit": "Войти",
+    "noAccount": "Нет аккаунта?",
+    "signUpLink": "Зарегистрироваться",
+    "signingIn": "Вход...",
+    "signingUp": "Регистрация...",
+    "errEmailTaken": "Этот email уже зарегистрирован",
+    "errInvalidCredentials": "Неверный email или пароль",
+    "errWeakPassword": "Пароль должен быть не менее 6 символов",
+    "errInvalidEmail": "Введите корректный email",
+    "errGeneric": "Произошла ошибка. Попробуйте снова"
+  },
   "home": {
     "location": "Баку, Азербайджан",
     "searchPlaceholder": "Город, район или метро...",
@@ -93,7 +107,9 @@
     "language": "Язык",
     "settings": "Настройки",
     "theme": "Тема",
-    "logout": "Выйти из аккаунта"
+    "logout": "Выйти из аккаунта",
+    "guest": "Гость",
+    "login": "Войти"
   },
   "addListing": {
     "title": "Подать объявление",
