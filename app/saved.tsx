@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
@@ -18,23 +18,33 @@ export default function SavedScreen() {
   const router = useRouter();
   const { ids, isFavorite, toggle } = useFavorites();
 
-  const [items, setItems] = useState<Listing[] | null>(null);
+  // Cache of listing objects fetched on focus. The visible list is the live
+  // intersection of this cache with the CURRENT favorites set (below), so an
+  // unlike here hides the card instantly — no network round-trip per toggle.
+  const [loaded, setLoaded] = useState<Listing[] | null>(null);
   const [error, setError] = useState(false);
 
-  // Re-resolve whenever the saved-id set changes (shared favorites state).
+  // Read ids by snapshot at focus time → the fetch callback stays stable and
+  // doesn't re-run on every like/unlike.
+  const idsRef = useRef(ids);
+  useEffect(() => { idsRef.current = ids; }, [ids]);
+
   const load = useCallback(() => {
     setError(false);
-    fetchListingsByIds(ids)
-      .then((list) => {
-        // Keep the saved order (most-recently toggled first as in `ids`).
-        const byId = new Map(list.map((l) => [l.id, l]));
-        setItems(ids.map((id) => byId.get(id)).filter((l): l is Listing => l != null));
-      })
+    fetchListingsByIds(idsRef.current)
+      .then(setLoaded)
       .catch(() => setError(true));
-  }, [ids]);
-  useEffect(() => { load(); }, [load]);
+  }, []);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  const loading = items === null && !error;
+  // Live: reacts to `ids` (instant unlike) and to `loaded` (focus refetch).
+  // Preserves the saved order from `ids`.
+  const visible = useMemo(() => {
+    const byId = new Map((loaded ?? []).map((l) => [l.id, l]));
+    return ids.map((id) => byId.get(id)).filter((l): l is Listing => l != null);
+  }, [loaded, ids]);
+
+  const loading = loaded === null && !error;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
@@ -51,7 +61,7 @@ export default function SavedScreen() {
         <ErrorState colors={colors} onRetry={load} />
       ) : (
         <FlatList
-          data={items ?? []}
+          data={visible}
           keyExtractor={(l) => l.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8, flexGrow: 1 }}

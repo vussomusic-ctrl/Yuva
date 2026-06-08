@@ -21,6 +21,7 @@ import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { ListingDetail, formatPrice, formatArea } from "../../lib/mock/listings";
 import { fetchListingDetail } from "../../lib/api/listings";
+import { useFavorites } from "../../lib/favorites";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { Header } from "../my-listings";
 import { buildListingTitle } from "../../lib/listingTitle";
@@ -48,9 +49,9 @@ export default function PropertyDetailScreen() {
   const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
 
+  const { isFavorite, toggle } = useFavorites();
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [status, setStatus] = useState<"loading" | "error" | "notfound" | "ok">("loading");
-  const [favorited, setFavorited] = useState(false);
   const [page, setPage] = useState(0);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/home"));
@@ -304,11 +305,11 @@ export default function PropertyDetailScreen() {
           <Pressable onPress={onShare} hitSlop={6} style={overlayBtn}>
             <Ionicons name="share-outline" size={20} color={colors.text} />
           </Pressable>
-          <Pressable onPress={() => setFavorited((f) => !f)} hitSlop={6} style={overlayBtn}>
+          <Pressable onPress={() => toggle(listing.id)} hitSlop={6} style={overlayBtn}>
             <Ionicons
-              name={favorited ? "heart" : "heart-outline"}
+              name={isFavorite(listing.id) ? "heart" : "heart-outline"}
               size={20}
-              color={favorited ? brand.magenta : colors.text}
+              color={isFavorite(listing.id) ? brand.magenta : colors.text}
             />
           </Pressable>
         </View>
