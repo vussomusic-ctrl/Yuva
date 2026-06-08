@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, Text, Pressable, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,7 +9,8 @@ import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { Header, EmptyState } from "./my-listings";
 import { notifications as seed, AppNotification } from "../lib/mock/notifications";
-import { getListingById, formatPrice } from "../lib/mock/listings";
+import { Listing, formatPrice } from "../lib/mock/listings";
+import { fetchListingsByIds } from "../lib/api/listings";
 import { buildListingTitle } from "../lib/listingTitle";
 import { useLanguage } from "../lib/i18n/languages";
 
@@ -38,6 +39,18 @@ export default function NotificationsScreen() {
   const router = useRouter();
 
   const [items, setItems] = useState<AppNotification[]>(seed);
+
+  // Resolve the referenced listings once (for previews), keyed by id. No N+1.
+  const listingIds = useMemo(
+    () => items.filter((n) => n.type !== "message").map((n) => (n as { listingId: string }).listingId),
+    [items],
+  );
+  const [byId, setById] = useState<Record<string, Listing>>({});
+  useEffect(() => {
+    fetchListingsByIds(listingIds)
+      .then((list) => setById(Object.fromEntries(list.map((l) => [l.id, l]))))
+      .catch(() => setById({}));
+  }, [listingIds]);
 
   const open = (n: AppNotification) => {
     setItems((cur) => cur.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
@@ -70,13 +83,21 @@ export default function NotificationsScreen() {
             desc={t("notifications.emptyDesc")}
           />
         }
-        renderItem={({ item }) => <Row item={item} onPress={() => open(item)} />}
+        renderItem={({ item }) => <Row item={item} byId={byId} onPress={() => open(item)} />}
       />
     </SafeAreaView>
   );
 }
 
-function Row({ item, onPress }: { item: AppNotification; onPress: () => void }) {
+function Row({
+  item,
+  byId,
+  onPress,
+}: {
+  item: AppNotification;
+  byId: Record<string, Listing>;
+  onPress: () => void;
+}) {
   const { t } = useTranslation();
   const { current: lang } = useLanguage();
   const { colors, mode } = useTheme();
@@ -86,7 +107,7 @@ function Row({ item, onPress }: { item: AppNotification; onPress: () => void }) 
     item.type === "message"
       ? `${item.peerName}: ${item.preview}`
       : (() => {
-          const l = getListingById(item.listingId);
+          const l = byId[item.listingId];
           return l ? buildListingTitle(l, t, lang) : "";
         })();
 

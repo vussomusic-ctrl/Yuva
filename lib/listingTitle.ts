@@ -10,6 +10,7 @@ type TitleInput = {
   propertyType: PropertyTypeKey | null;
   rooms: number | string;
   areaM2: number | string;
+  landAreaSot?: number | string | null;
   placeId?: string | null;
   metroId?: string | null;
 };
@@ -30,8 +31,14 @@ export function buildListingTitle(f: TitleInput, t: T, lang: Lang): string {
   const rooms = Number(f.rooms);
   if (!isLand && rooms > 0) parts.push(t("listingTitle.rooms", { n: rooms }));
   if (!isLand) parts.push(t(f.buildType === "secondary" ? "listingTitle.secondary" : "listingTitle.newBuild"));
-  const area = Number(f.areaM2);
-  if (area > 0) parts.push(`${area} ${t("listingTitle.areaUnit")}`);
+  // Area: land → "sot", everything else → m². Never show "0 m²" for land.
+  if (isLand) {
+    const sot = Number(f.landAreaSot);
+    if (sot > 0) parts.push(`${sot} ${t("listingTitle.sotUnit")}`);
+  } else {
+    const area = Number(f.areaM2);
+    if (area > 0) parts.push(`${area} ${t("listingTitle.areaUnit")}`);
+  }
 
   // Location: metro (with prefix) wins, else region name.
   let location = "";

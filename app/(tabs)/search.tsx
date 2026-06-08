@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { View, Text, FlatList, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
@@ -13,9 +13,11 @@ import { Segmented } from "../../components/Segmented";
 import { PropertyCard } from "../../components/PropertyCard";
 import { SearchMap } from "../../components/SearchMap";
 import { BottomSheet } from "../../components/BottomSheet";
+import { LoadingState, ErrorState } from "../../components/ListState";
 import { useFavorites } from "../../lib/favorites";
 import { useFilters, filterListings } from "../../lib/filters-state";
-import { newListings } from "../../lib/mock/listings";
+import { Listing } from "../../lib/mock/listings";
+import { fetchFeed } from "../../lib/api/listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { useLanguage } from "../../lib/i18n/languages";
 
@@ -41,9 +43,21 @@ export default function SearchScreen() {
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
   const { filters, setDealType, activeCount } = useFilters();
 
+  // Feed from Supabase (same active set as Home), refetched on focus.
+  const [feed, setFeed] = useState<Listing[] | null>(null);
+  const [error, setError] = useState(false);
+  const load = useCallback(() => {
+    setError(false);
+    fetchFeed()
+      .then(setFeed)
+      .catch(() => setError(true));
+  }, []);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+  const loading = feed === null && !error;
+
   const results = useMemo(() => {
     // Active filters first (incl. deal type), then the free-text query on top.
-    const base = filterListings(newListings, filters);
+    const base = filterListings(feed ?? [], filters);
     const q = query.trim().toLowerCase();
     const filtered = !q
       ? base
@@ -59,7 +73,7 @@ export default function SearchScreen() {
     else if (sort === "priceDesc") arr.sort((a, b) => b.priceAzn - a.priceAzn);
     else if (sort === "newest") arr.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     return arr;
-  }, [query, filters, sort, t, lang]);
+  }, [feed, query, filters, sort, t, lang]);
 
   const sortLabel = t(SORTS.find((s) => s.key === sort)!.labelKey);
 
@@ -99,7 +113,11 @@ export default function SearchScreen() {
         </Pressable>
       </View>
 
-      {view === "map" ? (
+      {loading ? (
+        <LoadingState colors={colors} />
+      ) : error ? (
+        <ErrorState colors={colors} onRetry={load} />
+      ) : view === "map" ? (
         <SearchMap listings={results} onOpen={(id) => router.push(`/property/${id}`)} />
       ) : (
         <FlatList

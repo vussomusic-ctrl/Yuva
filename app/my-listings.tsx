@@ -1,23 +1,44 @@
+import { useCallback, useState } from "react";
 import { View, Text, Pressable, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { Theme } from "../lib/theme/colors";
 import { PropertyCard } from "../components/PropertyCard";
+import { LoadingState, ErrorState } from "../components/ListState";
 import { useFavorites } from "../lib/favorites";
-import { getListingsByOwner } from "../lib/mock/listings";
-import { currentUser } from "../lib/mock/user";
+import { useAuth } from "../lib/auth";
+import { Listing } from "../lib/mock/listings";
+import { fetchMyListings } from "../lib/api/listings";
 
 export default function MyListingsScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
   const { isFavorite, toggle } = useFavorites();
+  const { user } = useAuth();
 
-  const myListings = getListingsByOwner(currentUser.id);
+  const [items, setItems] = useState<Listing[] | null>(null);
+  const [error, setError] = useState(false);
+
+  // Refetch every time the screen gains focus — this is what makes a freshly
+  // published listing appear (the DB doesn't unshift into an in-memory array).
+  const load = useCallback(() => {
+    if (!user) {
+      setItems([]);
+      return;
+    }
+    setError(false);
+    fetchMyListings(user.id)
+      .then(setItems)
+      .catch(() => setError(true));
+  }, [user]);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const loading = items === null && !error;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
@@ -28,30 +49,36 @@ export default function MyListingsScreen() {
         onBack={() => (router.canGoBack() ? router.back() : router.replace("/profile"))}
       />
 
-      <FlatList
-        data={myListings}
-        keyExtractor={(l) => l.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8, flexGrow: 1 }}
-        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-        ListEmptyComponent={
-          <EmptyState
-            colors={colors}
-            icon="pricetags-outline"
-            title={t("myListings.emptyTitle")}
-            desc={t("myListings.emptyDesc")}
-          />
-        }
-        renderItem={({ item }) => (
-          <PropertyCard
-            listing={item}
-            variant="feed"
-            favorited={isFavorite(item.id)}
-            onToggleFavorite={() => toggle(item.id)}
-            onPress={() => router.push(`/property/${item.id}`)}
-          />
-        )}
-      />
+      {loading ? (
+        <LoadingState colors={colors} />
+      ) : error ? (
+        <ErrorState colors={colors} onRetry={load} />
+      ) : (
+        <FlatList
+          data={items ?? []}
+          keyExtractor={(l) => l.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8, flexGrow: 1 }}
+          ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+          ListEmptyComponent={
+            <EmptyState
+              colors={colors}
+              icon="pricetags-outline"
+              title={t("myListings.emptyTitle")}
+              desc={t("myListings.emptyDesc")}
+            />
+          }
+          renderItem={({ item }) => (
+            <PropertyCard
+              listing={item}
+              variant="feed"
+              favorited={isFavorite(item.id)}
+              onToggleFavorite={() => toggle(item.id)}
+              onPress={() => router.push(`/property/${item.id}`)}
+            />
+          )}
+        />
+      )}
     </SafeAreaView>
   );
 }

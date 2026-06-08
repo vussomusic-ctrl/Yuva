@@ -7,7 +7,9 @@
     "profile": "Profil"
   },
   "common": {
-    "appName": "Yuva"
+    "appName": "Yuva",
+    "retry": "Yenidən cəhd et",
+    "loadError": "Yükləmə alınmadı"
   },
   "splash": {
     "subtitle": "Premium yuvanız sizi gözləyir.",
@@ -148,7 +150,10 @@
     "floorTotal": "Mərtəbə (ümumi)",
     "reviewTitle": "Elan belə görünəcək",
     "publishedTitle": "Elan yerləşdirildi!",
-    "publishedDesc": "Elanınız «Mənim elanlarım»da görünür"
+    "publishedDesc": "Elanınız «Mənim elanlarım»da görünür",
+    "errSave": "Elanı yerləşdirmək alınmadı. Yenidən cəhd edin.",
+    "errPhotos": "Elan yaradıldı, amma şəkillər yüklənmədi.",
+    "publishing": "Yerləşdirilir..."
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",
@@ -239,6 +244,7 @@
     "newBuild": "yeni tikili",
     "secondary": "köhnə tikili",
     "areaUnit": "m²",
+    "sotUnit": "sot",
     "metroPrefix": "m."
   }
 }

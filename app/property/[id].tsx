@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -19,7 +19,10 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
-import { getListingDetail, formatPrice } from "../../lib/mock/listings";
+import { ListingDetail, formatPrice, formatArea } from "../../lib/mock/listings";
+import { fetchListingDetail } from "../../lib/api/listings";
+import { LoadingState, ErrorState } from "../../components/ListState";
+import { Header } from "../my-listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { useLanguage } from "../../lib/i18n/languages";
 
@@ -45,17 +48,47 @@ export default function PropertyDetailScreen() {
   const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const listing = getListingDetail(id ?? "");
+  const [listing, setListing] = useState<ListingDetail | null>(null);
+  const [status, setStatus] = useState<"loading" | "error" | "notfound" | "ok">("loading");
   const [favorited, setFavorited] = useState(false);
   const [page, setPage] = useState(0);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/home"));
 
-  if (!listing) {
+  const load = useCallback(() => {
+    if (!id) {
+      setStatus("notfound");
+      return;
+    }
+    setStatus("loading");
+    fetchListingDetail(id)
+      .then((d) => {
+        if (d) {
+          setListing(d);
+          setStatus("ok");
+        } else {
+          setStatus("notfound");
+        }
+      })
+      .catch(() => setStatus("error"));
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
+
+  if (status !== "ok" || !listing) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ color: colors.text }}>Not found</Text>
-      </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
+        <Header colors={colors} title="" onBack={goBack} />
+        {status === "loading" && <LoadingState colors={colors} />}
+        {status === "error" && <ErrorState colors={colors} onRetry={load} />}
+        {status === "notfound" && (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 10 }}>
+            <Ionicons name="alert-circle-outline" size={48} color={colors.textSecondary} />
+            <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>
+              {t("common.loadError")}
+            </Text>
+          </View>
+        )}
+      </SafeAreaView>
     );
   }
 
@@ -162,7 +195,7 @@ export default function PropertyDetailScreen() {
 
           {/* Specs row */}
           <View style={{ flexDirection: "row", gap: 12, marginTop: 20 }}>
-            <SpecCard colors={colors} icon="resize-outline" label={t("propertyDetail.area")} value={`${listing.areaM2} m²`} />
+            <SpecCard colors={colors} icon="resize-outline" label={t("propertyDetail.area")} value={formatArea(listing, t)} />
             <SpecCard colors={colors} icon="bed-outline" label={t("propertyDetail.rooms")} value={`${listing.rooms}`} />
             {listing.floor != null && listing.floorTotal != null && (
               <SpecCard
@@ -174,31 +207,35 @@ export default function PropertyDetailScreen() {
             )}
           </View>
 
-          {/* Description */}
-          <Section title={t("propertyDetail.description")} colors={colors}>
-            <Text style={{ color: colors.textSecondary, fontSize: 15, lineHeight: 22 }}>
-              {listing.description}
-            </Text>
-          </Section>
+          {/* Description — only if the seller wrote one */}
+          {listing.description.trim() !== "" && (
+            <Section title={t("propertyDetail.description")} colors={colors}>
+              <Text style={{ color: colors.textSecondary, fontSize: 15, lineHeight: 22 }}>
+                {listing.description}
+              </Text>
+            </Section>
+          )}
 
-          {/* Amenities */}
-          <Section title={t("propertyDetail.amenities")} colors={colors}>
-            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-              {listing.amenities.map((key) => {
-                const meta = AMENITY_META[key];
-                if (!meta) return null;
-                return (
-                  <View
-                    key={key}
-                    style={{ width: "50%", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
-                  >
-                    <Ionicons name={meta.icon} size={20} color={brand.violet} />
-                    <Text style={{ color: colors.text, fontSize: 14, flex: 1 }}>{t(meta.labelKey)}</Text>
-                  </View>
-                );
-              })}
-            </View>
-          </Section>
+          {/* Amenities — hidden when none are set */}
+          {listing.amenities.length > 0 && (
+            <Section title={t("propertyDetail.amenities")} colors={colors}>
+              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                {listing.amenities.map((key) => {
+                  const meta = AMENITY_META[key];
+                  if (!meta) return null;
+                  return (
+                    <View
+                      key={key}
+                      style={{ width: "50%", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
+                    >
+                      <Ionicons name={meta.icon} size={20} color={brand.violet} />
+                      <Text style={{ color: colors.text, fontSize: 14, flex: 1 }}>{t(meta.labelKey)}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </Section>
+          )}
 
           {/* Map stub */}
           <Section title={t("propertyDetail.locationTitle")} colors={colors}>
@@ -294,16 +331,33 @@ export default function PropertyDetailScreen() {
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <Image
-            source={{ uri: listing.agent.avatar }}
-            style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.bg }}
-          />
+          {listing.agent.avatar ? (
+            <Image
+              source={{ uri: listing.agent.avatar }}
+              style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.bg }}
+            />
+          ) : (
+            <View
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: brand.violet,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons name="person" size={24} color="#FFFFFF" />
+            </View>
+          )}
           <View style={{ flex: 1 }}>
             <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>{listing.agent.name}</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Ionicons name="shield-checkmark" size={13} color={brand.blue} />
-              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{t("propertyDetail.verifiedAgent")}</Text>
-            </View>
+            {listing.agent.verified && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <Ionicons name="shield-checkmark" size={13} color={brand.blue} />
+                <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{t("propertyDetail.verifiedAgent")}</Text>
+              </View>
+            )}
           </View>
         </View>
 

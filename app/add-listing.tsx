@@ -30,8 +30,10 @@ import { placeById, placeName, coordsForPlace, regionOfPlace } from "../lib/plac
 import { useLanguage } from "../lib/i18n/languages";
 import { buildListingTitle } from "../lib/listingTitle";
 import { stockListingPhotos } from "../lib/mock/photos";
-import { addListing, formatPrice, Listing } from "../lib/mock/listings";
-import { currentUser } from "../lib/mock/user";
+import { formatPrice, Listing } from "../lib/mock/listings";
+import { createListing } from "../lib/api/listings";
+import { ListingFormInput } from "../lib/adapters/listing";
+import { useAuth } from "../lib/auth";
 import { useMapPick } from "../lib/map-pick";
 
 const TOTAL_STEPS = 4;
@@ -43,6 +45,12 @@ export default function AddListingModal() {
   const { current: lang } = useLanguage();
   const { colors } = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
+
+  // Publishing requires an account (owner_id + RLS). Send guests to login.
+  useEffect(() => {
+    if (!user) router.replace("/login");
+  }, [user, router]);
 
   const [step, setStep] = useState(1);
 
@@ -66,6 +74,8 @@ export default function AddListingModal() {
 
   const [locationSheet, setLocationSheet] = useState(false);
   const [published, setPublished] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   // Map-picked coordinates come back via the shared store (router can't return a
   // value). `clear()` runs ONLY on mount = start of a new listing — NOT on focus
@@ -92,7 +102,15 @@ export default function AddListingModal() {
 
   // Auto-generated title (bina.az style), live in the current UI language.
   const generatedTitle = buildListingTitle(
-    { buildType, propertyType, rooms, areaM2: area, placeId, metroId },
+    {
+      buildType,
+      propertyType,
+      rooms,
+      areaM2: isLand ? "" : area,
+      landAreaSot: isLand ? area : undefined,
+      placeId,
+      metroId,
+    },
     t,
     lang,
   );
@@ -130,32 +148,45 @@ export default function AddListingModal() {
   const goNext = () => step < TOTAL_STEPS && canNext && setStep(step + 1);
   const goBack = () => step > 1 && setStep(step - 1);
 
-  const publish = () => {
-    addListing({
-      image: photos[0],
-      priceAzn: Number(price),
-      areaM2: Number(area),
-      rooms: isLand ? 0 : Number(rooms || 0),
-      floor: !isLand && floor ? Number(floor) : undefined,
-      floorTotal: !isLand && floorTotal ? Number(floorTotal) : undefined,
-      district: placeId ? placeName(placeById(placeId)!, "az") : "",
-      placeId: placeId ?? "",
-      metroId: metroId ?? undefined,
-      premium: false,
-      ownerId: currentUser.id,
-      ownerPhone: phone.trim(),
+  const publish = async () => {
+    if (!user || publishing) return;
+    setPublishError(null);
+    setPublishing(true);
+
+    // Map pin wins; otherwise fall back to the place centre (also the web path).
+    const coords = picked ?? coordsForPlace(placeId);
+    const form: ListingFormInput = {
       dealType,
       propertyType: propertyType!,
       buildType,
-      baths: isLand ? 0 : Number(baths) || 1,
-      furnished: isLand ? false : furnished,
+      price,
+      area,
+      rooms,
+      baths,
+      floor,
+      floorTotal,
+      placeId,
+      metroId,
+      district: placeId ? placeName(placeById(placeId)!, "az") : "",
+      phone,
+      furnished,
       mortgage,
-      createdAt: new Date().toISOString(),
-      // Map pin wins; otherwise fall back to the place centre (also the web path).
-      ...(picked ?? coordsForPlace(placeId)),
-    });
+      description,
+      lat: coords?.lat ?? null,
+      lng: coords?.lng ?? null,
+    };
+
+    const result = await createListing(form, user.id, photos);
+    setPublishing(false);
+
+    if (!result.ok) {
+      // Surface both failure modes explicitly — don't pretend it worked.
+      setPublishError(result.step === "photos" ? t("addListing.errPhotos") : t("addListing.errSave"));
+      return;
+    }
+
     setPublished(true);
-    // Confirm, then land on My listings so the new listing is visible.
+    // Confirm, then land on My listings (refetches on focus → shows the new one).
     setTimeout(() => router.replace("/my-listings"), 1300);
   };
 
@@ -172,7 +203,8 @@ export default function AddListingModal() {
     id: "preview",
     image: photos[0] ?? "",
     priceAzn: Number(price) || 0,
-    areaM2: Number(area) || 0,
+    areaM2: isLand ? 0 : Number(area) || 0,
+    landAreaSot: isLand ? Number(area) || 0 : undefined,
     rooms: isLand ? 0 : Number(rooms) || 0,
     floor: !isLand && floor ? Number(floor) : undefined,
     floorTotal: !isLand && floorTotal ? Number(floorTotal) : undefined,
@@ -180,7 +212,7 @@ export default function AddListingModal() {
     placeId: placeId ?? "",
     metroId: metroId ?? undefined,
     premium: false,
-    ownerId: currentUser.id,
+    ownerId: user?.id ?? "",
     dealType,
     propertyType: propertyType ?? "apartment",
     buildType,
@@ -478,7 +510,15 @@ export default function AddListingModal() {
                   />
                 )}
                 <SummaryRow colors={colors} label={t("filters.price")} value={formatPrice(Number(price) || 0)} />
-                <SummaryRow colors={colors} label={t("filters.area")} value={`${Number(area) || 0} m²`} />
+                <SummaryRow
+                  colors={colors}
+                  label={t("filters.area")}
+                  value={
+                    isLand
+                      ? `${Number(area) || 0} ${t("listingTitle.sotUnit")}`
+                      : `${Number(area) || 0} ${t("listingTitle.areaUnit")}`
+                  }
+                />
                 {!isLand && (
                   <SummaryRow colors={colors} label={t("filters.rooms")} value={rooms || "—"} />
                 )}
@@ -513,6 +553,25 @@ export default function AddListingModal() {
           )}
         </ScrollView>
 
+        {/* Publish error (e.g. insert failed, or photos failed after create) */}
+        {publishError && (
+          <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                backgroundColor: "#FCE8E8",
+                borderRadius: 12,
+                padding: 12,
+              }}
+            >
+              <Ionicons name="alert-circle" size={20} color="#BA1A1A" />
+              <Text style={{ flex: 1, color: "#8C1D18", fontSize: 13 }}>{publishError}</Text>
+            </View>
+          </View>
+        )}
+
         {/* Bottom action bar */}
         <View
           style={{
@@ -526,11 +585,16 @@ export default function AddListingModal() {
             backgroundColor: colors.bg,
           }}
         >
-          {step > 1 && <SecondaryButton label={t("addListing.back")} onPress={goBack} style={{ flex: 1 }} />}
+          {step > 1 && <SecondaryButton label={t("addListing.back")} onPress={goBack} disabled={publishing} style={{ flex: 1 }} />}
           {step < TOTAL_STEPS ? (
             <PrimaryButton label={t("addListing.next")} onPress={goNext} disabled={!canNext} style={{ flex: 2 }} />
           ) : (
-            <PrimaryButton label={t("addListing.publish")} onPress={publish} style={{ flex: 2 }} />
+            <PrimaryButton
+              label={publishing ? t("addListing.publishing") : t("addListing.publish")}
+              onPress={publish}
+              disabled={publishing}
+              style={{ flex: 2 }}
+            />
           )}
         </View>
       </KeyboardAvoidingView>

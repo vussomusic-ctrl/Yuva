@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
@@ -16,11 +16,13 @@ import { brand, Theme } from "../../lib/theme/colors";
 import { PropertyCard } from "../../components/PropertyCard";
 import { SearchBar } from "../../components/SearchBar";
 import { DealTypeChips, DealKey } from "../../components/DealTypeChips";
+import { LoadingState, ErrorState } from "../../components/ListState";
 import { useLanguage } from "../../lib/i18n/languages";
 import { useFavorites } from "../../lib/favorites";
 import { useFilters } from "../../lib/filters-state";
 import { PropertyTypeKey } from "../../lib/propertyTypes";
-import { recommendedListings, newListings } from "../../lib/mock/listings";
+import { Listing } from "../../lib/mock/listings";
+import { fetchFeed } from "../../lib/api/listings";
 import { hasUnreadNotifications } from "../../lib/mock/notifications";
 
 const CATEGORIES: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; type: PropertyTypeKey }[] = [
@@ -40,6 +42,20 @@ export default function HomeScreen() {
   const [deal, setDeal] = useState<DealKey>("sale");
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
   const { filters, apply } = useFilters();
+
+  // Feed from Supabase. Refetch whenever Home regains focus (e.g. after publish).
+  const [feed, setFeed] = useState<Listing[] | null>(null);
+  const [error, setError] = useState(false);
+  const load = useCallback(() => {
+    setError(false);
+    fetchFeed()
+      .then(setFeed)
+      .catch(() => setError(true));
+  }, []);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const loading = feed === null && !error;
+  const recommended = (feed ?? []).filter((l) => l.premium);
 
   const openListing = (id: string) => router.push(`/property/${id}`);
 
@@ -134,48 +150,66 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* Recommended carousel */}
-        <View style={{ gap: 12 }}>
-          <SectionHeader
-            title={t("home.recommended")}
-            action={t("home.seeAll")}
-            colors={colors}
-            onAction={() => router.push("/search")}
-          />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}
-          >
-            {recommendedListings.map((l) => (
-              <PropertyCard
-                key={l.id}
-                listing={l}
-                variant="carousel"
-                favorited={isFavorite(l.id)}
-                onToggleFavorite={() => toggleFavorite(l.id)}
-                onPress={() => openListing(l.id)}
-              />
-            ))}
-          </ScrollView>
-        </View>
+        {loading && <View style={{ height: 240 }}><LoadingState colors={colors} /></View>}
+        {error && <View style={{ height: 240 }}><ErrorState colors={colors} onRetry={load} /></View>}
 
-        {/* New listings feed */}
-        <View style={{ gap: 16, paddingHorizontal: 16 }}>
-          <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>
-            {t("home.newListings")}
-          </Text>
-          {newListings.map((l) => (
-            <PropertyCard
-              key={l.id}
-              listing={l}
-              variant="feed"
-              favorited={isFavorite(l.id)}
-              onToggleFavorite={() => toggleFavorite(l.id)}
-              onPress={() => openListing(l.id)}
-            />
-          ))}
-        </View>
+        {!loading && !error && (
+          <>
+            {/* Recommended carousel — only when there are premium listings */}
+            {recommended.length > 0 && (
+              <View style={{ gap: 12 }}>
+                <SectionHeader
+                  title={t("home.recommended")}
+                  action={t("home.seeAll")}
+                  colors={colors}
+                  onAction={() => router.push("/search")}
+                />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}
+                >
+                  {recommended.map((l) => (
+                    <PropertyCard
+                      key={l.id}
+                      listing={l}
+                      variant="carousel"
+                      favorited={isFavorite(l.id)}
+                      onToggleFavorite={() => toggleFavorite(l.id)}
+                      onPress={() => openListing(l.id)}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {/* New listings feed */}
+            <View style={{ gap: 16, paddingHorizontal: 16 }}>
+              <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>
+                {t("home.newListings")}
+              </Text>
+              {(feed ?? []).length === 0 ? (
+                <View style={{ alignItems: "center", paddingVertical: 32, gap: 8 }}>
+                  <Ionicons name="home-outline" size={44} color={colors.textSecondary} />
+                  <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: "center" }}>
+                    {t("myListings.emptyDesc")}
+                  </Text>
+                </View>
+              ) : (
+                (feed ?? []).map((l) => (
+                  <PropertyCard
+                    key={l.id}
+                    listing={l}
+                    variant="feed"
+                    favorited={isFavorite(l.id)}
+                    onToggleFavorite={() => toggleFavorite(l.id)}
+                    onPress={() => openListing(l.id)}
+                  />
+                ))
+              )}
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

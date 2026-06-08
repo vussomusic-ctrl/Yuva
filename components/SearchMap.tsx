@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
-import { Listing, formatPrice } from "../lib/mock/listings";
+import { Listing, formatPrice, formatArea } from "../lib/mock/listings";
 import { BAKU_CENTER } from "../lib/places";
 import { buildListingTitle } from "../lib/listingTitle";
 import { useLanguage } from "../lib/i18n/languages";
@@ -144,7 +144,7 @@ export function SearchMap({ listings, onOpen }: Props) {
                 {buildListingTitle(selected, t, lang)}
               </Text>
               <Text numberOfLines={1} style={{ color: colors.textSecondary, fontSize: 13 }}>
-                {selected.areaM2} m² · {selected.rooms} {t("home.roomsUnit")}
+                {formatArea(selected, t)} · {selected.rooms} {t("home.roomsUnit")}
               </Text>
             </View>
             <Pressable

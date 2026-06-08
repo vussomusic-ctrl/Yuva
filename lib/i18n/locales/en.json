@@ -7,7 +7,9 @@
     "profile": "Profile"
   },
   "common": {
-    "appName": "Yuva"
+    "appName": "Yuva",
+    "retry": "Retry",
+    "loadError": "Couldn't load"
   },
   "splash": {
     "subtitle": "Your premium nest awaits.",
@@ -148,7 +150,10 @@
     "floorTotal": "Total floors",
     "reviewTitle": "How your listing will look",
     "publishedTitle": "Listing published!",
-    "publishedDesc": "Your listing now appears in My listings"
+    "publishedDesc": "Your listing now appears in My listings",
+    "errSave": "Couldn't publish the listing. Please try again.",
+    "errPhotos": "Listing created, but photos failed to upload.",
+    "publishing": "Publishing..."
   },
   "search": {
     "resultsCount": "{{count}} listings found",
@@ -239,6 +244,7 @@
     "newBuild": "new build",
     "secondary": "secondary",
     "areaUnit": "m²",
+    "sotUnit": "sot",
     "metroPrefix": "m."
   }
 }
