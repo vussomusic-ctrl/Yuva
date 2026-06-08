@@ -20,13 +20,13 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { Segmented } from "../components/Segmented";
-import { PlacePickerSheet } from "../components/PlacePickerSheet";
+import { RegionPickerSheet } from "../components/RegionPickerSheet";
 import { PropertyCard } from "../components/PropertyCard";
 import { PrimaryButton, SecondaryButton } from "../components/Button";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
 import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
-import { AREAS, METRO, placeById, placeName, coordsForPlace } from "../lib/places";
+import { placeById, placeName, coordsForPlace, regionOfPlace } from "../lib/places";
 import { useLanguage } from "../lib/i18n/languages";
 import { buildListingTitle } from "../lib/listingTitle";
 import { stockListingPhotos } from "../lib/mock/photos";
@@ -64,8 +64,7 @@ export default function AddListingModal() {
   const [mortgage, setMortgage] = useState(false);
   const [description, setDescription] = useState("");
 
-  const [regionSheet, setRegionSheet] = useState(false);
-  const [metroSheet, setMetroSheet] = useState(false);
+  const [locationSheet, setLocationSheet] = useState(false);
   const [published, setPublished] = useState(false);
 
   // Map-picked coordinates come back via the shared store (router can't return a
@@ -79,6 +78,17 @@ export default function AddListingModal() {
   }, []);
 
   const isLand = propertyType === "land";
+
+  // Location field label: region name, or "Bakı › Area" when inside Baku.
+  const locationLabel = (() => {
+    if (!placeId) return "";
+    const p = placeById(placeId);
+    if (!p) return "";
+    if (placeId !== "baku" && regionOfPlace(placeId) === "baku") {
+      return `${placeName(placeById("baku")!, lang)} › ${placeName(p, lang)}`;
+    }
+    return placeName(p, lang);
+  })();
 
   // Auto-generated title (bina.az style), live in the current UI language.
   const generatedTitle = buildListingTitle(
@@ -331,49 +341,35 @@ export default function AddListingModal() {
                 </>
               )}
 
-              <Field label={t("filters.region")} colors={colors}>
+              {/* Location — cascading region → Baku area (+ optional metro) */}
+              <Field label={t("addListing.locationLabel")} colors={colors}>
                 <Pressable
-                  onPress={() => setRegionSheet(true)}
+                  onPress={() => setLocationSheet(true)}
                   style={({ pressed }) => ({
-                    height: 48,
+                    minHeight: 48,
                     borderRadius: 12,
                     borderWidth: 1,
                     borderColor: colors.border,
                     backgroundColor: colors.card,
                     paddingHorizontal: 14,
+                    paddingVertical: 8,
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "space-between",
+                    gap: 10,
                     opacity: pressed ? 0.7 : 1,
                   })}
                 >
-                  <Text style={{ color: placeId ? colors.text : colors.textSecondary, fontSize: 15 }}>
-                    {placeId ? placeName(placeById(placeId)!, lang) : t("addListing.selectRegion")}
-                  </Text>
-                  <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
-                </Pressable>
-              </Field>
-
-              {/* Metro — optional */}
-              <Field label={t("filters.metro")} colors={colors}>
-                <Pressable
-                  onPress={() => setMetroSheet(true)}
-                  style={({ pressed }) => ({
-                    height: 48,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    backgroundColor: colors.card,
-                    paddingHorizontal: 14,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    opacity: pressed ? 0.7 : 1,
-                  })}
-                >
-                  <Text style={{ color: metroId ? colors.text : colors.textSecondary, fontSize: 15 }}>
-                    {metroId ? placeName(placeById(metroId)!, lang) : t("addListing.notSelected")}
-                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: placeId ? colors.text : colors.textSecondary, fontSize: 15 }}>
+                      {placeId ? locationLabel : t("addListing.selectLocation")}
+                    </Text>
+                    {metroId && (
+                      <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                        {t("filters.metro")}: {placeName(placeById(metroId)!, lang)}
+                      </Text>
+                    )}
+                  </View>
                   <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
                 </Pressable>
               </Field>
@@ -539,30 +535,15 @@ export default function AddListingModal() {
         </View>
       </KeyboardAvoidingView>
 
-      {/* Region picker — single-select with search */}
-      <PlacePickerSheet
-        visible={regionSheet}
-        onClose={() => setRegionSheet(false)}
-        title={t("filters.region")}
-        searchPlaceholder={t("addListing.search")}
-        places={AREAS}
-        selectedId={placeId}
-        onSelect={(id) => setPlaceId(id)}
+      {/* Location picker — cascading region → Baku area + metro */}
+      <RegionPickerSheet
+        visible={locationSheet}
+        onClose={() => setLocationSheet(false)}
+        placeId={placeId}
+        metroId={metroId}
+        onSelectPlace={(id) => setPlaceId(id)}
+        onSelectMetro={(id) => setMetroId(id)}
         lang={lang}
-      />
-
-      {/* Metro picker — single-select with search, optional (clearable) */}
-      <PlacePickerSheet
-        visible={metroSheet}
-        onClose={() => setMetroSheet(false)}
-        title={t("filters.metro")}
-        searchPlaceholder={t("addListing.search")}
-        places={METRO}
-        selectedId={metroId}
-        onSelect={(id) => setMetroId(id)}
-        lang={lang}
-        allowClear
-        clearLabel={t("addListing.notSelected")}
       />
 
       {/* Publish confirmation toast */}

@@ -52,7 +52,7 @@ The brand/component rules in `CLAUDE.md` override anything inconsistent from Sti
 | My listings | `app/my-listings.tsx` | Back + title header. Vertical `PropertyCard` list of the current user's listings (`getListingsByOwner(currentUser.id)`, via `ownerId`). i18n empty state |
 | Saved / Favorites | `app/saved.tsx` + `lib/favorites.tsx` | **One screen** (Profile "Saved" = Favorites). `FavoritesProvider`/`useFavorites` shared state (`ids`/`isFavorite`/`toggle`) wraps app in root layout; hearts on Home & Search write to it; Saved list reflects it reactively. i18n empty state. In-memory only (no persistence yet) |
 | Notifications | `app/notifications.tsx` + `lib/mock/notifications.ts` | Back + title header (no logo). Entered via bell in Home header. Mock list of 3 types — `price_drop` (old→new ₼, listing preview), `new_match` (saved-search match), `message` (peer + preview); each with brand-colored icon, neutral time, unread row tint + magenta dot. Tap → `/property/[id]` (drop/match) or `/chat/[id]` (message); marks read in local state. i18n empty state |
-| Add Listing | `app/add-listing.tsx` (modal) | 4-step flow with progress bar (`n/4`) + X-close header. **1** Photos (stock set via `lib/mock/photos.ts`; cover badge; ≥1 required). **2** Deal type + property type + **build type** (hidden for land). **3** Details — **auto-title live preview** (no manual title field), price ₼, area, rooms/baths + floor/floorTotal (hidden for land), **Район via `PlacePickerSheet`** (search, single-select, from `AREAS`), **Metro** (optional, `PlacePickerSheet`, clearable), **map pin via Map Picker** (overrides place centre), **contact phone +994**, description, furnished/mortgage. **4** Preview (`PropertyCard` + summary). Validation: place OR pin, price/area, phone ≥ 9 digits. Publish → `addListing()` (`regionId`/`metroId`, coords = pin ?? `coordsForPlace`, `createdAt = now`) → toast → `/my-listings`. **No stored title** (derived). In-memory |
+| Add Listing | `app/add-listing.tsx` (modal) | 4-step flow with progress bar (`n/4`) + X-close header. **1** Photos (stock set via `lib/mock/photos.ts`; cover badge; ≥1 required). **2** Deal type + property type + **build type** (hidden for land). **3** Details — **auto-title live preview** (no manual title field), price ₼, area, rooms/baths + floor/floorTotal (hidden for land), **Location via `RegionPickerSheet`** (cascading region → Baku area, diacritic-folded search, metro as its own block inside Baku), **map pin via Map Picker** (overrides place centre), **contact phone +994**, description, furnished/mortgage. **4** Preview (`PropertyCard` + summary). Validation: place OR pin, price/area, phone ≥ 9 digits. Publish → `addListing()` (`regionId`/`metroId`, coords = pin ?? `coordsForPlace`, `createdAt = now`) → toast → `/my-listings`. **No stored title** (derived). In-memory |
 | Map Picker | `app/map-picker.tsx` (+ `.web.tsx`) | Fixed centre crosshair over `MapView` (PROVIDER_DEFAULT / Apple Maps, no key); map pans under the pin, coord from `onRegionChangeComplete` (Uber/Bolt pattern). Header X + title, hint chip, sticky «Set here» (gradient). Start centre: prev pin → `coordsForPlace(regionId)` → else `expo-location` (within AZ bbox, else `BAKU_CENTER`). Returns coord to the still-mounted Add Listing via `lib/map-pick.tsx` (`useMapPick`); `clear()` runs only on form mount. **Web fallback** = themed placeholder (no native module) |
 | Settings | `app/settings.tsx` | Back + title header (no logo), reached from Profile → Settings. Sections: **Notifications** (3 local-state toggles: new matches / price drops / messages), **Account** (Edit profile / Change phone-email / Delete account [red] — stub rows), **About** (Version from `expo-constants`, Terms / Privacy / Support — stubs). Language & Theme intentionally NOT duplicated (live in Profile) |
 
@@ -61,7 +61,9 @@ Supporting components: `BrandGlow.tsx` (organic radial glow, no SVG),
 `BottomSheet.tsx`, `SearchBar.tsx`, `DealTypeChips.tsx`, `Segmented.tsx`,
 `Button.tsx` (`PrimaryButton` gradient / `SecondaryButton` outline — reusable),
 `SearchMap.tsx` + `SearchMap.web.tsx` (native price-pin map / web placeholder),
-`PlacePickerSheet.tsx` (search + single-select sheet for Район/Metro).
+`RegionPickerSheet.tsx` (cascading region → Baku area/metro picker, diacritic-folded
+search — used by Add Listing), `PlacePickerSheet.tsx` (older single-select sheet,
+kept as a reusable pattern; currently unused).
 Shared state/data/utils: `lib/favorites.tsx` (FavoritesProvider + useFavorites),
 `lib/filters-state.tsx` (FiltersProvider + useFilters + `filterListings` /
 `activeFilterCount`; id-based region/metro matching), `lib/places.ts` (**Baku
@@ -118,7 +120,9 @@ yuva-app/
     favorites.tsx          # FavoritesProvider + useFavorites (app-wide saved set)
     filters-state.tsx      # FiltersProvider + useFilters + filterListings (id-based)
     map-pick.tsx           # MapPickProvider + useMapPick (returns picked coord to Add Listing)
-    places.ts              # Baku places directory (OSM): Place[], AREAS/RAYONS/METRO, placeById/placeName/coordsForPlace, BAKU_CENTER
+    places.ts              # all-AZ places directory (OSM): Place[], REGIONS(78)/AREAS/RAYONS/METRO, areasOf/regionOfPlace, placeById/placeName/coordsForPlace, BAKU_CENTER
+    places.validate.ts     # coord guard (isFinite + AZ bbox + on-land PiP); `npm run validate:places` (CI), fails with offending ids
+    normalize.ts           # foldSearch() — diacritic-folding for az+ru+en place search
     listingTitle.ts        # buildListingTitle(listing,t,lang) — on-the-fly trilingual title
     dealTypes.ts           # DEALS array + DealKey type (sale/rent/...)
     propertyTypes.ts       # PROPERTY_TYPES (shared by Filters + Add Listing)
@@ -171,17 +175,22 @@ All ~13 canonical MVP screens are built (incl. Search map). What's left:
   `docs/places-translations-todo.md` (26 missing ru, 63 missing en).
 - **Interactive map on Property Detail** — the detail map is still a styled stub;
   tapping the pin should open a full map with the listing's `lat`/`lng`.
-- **Places — UI cascade (next заход)** — data hierarchy DONE (`lib/places.ts`:
-  77 republic regions + `baku`, areas/metro via `parentId`, `regionOfPlace` index).
-  Still to build: cascade picker Город/регион → район, **search on top (az+ru+en),
-  Baku first, metro as its own block**; filter chips → searchable multi-select sheet.
-  Disambiguate same-named city/rayon in the picker via type, e.g. «Şəki şəh.» /
-  «Şəki r.» (seher vs rayon).
-  - ⛔ **BLOCKER before surfacing the 77 regions in any picker:** region `lat/lng`
-    are OSM admin **centroids** — for coastal republic rayons they fall in the
-    Caspian (same class of bug just fixed for Baku's 12 rayons). Replace region
-    centroids with a label point / city centre BEFORE showing them, else the map
-    pin lands in the sea.
+- **Places — UI cascade — DONE (заход 3).** `components/RegionPickerSheet.tsx`:
+  cascading region → Baku drill-in. Root lists all 78 regions (Baku pinned on top,
+  rest alphabetical); tap Baku → breadcrumb «‹ Bakı» + «All Baku» + areas section +
+  separate **Metro** block (area & metro live-selected, confirmed with «Done»); any
+  other region is a leaf → sets `placeId`, clears metro, closes. Search folds az
+  diacritics via `lib/normalize.ts` (`foldSearch`) so «narimanov» finds Nərimanov,
+  «гянджа» finds Gəncə (matches across az+ru+en). Same-named city/rayon get a type
+  suffix only on collision (Şəki/Lənkəran/Yevlax → «Şəki şəh.» / «Şəki r.»). Wired
+  into Add Listing (replaced the old AREAS/METRO `PlacePickerSheet` pair + standalone
+  Metro field). Still TODO (separate заход): Search filter chips → searchable
+  multi-select sheet.
+  - ✅ **Coordinate BLOCKER RESOLVED (commit `b542bd4`).** All 77 republic regions
+    shipped with `lng: NaN` (unplottable; coastal centroids would land in the
+    Caspian). Replaced with curated city-centre coords from OSM `place=city/town`.
+    Guarded by `lib/places.validate.ts` (`npm run validate:places`: isFinite + AZ
+    bbox + on-land point-in-polygon; fails with offending ids in CI).
 - **Finish region `ru`/`en` translations** — 26 missing ru, 74 missing en (mostly
   rayon `en` + qəsəbə/metro); see `docs/places-translations-todo.md`.
 - **Wiring polish** (UI exists, behaviour not connected):
