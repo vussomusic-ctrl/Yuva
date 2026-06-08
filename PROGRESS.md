@@ -171,10 +171,19 @@ All ~13 canonical MVP screens are built (incl. Search map). What's left:
   `docs/places-translations-todo.md` (26 missing ru, 63 missing en).
 - **Interactive map on Property Detail** — the detail map is still a styled stub;
   tapping the pin should open a full map with the listing's `lat`/`lng`.
-- **Places phase 2 — all-Azerbaijan hierarchy** — extend `lib/places.ts` to
-  City/region → district/settlement (`parentId`); ~77 top-level rayon/şəhər now,
-  settlements of non-Baku regions on demand. UX: search on top, cascade, Baku
-  first, metro as its own block. (Filter chips → searchable multi-select sheet.)
+- **Places — UI cascade (next заход)** — data hierarchy DONE (`lib/places.ts`:
+  77 republic regions + `baku`, areas/metro via `parentId`, `regionOfPlace` index).
+  Still to build: cascade picker Город/регион → район, **search on top (az+ru+en),
+  Baku first, metro as its own block**; filter chips → searchable multi-select sheet.
+  Disambiguate same-named city/rayon in the picker via type, e.g. «Şəki şəh.» /
+  «Şəki r.» (seher vs rayon).
+  - ⛔ **BLOCKER before surfacing the 77 regions in any picker:** region `lat/lng`
+    are OSM admin **centroids** — for coastal republic rayons they fall in the
+    Caspian (same class of bug just fixed for Baku's 12 rayons). Replace region
+    centroids with a label point / city centre BEFORE showing them, else the map
+    pin lands in the sea.
+- **Finish region `ru`/`en` translations** — 26 missing ru, 74 missing en (mostly
+  rayon `en` + qəsəbə/metro); see `docs/places-translations-todo.md`.
 - **Wiring polish** (UI exists, behaviour not connected):
   - **"Message" button → conversation** — Property Detail's Message/"Yaz" goes to the `/chat` tab; should open/create the listing's conversation (`/chat/[id]`)
   - **Home bell ↔ read state** — the bell's unread dot is static (`hasUnreadNotifications` from the mock) and doesn't update when notifications are marked read; needs shared notifications state (like `useFavorites`)

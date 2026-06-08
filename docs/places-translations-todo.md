@@ -5,7 +5,7 @@ OpenStreetMap had no `name:ru` / `name:en`. Fill them in `lib/places.ts`
 (e.g. **Nərimanov** rayon and most qəsəbə / metro stations).
 
 Source: OpenStreetMap (Overpass API), scoped to administrative Baku.
-Total places: 92 (12 rayon · metro · microrayon · qəsəbə).
+Total places: 170 (12 rayon · metro · microrayon · qəsəbə).
 
 ## Missing ru — 26
 - `nerimanov_rayon` [rayon] — az: Nərimanov
@@ -35,7 +35,18 @@ Total places: 92 (12 rayon · metro · microrayon · qəsəbə).
 - `yeni_turkan_q` [qesebe] — az: Yeni Türkan
 - `zeferan_q` [qesebe] — az: Zəfəran
 
-## Missing en — 63
+## Missing en — 74
+- `astara_rayon` [rayon] — az: Astara
+- `goranboy_rayon` [rayon] — az: Goranboy
+- `lerik_rayon` [rayon] — az: Lerik
+- `ordubad_rayon` [rayon] — az: Ordubad
+- `quba_rayon` [rayon] — az: Quba
+- `qusar_rayon` [rayon] — az: Qusar
+- `sabirabad_rayon` [rayon] — az: Sabirabad
+- `salyan_rayon` [rayon] — az: Salyan
+- `tovuz_rayon` [rayon] — az: Tovuz
+- `zaqatala_rayon` [rayon] — az: Zaqatala
+- `naftalan_city` [seher] — az: Naftalan
 - `nerimanov_rayon` [rayon] — az: Nərimanov
 - `20_yanvar_metro` [metro] — az: 20 Yanvar
 - `28_may_metro` [metro] — az: 28 May
