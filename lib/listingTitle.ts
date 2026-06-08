@@ -10,7 +10,7 @@ type TitleInput = {
   propertyType: PropertyTypeKey | null;
   rooms: number | string;
   areaM2: number | string;
-  regionId?: string | null;
+  placeId?: string | null;
   metroId?: string | null;
 };
 
@@ -39,8 +39,8 @@ export function buildListingTitle(f: TitleInput, t: T, lang: Lang): string {
     const m = placeById(f.metroId);
     if (m) location = `${t("listingTitle.metroPrefix")} ${placeName(m, lang)}`;
   }
-  if (!location && f.regionId) {
-    const r = placeById(f.regionId);
+  if (!location && f.placeId) {
+    const r = placeById(f.placeId);
     if (r) location = placeName(r, lang);
   }
 

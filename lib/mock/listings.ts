@@ -20,9 +20,9 @@ export type Listing = {
   ownerId: string;
   // Seller phone, "+994XXXXXXXXX" — drives Call / WhatsApp on Property Detail.
   ownerPhone: string;
-  // Place reference (lib/places.ts). `regionId` powers the region filter + coords;
+  // Place reference (lib/places.ts). `placeId` powers the region filter + coords;
   // `metroId` (optional) powers the metro filter. `district` stays a display string.
-  regionId: string;
+  placeId: string;
   metroId?: string;
   // Faceted attributes used by Search filters.
   dealType: DealKey;
@@ -51,7 +51,7 @@ export const listings: Listing[] = [
     floor: 7,
     floorTotal: 16,
     district: "Nizami rayonu",
-    regionId: "nizami_rayon",
+    placeId: "nizami_rayon",
     metroId: "nizami_metro",
     lat: 40.379,
     lng: 49.949,
@@ -73,7 +73,7 @@ export const listings: Listing[] = [
     areaM2: 210,
     rooms: 5,
     district: "Xəzər rayonu",
-    regionId: "xezer_rayon",
+    placeId: "xezer_rayon",
     lat: 40.422,
     lng: 50.048,
     premium: true,
@@ -96,7 +96,7 @@ export const listings: Listing[] = [
     floor: 3,
     floorTotal: 9,
     district: "Yasamal rayonu",
-    regionId: "yasamal_rayon",
+    placeId: "yasamal_rayon",
     metroId: "elmler_akademiyasi_metro",
     lat: 40.378,
     lng: 49.815,
@@ -120,7 +120,7 @@ export const listings: Listing[] = [
     floor: 4,
     floorTotal: 12,
     district: "28 May metrosu yaxınlığında",
-    regionId: "nesimi_rayon",
+    placeId: "nesimi_rayon",
     metroId: "28_may_metro",
     lat: 40.379,
     lng: 49.849,
@@ -142,7 +142,7 @@ export const listings: Listing[] = [
     areaM2: 140,
     rooms: 4,
     district: "Abşeron, Mərdəkan",
-    regionId: "merdekan_q",
+    placeId: "merdekan_q",
     lat: 40.49,
     lng: 50.13,
     premium: false,
@@ -165,7 +165,7 @@ export const listings: Listing[] = [
     floor: 9,
     floorTotal: 14,
     district: "Xətai rayonu",
-    regionId: "xetai_rayon",
+    placeId: "xetai_rayon",
     metroId: "ehmedli_metro",
     lat: 40.394,
     lng: 49.905,

@@ -57,7 +57,7 @@ export default function AddListingModal() {
   const [baths, setBaths] = useState("");
   const [floor, setFloor] = useState("");
   const [floorTotal, setFloorTotal] = useState("");
-  const [regionId, setRegionId] = useState<string | null>(null);
+  const [placeId, setPlaceId] = useState<string | null>(null);
   const [metroId, setMetroId] = useState<string | null>(null);
   const [phone, setPhone] = useState("+994");
   const [furnished, setFurnished] = useState(false);
@@ -82,7 +82,7 @@ export default function AddListingModal() {
 
   // Auto-generated title (bina.az style), live in the current UI language.
   const generatedTitle = buildListingTitle(
-    { buildType, propertyType, rooms, areaM2: area, regionId, metroId },
+    { buildType, propertyType, rooms, areaM2: area, placeId, metroId },
     t,
     lang,
   );
@@ -91,7 +91,7 @@ export default function AddListingModal() {
     router.push({
       pathname: "/map-picker",
       params: {
-        ...(regionId ? { regionId } : {}),
+        ...(placeId ? { placeId } : {}),
         ...(picked ? { lat: String(picked.lat), lng: String(picked.lng) } : {}),
       },
     });
@@ -110,7 +110,7 @@ export default function AddListingModal() {
   const step3Valid =
     Number(price) > 0 &&
     Number(area) > 0 &&
-    (regionId != null || picked != null) && // a place OR a map pin is enough
+    (placeId != null || picked != null) && // a place OR a map pin is enough
     phoneOk &&
     (isLand || Number(rooms) > 0);
   const canNext =
@@ -128,8 +128,8 @@ export default function AddListingModal() {
       rooms: isLand ? 0 : Number(rooms || 0),
       floor: !isLand && floor ? Number(floor) : undefined,
       floorTotal: !isLand && floorTotal ? Number(floorTotal) : undefined,
-      district: regionId ? placeName(placeById(regionId)!, "az") : "",
-      regionId: regionId ?? "",
+      district: placeId ? placeName(placeById(placeId)!, "az") : "",
+      placeId: placeId ?? "",
       metroId: metroId ?? undefined,
       premium: false,
       ownerId: currentUser.id,
@@ -142,7 +142,7 @@ export default function AddListingModal() {
       mortgage,
       createdAt: new Date().toISOString(),
       // Map pin wins; otherwise fall back to the place centre (also the web path).
-      ...(picked ?? coordsForPlace(regionId)),
+      ...(picked ?? coordsForPlace(placeId)),
     });
     setPublished(true);
     // Confirm, then land on My listings so the new listing is visible.
@@ -166,8 +166,8 @@ export default function AddListingModal() {
     rooms: isLand ? 0 : Number(rooms) || 0,
     floor: !isLand && floor ? Number(floor) : undefined,
     floorTotal: !isLand && floorTotal ? Number(floorTotal) : undefined,
-    district: regionId ? placeName(placeById(regionId)!, lang) : "",
-    regionId: regionId ?? "",
+    district: placeId ? placeName(placeById(placeId)!, lang) : "",
+    placeId: placeId ?? "",
     metroId: metroId ?? undefined,
     premium: false,
     ownerId: currentUser.id,
@@ -179,7 +179,7 @@ export default function AddListingModal() {
     mortgage,
     ownerPhone: phone.trim(),
     createdAt: new Date().toISOString(),
-    ...(picked ?? coordsForPlace(regionId)),
+    ...(picked ?? coordsForPlace(placeId)),
   };
 
   return (
@@ -347,8 +347,8 @@ export default function AddListingModal() {
                     opacity: pressed ? 0.7 : 1,
                   })}
                 >
-                  <Text style={{ color: regionId ? colors.text : colors.textSecondary, fontSize: 15 }}>
-                    {regionId ? placeName(placeById(regionId)!, lang) : t("addListing.selectRegion")}
+                  <Text style={{ color: placeId ? colors.text : colors.textSecondary, fontSize: 15 }}>
+                    {placeId ? placeName(placeById(placeId)!, lang) : t("addListing.selectRegion")}
                   </Text>
                   <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
                 </Pressable>
@@ -496,7 +496,7 @@ export default function AddListingModal() {
                     value={floorTotal ? `${floor}/${floorTotal}` : floor}
                   />
                 )}
-                <SummaryRow colors={colors} label={t("filters.region")} value={regionId ? placeName(placeById(regionId)!, lang) : "—"} />
+                <SummaryRow colors={colors} label={t("filters.region")} value={placeId ? placeName(placeById(placeId)!, lang) : "—"} />
                 <SummaryRow colors={colors} label={t("filters.metro")} value={metroId ? placeName(placeById(metroId)!, lang) : "—"} />
                 <SummaryRow
                   colors={colors}
@@ -546,8 +546,8 @@ export default function AddListingModal() {
         title={t("filters.region")}
         searchPlaceholder={t("addListing.search")}
         places={AREAS}
-        selectedId={regionId}
-        onSelect={(id) => setRegionId(id)}
+        selectedId={placeId}
+        onSelect={(id) => setPlaceId(id)}
         lang={lang}
       />
 

@@ -29,7 +29,7 @@ export default function MapPickerScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const { setPicked } = useMapPick();
-  const params = useLocalSearchParams<{ regionId?: string; lat?: string; lng?: string }>();
+  const params = useLocalSearchParams<{ placeId?: string; lat?: string; lng?: string }>();
 
   const mapRef = useRef<MapView>(null);
 
@@ -39,8 +39,8 @@ export default function MapPickerScreen() {
   const start =
     startLat != null && startLng != null && !Number.isNaN(startLat) && !Number.isNaN(startLng)
       ? { lat: startLat, lng: startLng }
-      : params.regionId
-        ? coordsForPlace(params.regionId)
+      : params.placeId
+        ? coordsForPlace(params.placeId)
         : BAKU_CENTER;
 
   // The map centre = pin position (crosshair is fixed to screen centre).
@@ -48,7 +48,7 @@ export default function MapPickerScreen() {
 
   useEffect(() => {
     // No explicit start (no place, no previous pin) → try device location.
-    if (params.lat || params.lng || params.regionId) return;
+    if (params.lat || params.lng || params.placeId) return;
     let cancelled = false;
     (async () => {
       try {

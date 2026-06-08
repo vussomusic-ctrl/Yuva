@@ -86,7 +86,7 @@ export function filterListings(items: Listing[], f: Filters): Listing[] {
     }
     if (f.areaMin && l.areaM2 < Number(f.areaMin)) return false;
     if (f.areaMax && l.areaM2 > Number(f.areaMax)) return false;
-    if (f.regions.length && !(l.regionId && f.regions.includes(l.regionId))) return false;
+    if (f.regions.length && !(l.placeId && f.regions.includes(l.placeId))) return false;
     if (f.metro.length && !(l.metroId && f.metro.includes(l.metroId))) return false;
     if (f.floorMin && (l.floor == null || l.floor < Number(f.floorMin))) return false;
     if (f.floorMax && (l.floor == null || l.floor > Number(f.floorMax))) return false;
