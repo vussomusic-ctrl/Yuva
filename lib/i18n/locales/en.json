@@ -158,7 +158,8 @@
     "save": "Save",
     "updatedTitle": "Listing updated",
     "updatedDesc": "Your changes were saved",
-    "photoPermission": "Allow photo access to add them to your listing"
+    "photoPermission": "Allow photo access to add them to your listing",
+    "makeCover": "Make cover"
   },
   "search": {
     "resultsCount": "{{count}} listings found",

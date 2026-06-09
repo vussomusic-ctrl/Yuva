@@ -158,7 +158,8 @@
     "save": "Yadda saxla",
     "updatedTitle": "Elan yeniləndi",
     "updatedDesc": "Dəyişikliklər saxlanıldı",
-    "photoPermission": "Şəkilləri elana əlavə etmək üçün foto-kitabxanaya icazə verin"
+    "photoPermission": "Şəkilləri elana əlavə etmək üçün foto-kitabxanaya icazə verin",
+    "makeCover": "Əsas şəkil et"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",
