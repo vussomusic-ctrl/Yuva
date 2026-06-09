@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { View, Text, Pressable, FlatList } from "react-native";
+import { View, Text, Pressable, FlatList, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -12,7 +12,7 @@ import { LoadingState, ErrorState } from "../components/ListState";
 import { useFavorites } from "../lib/favorites";
 import { useAuth } from "../lib/auth";
 import { Listing } from "../lib/mock/listings";
-import { fetchMyListings } from "../lib/api/listings";
+import { fetchMyListings, deleteListing } from "../lib/api/listings";
 
 export default function MyListingsScreen() {
   const { t } = useTranslation();
@@ -39,6 +39,31 @@ export default function MyListingsScreen() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const loading = items === null && !error;
+
+  // Optimistic delete: drop the row immediately, restore it at its original
+  // index if the DB call fails. FK cascade removes its photos + favorites.
+  const doDelete = async (item: Listing) => {
+    const snapshot = items ?? [];
+    const index = snapshot.findIndex((l) => l.id === item.id);
+    setItems(snapshot.filter((l) => l.id !== item.id));
+
+    const { ok } = await deleteListing(item.id);
+    if (!ok) {
+      setItems((cur) => {
+        const arr = [...(cur ?? [])];
+        arr.splice(index < 0 ? arr.length : index, 0, item);
+        return arr;
+      });
+      Alert.alert(t("myListings.errDelete"));
+    }
+  };
+
+  const confirmDelete = (item: Listing) => {
+    Alert.alert(t("myListings.deleteConfirmTitle"), t("myListings.deleteConfirmMsg"), [
+      { text: t("common.cancel"), style: "cancel" },
+      { text: t("myListings.delete"), style: "destructive", onPress: () => doDelete(item) },
+    ]);
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
@@ -69,13 +94,38 @@ export default function MyListingsScreen() {
             />
           }
           renderItem={({ item }) => (
-            <PropertyCard
-              listing={item}
-              variant="feed"
-              favorited={isFavorite(item.id)}
-              onToggleFavorite={() => toggle(item.id)}
-              onPress={() => router.push(`/property/${item.id}`)}
-            />
+            <View>
+              <PropertyCard
+                listing={item}
+                variant="feed"
+                favorited={isFavorite(item.id)}
+                onToggleFavorite={() => toggle(item.id)}
+                onPress={() => router.push(`/property/${item.id}`)}
+              />
+              {/* Owner action strip (Edit comes in 2.5b-ii) */}
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 8 }}>
+                <Pressable
+                  onPress={() => confirmDelete(item)}
+                  hitSlop={6}
+                  style={({ pressed }) => ({
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    paddingVertical: 8,
+                    paddingHorizontal: 14,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    opacity: pressed ? 0.6 : 1,
+                  })}
+                >
+                  <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                  <Text style={{ color: colors.danger, fontSize: 14, fontWeight: "600" }}>
+                    {t("myListings.delete")}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
           )}
         />
       )}

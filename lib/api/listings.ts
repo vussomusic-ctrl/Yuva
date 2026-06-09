@@ -97,3 +97,13 @@ export async function createListing(
 
   return { ok: true, id };
 }
+
+/**
+ * Delete a listing the user owns. The FK ON DELETE CASCADE removes its
+ * listing_photos + favorites rows automatically; RLS (listings_delete_own)
+ * restricts it to the owner. Errors are caught into { ok: false } (not thrown).
+ */
+export async function deleteListing(id: string): Promise<{ ok: boolean }> {
+  const { error } = await supabase.from("listings").delete().eq("id", id);
+  return { ok: !error };
+}

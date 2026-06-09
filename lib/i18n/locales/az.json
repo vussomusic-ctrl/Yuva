@@ -9,7 +9,8 @@
   "common": {
     "appName": "Yuva",
     "retry": "Yenidən cəhd et",
-    "loadError": "Yükləmə alınmadı"
+    "loadError": "Yükləmə alınmadı",
+    "cancel": "Ləğv et"
   },
   "splash": {
     "subtitle": "Premium yuvanız sizi gözləyir.",
@@ -202,7 +203,11 @@
   "myListings": {
     "title": "Mənim elanlarım",
     "emptyTitle": "Hələ elanınız yoxdur",
-    "emptyDesc": "İlk elanınızı yerləşdirin"
+    "emptyDesc": "İlk elanınızı yerləşdirin",
+    "delete": "Sil",
+    "deleteConfirmTitle": "Elanı silmək?",
+    "deleteConfirmMsg": "Bu əməliyyat geri qaytarıla bilməz",
+    "errDelete": "Silinmədi"
   },
   "saved": {
     "title": "Yadda saxlanılanlar",

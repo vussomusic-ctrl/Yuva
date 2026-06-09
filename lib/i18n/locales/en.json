@@ -9,7 +9,8 @@
   "common": {
     "appName": "Yuva",
     "retry": "Retry",
-    "loadError": "Couldn't load"
+    "loadError": "Couldn't load",
+    "cancel": "Cancel"
   },
   "splash": {
     "subtitle": "Your premium nest awaits.",
@@ -202,7 +203,11 @@
   "myListings": {
     "title": "My listings",
     "emptyTitle": "No listings yet",
-    "emptyDesc": "Post your first listing"
+    "emptyDesc": "Post your first listing",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete listing?",
+    "deleteConfirmMsg": "This action cannot be undone",
+    "errDelete": "Couldn't delete"
   },
   "saved": {
     "title": "Saved",
