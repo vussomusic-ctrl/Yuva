@@ -10,6 +10,40 @@
 > **on the fly** per UI language (no stored title). What's left: fill ru/en place
 > translations, all-Azerbaijan hierarchy (phase 2), wiring polish, Supabase.
 
+## ЗАХОД 4 — Supabase backend (progress)
+`origin/main = 28f0b80` (всё запушено). Поэтапно, каждый этап = отдельный коммит
+с живой проверкой на симуляторе.
+
+- **Этап 1 — Auth** (`32edafb`): Supabase email/password (signUp/signIn/signOut),
+  сессия в AsyncStorage, route guard, реальный профиль во вкладке Profile.
+- **Этап 2 — Listings Create+Read** (`dd01af2`): форма пишет в БД через RLS; все
+  ленты (Home/Search/My/Saved/Notifications/Detail) читают из БД; embed фото,
+  owner-profile join, land→sot, loading/error/empty, слой-адаптер.
+- **Этап 2.5 — Update/Delete + favorites**: персистентные лайки (`a08aa08`),
+  delete своего объявления + FK-каскад (`2d7d4d0`), edit-режим (prefill + update)
+  (`a1f86f6`), фикс «0 комн.» для land (`58101b5`).
+- **Этап 3 — ФОТО — ЗАКРЫТ ПОЛНОСТЬЮ:**
+  - **3a real photo upload on create** (`bf14ece`) — `expo-image-picker` →
+    сжатие (`expo-image-manipulator`, ≤1280, JPEG 0.7) → upload в Storage
+    `listing-photos` ({uid}/{listingId}/{i}.jpg), listing-first + откат; delete
+    объявления чистит файлы из Storage.
+  - **3b-i manage photos in edit** (`30db3df`) — add/remove существующих +
+    дифф-реконсиляция по rowId + Storage cleanup (порядок upload→sort→insert→
+    delete строк→delete файлов; шаги 4-5 best-effort).
+  - **3b-ii reorder via arrows** (`8303f95`) — стрелки ‹ › + make-cover ★.
+    **ЗАМЕНЕНО на drag ниже** (оставлено в истории, в UI стрелок больше нет).
+  - **reanimated infra** (`e6088bb`) — `react-native-reanimated 4.3.1` +
+    `react-native-worklets 0.8.3` (babel-плагин авто-включается babel-preset-expo,
+    babel.config.js не создавали).
+  - **2b drag-to-reorder** (`28f0b80`) — перетаскивание фото пальцем
+    (`react-native-sortables 1.9.4`: `Sortable.Grid` `customHandle` +
+    `Sortable.Handle` вокруг фото, оверлеи крестик/★ вне handle, «+» вынесена из
+    грида; `GestureHandlerRootView` в root `_layout`). Стрелки удалены. Reorder =
+    перестановка массива `photos` → `sort` пересчитывается на Save готовой
+    реконсиляцией (`updateListing`/`createListing` не трогали).
+- **Этап 4 — живой чат + realtime — СЛЕДУЮЩИЙ** (моки `lib/mock/chats.ts` →
+  Supabase `conversations`/`messages` + realtime; RLS уже в `supabase/schema.sql`).
+
 ## What this is
 **Yuva** ("nest" in Azerbaijani) — a native mobile app for buying, selling and
 renting real estate in **Azerbaijan**. Trilingual: **Azerbaijani (az) / Russian

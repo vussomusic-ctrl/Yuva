@@ -24,6 +24,7 @@ import { isLandType } from "../../lib/propertyTypes";
 import { fetchListingDetail } from "../../lib/api/listings";
 import { useFavorites } from "../../lib/favorites";
 import { LoadingState, ErrorState } from "../../components/ListState";
+import ListingMiniMap from "../../components/ListingMiniMap";
 import { Header } from "../my-listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { useLanguage } from "../../lib/i18n/languages";
@@ -150,10 +151,18 @@ export default function PropertyDetailScreen() {
             ))}
           </ScrollView>
 
-          {/* Bottom fade into the page */}
+          {/* Bottom fade into the page — balanced: top ~40% stays clear (photo
+              untouched), then a soft graduated haze dissolves into the bg at the
+              bottom (translucent mid-stop keeps it gentle, not a hard step). */}
           <LinearGradient
-            colors={["transparent", colors.bg]}
-            style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 80 }}
+            colors={[
+              "transparent",
+              "transparent",
+              mode === "dark" ? "rgba(18,18,18,0.25)" : "rgba(247,247,249,0.25)",
+              colors.bg,
+            ]}
+            locations={[0, 0.4, 0.72, 1]}
+            style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 75 }}
             pointerEvents="none"
           />
 
@@ -182,7 +191,7 @@ export default function PropertyDetailScreen() {
         </View>
 
         {/* Body */}
-        <View style={{ paddingHorizontal: 20, marginTop: -4 }}>
+        <View style={{ paddingHorizontal: 20, marginTop: -4, paddingTop: 24 }}>
           {/* Price + title + location */}
           <Text style={{ color: brand.violet, fontSize: 26, fontWeight: "800" }}>
             {formatPrice(listing.priceAzn)}
@@ -241,52 +250,13 @@ export default function PropertyDetailScreen() {
             </Section>
           )}
 
-          {/* Map stub */}
-          <Section title={t("propertyDetail.locationTitle")} colors={colors}>
-            <View
-              style={{
-                height: 180,
-                borderRadius: 16,
-                overflow: "hidden",
-                borderWidth: 1,
-                borderColor: colors.border,
-                backgroundColor: mode === "dark" ? "#15171C" : "#E8EAF1",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              {/* faux streets */}
-              <View style={{ position: "absolute", top: 50, left: 0, right: 0, height: 6, backgroundColor: mode === "dark" ? "#23262E" : "#D5D9E4" }} />
-              <View style={{ position: "absolute", top: 120, left: 0, right: 0, height: 4, backgroundColor: mode === "dark" ? "#23262E" : "#D5D9E4" }} />
-              <View style={{ position: "absolute", top: 0, bottom: 0, left: "60%", width: 5, backgroundColor: mode === "dark" ? "#23262E" : "#D5D9E4" }} />
-              <Ionicons name="location" size={40} color={brand.magenta} />
-
-              {/* address overlay */}
-              <View
-                style={{
-                  position: "absolute",
-                  bottom: 12,
-                  left: 12,
-                  right: 12,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  backgroundColor: mode === "dark" ? "rgba(20,18,24,0.85)" : "rgba(255,255,255,0.92)",
-                  borderRadius: 10,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                }}
-              >
-                <Text numberOfLines={1} style={{ color: colors.text, fontSize: 13, fontWeight: "600", flex: 1 }}>
-                  {listing.district}
-                </Text>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-                  <Text style={{ color: brand.violet, fontSize: 12, fontWeight: "700" }}>{t("propertyDetail.viewMap")}</Text>
-                  <Ionicons name="chevron-forward" size={14} color={brand.violet} />
-                </View>
-              </View>
-            </View>
-          </Section>
+          {/* Location map — real mini-map + marker; hidden when no coords
+              (adapter coalesces null→0, so a 0/0 listing has no point). */}
+          {listing.lat !== 0 && listing.lng !== 0 && (
+            <Section title={t("propertyDetail.locationTitle")} colors={colors}>
+              <ListingMiniMap lat={listing.lat} lng={listing.lng} district={listing.district} />
+            </Section>
+          )}
         </View>
       </ScrollView>
 

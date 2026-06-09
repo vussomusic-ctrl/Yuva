@@ -89,6 +89,7 @@
     "amenities": "Amenities",
     "locationTitle": "Location",
     "viewMap": "View",
+    "route": "Route",
     "verifiedAgent": "Verified agent",
     "call": "Call",
     "write": "Message",

@@ -58,6 +58,7 @@ function RootInner() {
         <Stack.Screen name="add-listing" options={{ presentation: "modal" }} />
         <Stack.Screen name="filters" options={{ presentation: "modal" }} />
         <Stack.Screen name="map-picker" options={{ presentation: "modal" }} />
+        <Stack.Screen name="property-map" options={{ presentation: "modal" }} />
       </Stack>
     </>
   );
