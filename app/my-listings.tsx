@@ -6,7 +6,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
-import { Theme } from "../lib/theme/colors";
+import { brand, Theme } from "../lib/theme/colors";
 import { PropertyCard } from "../components/PropertyCard";
 import { LoadingState, ErrorState } from "../components/ListState";
 import { useFavorites } from "../lib/favorites";
@@ -102,8 +102,28 @@ export default function MyListingsScreen() {
                 onToggleFavorite={() => toggle(item.id)}
                 onPress={() => router.push(`/property/${item.id}`)}
               />
-              {/* Owner action strip (Edit comes in 2.5b-ii) */}
-              <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 8 }}>
+              {/* Owner action strip */}
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
+                <Pressable
+                  onPress={() => router.push(`/add-listing?id=${item.id}`)}
+                  hitSlop={6}
+                  style={({ pressed }) => ({
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    paddingVertical: 8,
+                    paddingHorizontal: 14,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    opacity: pressed ? 0.6 : 1,
+                  })}
+                >
+                  <Ionicons name="create-outline" size={18} color={brand.violet} />
+                  <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "600" }}>
+                    {t("myListings.edit")}
+                  </Text>
+                </Pressable>
                 <Pressable
                   onPress={() => confirmDelete(item)}
                   hitSlop={6}

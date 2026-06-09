@@ -51,6 +51,17 @@ export async function fetchListingsByIds(ids: string[]): Promise<Listing[]> {
   return (data as ListingRow[]).map(rowToListing);
 }
 
+/** Raw row (with photos) for edit prefill — keeps null/0 the domain type loses. */
+export async function fetchListingRow(id: string): Promise<ListingRow | null> {
+  const { data, error } = await supabase
+    .from("listings")
+    .select(LIST_SELECT)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as ListingRow) ?? null;
+}
+
 /** A single listing with gallery + owner-as-agent. null if not found. */
 export async function fetchListingDetail(id: string): Promise<ListingDetail | null> {
   const { data, error } = await supabase
@@ -96,6 +107,22 @@ export async function createListing(
   }
 
   return { ok: true, id };
+}
+
+/**
+ * Update a listing the user owns. Payload = formToRow MINUS owner_id (never
+ * reassign the owner; RLS would block it anyway). Columns not in the payload
+ * (status/premium/views_count/has_deed/currency/amenities/created_at) are
+ * preserved; updated_at is bumped by the DB trigger. Photos are NOT touched.
+ * RLS: listings_update_own. Errors caught into { ok: false }.
+ */
+export async function updateListing(
+  id: string,
+  form: ListingFormInput,
+): Promise<{ ok: boolean }> {
+  const { owner_id, ...patch } = formToRow(form, "");
+  const { error } = await supabase.from("listings").update(patch).eq("id", id);
+  return { ok: !error };
 }
 
 /**

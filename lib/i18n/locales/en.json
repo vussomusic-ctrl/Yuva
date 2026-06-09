@@ -154,7 +154,10 @@
     "publishedDesc": "Your listing now appears in My listings",
     "errSave": "Couldn't publish the listing. Please try again.",
     "errPhotos": "Listing created, but photos failed to upload.",
-    "publishing": "Publishing..."
+    "publishing": "Publishing...",
+    "save": "Save",
+    "updatedTitle": "Listing updated",
+    "updatedDesc": "Your changes were saved"
   },
   "search": {
     "resultsCount": "{{count}} listings found",
@@ -207,7 +210,8 @@
     "delete": "Delete",
     "deleteConfirmTitle": "Delete listing?",
     "deleteConfirmMsg": "This action cannot be undone",
-    "errDelete": "Couldn't delete"
+    "errDelete": "Couldn't delete",
+    "edit": "Edit"
   },
   "saved": {
     "title": "Saved",

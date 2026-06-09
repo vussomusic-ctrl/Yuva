@@ -3,7 +3,7 @@
 // formToRow: Add Listing form → insert payload for the `listings` table.
 
 import { DealKey } from "../dealTypes";
-import { PropertyTypeKey } from "../propertyTypes";
+import { PropertyTypeKey, isLandType } from "../propertyTypes";
 import { BuildKey } from "../buildTypes";
 import { Listing, ListingDetail, Agent } from "../mock/listings";
 
@@ -140,7 +140,7 @@ const num = (s: string): number | null => {
 // Columns with DB defaults (currency/status/premium/views_count/has_deed/
 // amenities/created_at/updated_at) are intentionally omitted.
 export function formToRow(form: ListingFormInput, ownerId: string) {
-  const isLand = form.propertyType === "land";
+  const isLand = isLandType(form.propertyType);
   const area = num(form.area);
   return {
     owner_id: ownerId,
@@ -164,5 +164,34 @@ export function formToRow(form: ListingFormInput, ownerId: string) {
     description: form.description.trim() || null,
     contact_phone: form.phone.trim(),
     contact_type: "owner" as const,
+  };
+}
+
+// DB row → form fields (edit prefill). Reads the RAW row to keep the null/0
+// distinction the domain `Listing` loses. Mirror image of formToRow — same land
+// branch via isLandType so the area column round-trips faithfully. Does NOT
+// touch photos (they aren't part of ListingFormInput; seeded separately).
+export function rowToForm(row: ListingRow): ListingFormInput {
+  const isLand = isLandType(row.property_type);
+  const numStr = (n: number | null) => (n == null ? "" : String(n));
+  return {
+    dealType: row.deal_type,
+    propertyType: row.property_type,
+    buildType: row.build_type ?? "new",
+    price: numStr(row.price_azn),
+    area: numStr(isLand ? row.land_area_sot : row.area_m2),
+    rooms: numStr(row.rooms),
+    baths: numStr(row.baths),
+    floor: numStr(row.floor),
+    floorTotal: numStr(row.floor_total),
+    placeId: row.place_id ?? null,
+    metroId: row.metro_id ?? null,
+    district: row.district ?? "",
+    phone: row.contact_phone ?? "",
+    furnished: row.furnished,
+    mortgage: row.mortgage,
+    description: row.description ?? "",
+    lat: row.lat,
+    lng: row.lng,
   };
 }

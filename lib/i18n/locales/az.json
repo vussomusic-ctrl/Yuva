@@ -154,7 +154,10 @@
     "publishedDesc": "Elanınız «Mənim elanlarım»da görünür",
     "errSave": "Elanı yerləşdirmək alınmadı. Yenidən cəhd edin.",
     "errPhotos": "Elan yaradıldı, amma şəkillər yüklənmədi.",
-    "publishing": "Yerləşdirilir..."
+    "publishing": "Yerləşdirilir...",
+    "save": "Yadda saxla",
+    "updatedTitle": "Elan yeniləndi",
+    "updatedDesc": "Dəyişikliklər saxlanıldı"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",
@@ -207,7 +210,8 @@
     "delete": "Sil",
     "deleteConfirmTitle": "Elanı silmək?",
     "deleteConfirmMsg": "Bu əməliyyat geri qaytarıla bilməz",
-    "errDelete": "Silinmədi"
+    "errDelete": "Silinmədi",
+    "edit": "Redaktə et"
   },
   "saved": {
     "title": "Yadda saxlanılanlar",

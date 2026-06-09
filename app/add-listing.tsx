@@ -10,11 +10,12 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
@@ -23,6 +24,7 @@ import { Segmented } from "../components/Segmented";
 import { RegionPickerSheet } from "../components/RegionPickerSheet";
 import { PropertyCard } from "../components/PropertyCard";
 import { PrimaryButton, SecondaryButton } from "../components/Button";
+import { LoadingState } from "../components/ListState";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
 import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
@@ -31,8 +33,8 @@ import { useLanguage } from "../lib/i18n/languages";
 import { buildListingTitle } from "../lib/listingTitle";
 import { stockListingPhotos } from "../lib/mock/photos";
 import { formatPrice, Listing } from "../lib/mock/listings";
-import { createListing } from "../lib/api/listings";
-import { ListingFormInput } from "../lib/adapters/listing";
+import { createListing, updateListing, fetchListingRow } from "../lib/api/listings";
+import { ListingFormInput, rowToForm } from "../lib/adapters/listing";
 import { useAuth } from "../lib/auth";
 import { useMapPick } from "../lib/map-pick";
 
@@ -46,11 +48,19 @@ export default function AddListingModal() {
   const { colors } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const isEdit = !!id;
 
   // Publishing requires an account (owner_id + RLS). Send guests to login.
   useEffect(() => {
     if (!user) router.replace("/login");
   }, [user, router]);
+
+  // Edit prefill gate: don't render the form (and never let Save fire) until
+  // every field has been seeded from the row.
+  const [editStatus, setEditStatus] = useState<"loading" | "ok" | "notfound" | "error">(
+    isEdit ? "loading" : "ok",
+  );
 
   const [step, setStep] = useState(1);
 
@@ -81,11 +91,63 @@ export default function AddListingModal() {
   // value). `clear()` runs ONLY on mount = start of a new listing — NOT on focus
   // /return from the picker (this screen stays mounted under the picker), so a
   // freshly placed pin is never wiped.
-  const { picked, clear: clearPick } = useMapPick();
+  const { picked, clear: clearPick, setPicked } = useMapPick();
   useEffect(() => {
-    clearPick();
+    if (!isEdit) clearPick(); // create: fresh pin. edit: seeded from row below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Edit: load the row, prefill EVERY field, then flip status to "ok" (only
+  // after all setters, so an empty-default frame can't leak into Save).
+  useEffect(() => {
+    if (!isEdit || !id) return;
+    let active = true;
+    fetchListingRow(id)
+      .then((row) => {
+        if (!active) return;
+        if (!row) {
+          setEditStatus("notfound");
+          return;
+        }
+        const f = rowToForm(row);
+        setDealType(f.dealType);
+        setPropertyType(f.propertyType);
+        setBuildType(f.buildType);
+        setPrice(f.price);
+        setArea(f.area);
+        setRooms(f.rooms);
+        setBaths(f.baths);
+        setFloor(f.floor);
+        setFloorTotal(f.floorTotal);
+        setPlaceId(f.placeId);
+        setMetroId(f.metroId);
+        setPhone(f.phone);
+        setFurnished(f.furnished);
+        setMortgage(f.mortgage);
+        setDescription(f.description);
+        setPhotos(
+          (row.listing_photos ?? []).slice().sort((a, b) => a.sort - b.sort).map((p) => p.url),
+        );
+        if (row.lat != null && row.lng != null) setPicked({ lat: row.lat, lng: row.lng });
+        setEditStatus("ok");
+      })
+      .catch(() => {
+        if (active) setEditStatus("error");
+      });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit, id]);
+
+  // Bail out (no blank form under Save) if the listing is gone / failed to load.
+  useEffect(() => {
+    if (editStatus === "notfound" || editStatus === "error") {
+      Alert.alert(t("common.loadError"));
+      router.back();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editStatus]);
 
   const isLand = propertyType === "land";
 
@@ -176,17 +238,25 @@ export default function AddListingModal() {
       lng: coords?.lng ?? null,
     };
 
-    const result = await createListing(form, user.id, photos);
-    setPublishing(false);
-
-    if (!result.ok) {
-      // Surface both failure modes explicitly — don't pretend it worked.
-      setPublishError(result.step === "photos" ? t("addListing.errPhotos") : t("addListing.errSave"));
-      return;
+    if (isEdit) {
+      const res = await updateListing(id!, form);
+      setPublishing(false);
+      if (!res.ok) {
+        setPublishError(t("addListing.errSave"));
+        return;
+      }
+    } else {
+      const res = await createListing(form, user.id, photos);
+      setPublishing(false);
+      if (!res.ok) {
+        // Surface both failure modes explicitly — don't pretend it worked.
+        setPublishError(res.step === "photos" ? t("addListing.errPhotos") : t("addListing.errSave"));
+        return;
+      }
     }
 
     setPublished(true);
-    // Confirm, then land on My listings (refetches on focus → shows the new one).
+    // Confirm, then land on My listings (refetches on focus → shows the change).
     setTimeout(() => router.replace("/my-listings"), 1300);
   };
 
@@ -223,6 +293,20 @@ export default function AddListingModal() {
     createdAt: new Date().toISOString(),
     ...(picked ?? coordsForPlace(placeId)),
   };
+
+  // Edit prefill in flight → spinner only (form not rendered, Save can't fire).
+  if (isEdit && editStatus === "loading") {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top", "bottom"]}>
+        <View style={{ height: 56, justifyContent: "center", paddingHorizontal: 16 }}>
+          <Pressable onPress={close} hitSlop={10} style={({ pressed }) => ({ alignSelf: "flex-start", opacity: pressed ? 0.6 : 1 })}>
+            <Ionicons name="close" size={26} color={colors.text} />
+          </Pressable>
+        </View>
+        <LoadingState colors={colors} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top", "bottom"]}>
@@ -276,7 +360,8 @@ export default function AddListingModal() {
               photos={photos}
               onAdd={addPhoto}
               onRemove={removePhoto}
-              canAddMore={photos.length < stockListingPhotos.length}
+              canAddMore={!isEdit && photos.length < stockListingPhotos.length}
+              readOnly={isEdit}
             />
           )}
 
@@ -590,7 +675,13 @@ export default function AddListingModal() {
             <PrimaryButton label={t("addListing.next")} onPress={goNext} disabled={!canNext} style={{ flex: 2 }} />
           ) : (
             <PrimaryButton
-              label={publishing ? t("addListing.publishing") : t("addListing.publish")}
+              label={
+                publishing
+                  ? t("addListing.publishing")
+                  : isEdit
+                    ? t("addListing.save")
+                    : t("addListing.publish")
+              }
               onPress={publish}
               disabled={publishing}
               style={{ flex: 2 }}
@@ -636,8 +727,12 @@ export default function AddListingModal() {
               <Ionicons name="checkmark" size={20} color="#FFFFFF" />
             </LinearGradient>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700" }}>{t("addListing.publishedTitle")}</Text>
-              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{t("addListing.publishedDesc")}</Text>
+              <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700" }}>
+                {t(isEdit ? "addListing.updatedTitle" : "addListing.publishedTitle")}
+              </Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+                {t(isEdit ? "addListing.updatedDesc" : "addListing.publishedDesc")}
+              </Text>
             </View>
           </View>
         </View>
@@ -654,6 +749,7 @@ function Step1Photos({
   onAdd,
   onRemove,
   canAddMore,
+  readOnly,
 }: {
   colors: Theme;
   t: (k: string) => string;
@@ -661,6 +757,7 @@ function Step1Photos({
   onAdd: () => void;
   onRemove: (u: string) => void;
   canAddMore: boolean;
+  readOnly?: boolean;
 }) {
   return (
     <View style={{ gap: 12, paddingTop: 4 }}>
@@ -693,23 +790,25 @@ function Step1Photos({
                 </Text>
               </LinearGradient>
             )}
-            <Pressable
-              onPress={() => onRemove(uri)}
-              hitSlop={6}
-              style={{
-                position: "absolute",
-                top: 6,
-                right: 6,
-                width: 24,
-                height: 24,
-                borderRadius: 12,
-                backgroundColor: "rgba(20,18,24,0.7)",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons name="close" size={15} color="#FFFFFF" />
-            </Pressable>
+            {!readOnly && (
+              <Pressable
+                onPress={() => onRemove(uri)}
+                hitSlop={6}
+                style={{
+                  position: "absolute",
+                  top: 6,
+                  right: 6,
+                  width: 24,
+                  height: 24,
+                  borderRadius: 12,
+                  backgroundColor: "rgba(20,18,24,0.7)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons name="close" size={15} color="#FFFFFF" />
+              </Pressable>
+            )}
           </View>
         ))}
 
