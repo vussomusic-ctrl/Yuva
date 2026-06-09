@@ -4,6 +4,7 @@ import "../lib/i18n";
 import { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider, useTheme } from "../lib/theme/ThemeContext";
 import { AuthProvider, useAuth } from "../lib/auth";
@@ -64,18 +65,20 @@ function RootInner() {
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <FavoritesProvider>
-            <FiltersProvider>
-              <MapPickProvider>
-                <RootInner />
-              </MapPickProvider>
-            </FiltersProvider>
-          </FavoritesProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <FavoritesProvider>
+              <FiltersProvider>
+                <MapPickProvider>
+                  <RootInner />
+                </MapPickProvider>
+              </FiltersProvider>
+            </FavoritesProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

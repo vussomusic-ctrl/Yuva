@@ -33,6 +33,7 @@ import { useLanguage } from "../lib/i18n/languages";
 import { buildListingTitle } from "../lib/listingTitle";
 import * as ImagePicker from "expo-image-picker";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
+import Sortable from "react-native-sortables";
 import { formatPrice, Listing } from "../lib/mock/listings";
 import { createListing, updateListing, fetchListingRow } from "../lib/api/listings";
 import { ListingFormInput, PhotoItem, rowToForm, rowToPhotoItems } from "../lib/adapters/listing";
@@ -223,22 +224,14 @@ export default function AddListingModal() {
   };
   const removePhoto = (uri: string) => setPhotos((p) => p.filter((x) => x.uri !== uri));
 
-  // Reorder photos in the array — sort is derived from array index on Save
-  // (edit: updateListing; create: createListing). Pure array move, no Storage.
-  const onMove = (i: number, where: "left" | "right" | "cover") => {
+  // Move a photo to the front (cover) by identity — robust under drag reorder.
+  // Drag itself reorders via Sortable.Grid's onDragEnd → setPhotos(data).
+  // sort is derived from array index on Save (updateListing/createListing).
+  const makeCover = (uri: string) =>
     setPhotos((prev) => {
-      const next = [...prev];
-      if (where === "left" && i > 0) {
-        [next[i - 1], next[i]] = [next[i], next[i - 1]];
-      } else if (where === "right" && i < next.length - 1) {
-        [next[i], next[i + 1]] = [next[i + 1], next[i]];
-      } else if (where === "cover" && i > 0) {
-        const [moved] = next.splice(i, 1);
-        next.unshift(moved);
-      }
-      return next;
+      const item = prev.find((p) => p.uri === uri);
+      return item ? [item, ...prev.filter((p) => p.uri !== uri)] : prev;
     });
-  };
 
   // --- Validation (gates the Next button per step) ---
   const phoneOk = phone.replace(/[^\d]/g, "").length >= 9;
@@ -411,7 +404,8 @@ export default function AddListingModal() {
               photos={photos}
               onAdd={addPhoto}
               onRemove={removePhoto}
-              onMove={onMove}
+              onMakeCover={makeCover}
+              onReorder={setPhotos}
               canAddMore={photos.length < 10}
             />
           )}
@@ -799,7 +793,8 @@ function Step1Photos({
   photos,
   onAdd,
   onRemove,
-  onMove,
+  onMakeCover,
+  onReorder,
   canAddMore,
 }: {
   colors: Theme;
@@ -807,130 +802,124 @@ function Step1Photos({
   photos: PhotoItem[];
   onAdd: () => void;
   onRemove: (uri: string) => void;
-  onMove: (i: number, where: "left" | "right" | "cover") => void;
+  onMakeCover: (uri: string) => void;
+  onReorder: (next: PhotoItem[]) => void;
   canAddMore: boolean;
 }) {
+  const coverUri = photos[0]?.uri;
   return (
     <View style={{ gap: 12, paddingTop: 4 }}>
       <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{t("addListing.photosHint")}</Text>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: GRID_GAP }}>
-        {photos.map((photo, idx) => (
-          <View
-            key={photo.uri}
-            style={{
-              width: PHOTO_SIZE,
-              height: PHOTO_SIZE,
-              borderRadius: 12,
-              overflow: "hidden",
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}
-          >
-            <Image source={{ uri: photo.uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
 
-            {/* Cover indicator — small pill, top-left (index 0) */}
-            {idx === 0 && (
-              <LinearGradient
-                colors={brand.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{ position: "absolute", top: 6, left: 6, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}
+      {/* Drag-to-reorder grid. Drag only from the photo (Sortable.Handle) — the
+          remove/cover overlays sit outside the handle so taps reach them. */}
+      {photos.length > 0 && (
+        <Sortable.Grid
+          columns={3}
+          data={photos}
+          keyExtractor={(p) => p.uri}
+          customHandle
+          rowGap={GRID_GAP}
+          columnGap={GRID_GAP}
+          onDragEnd={({ data }) => onReorder(data)}
+          renderItem={({ item }) => {
+            const isCover = item.uri === coverUri;
+            return (
+              <View
+                style={{
+                  width: "100%",
+                  height: PHOTO_SIZE,
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  backgroundColor: colors.card,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
               >
-                <Text style={{ color: "#FFFFFF", fontSize: 9, fontWeight: "800", letterSpacing: 0.5 }}>
-                  {t("addListing.cover").toUpperCase()}
-                </Text>
-              </LinearGradient>
-            )}
+                <Sortable.Handle style={{ width: "100%", height: "100%" }}>
+                  <Image source={{ uri: item.uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                </Sortable.Handle>
 
-            {/* Remove — top-right */}
-            <Pressable
-              onPress={() => onRemove(photo.uri)}
-              hitSlop={6}
-              style={{
-                position: "absolute",
-                top: 6,
-                right: 6,
-                width: 24,
-                height: 24,
-                borderRadius: 12,
-                backgroundColor: "rgba(20,18,24,0.7)",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons name="close" size={15} color="#FFFFFF" />
-            </Pressable>
+                {/* Cover pill — top-left (by identity, not index) */}
+                {isCover && (
+                  <LinearGradient
+                    colors={brand.gradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ position: "absolute", top: 6, left: 6, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}
+                  >
+                    <Text style={{ color: "#FFFFFF", fontSize: 9, fontWeight: "800", letterSpacing: 0.5 }}>
+                      {t("addListing.cover").toUpperCase()}
+                    </Text>
+                  </LinearGradient>
+                )}
 
-            {/* Reorder strip — bottom: ‹  ★(cover)  › */}
-            <View
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                paddingHorizontal: 6,
-                paddingVertical: 4,
-                backgroundColor: "rgba(20,18,24,0.55)",
-              }}
-            >
-              <Pressable
-                onPress={() => onMove(idx, "left")}
-                disabled={idx === 0}
-                hitSlop={8}
-                style={{ opacity: idx === 0 ? 0.35 : 1, padding: 2 }}
-              >
-                <Ionicons name="chevron-back" size={16} color="#FFFFFF" />
-              </Pressable>
-
-              {idx === 0 ? (
-                <View style={{ width: 20 }} />
-              ) : (
+                {/* Remove — top-right (outside handle → tappable) */}
                 <Pressable
-                  onPress={() => onMove(idx, "cover")}
-                  accessibilityLabel={t("addListing.makeCover")}
-                  hitSlop={8}
-                  style={{ padding: 2 }}
+                  onPress={() => onRemove(item.uri)}
+                  hitSlop={6}
+                  style={{
+                    position: "absolute",
+                    top: 6,
+                    right: 6,
+                    width: 24,
+                    height: 24,
+                    borderRadius: 12,
+                    backgroundColor: "rgba(20,18,24,0.7)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  <Ionicons name="star" size={16} color="#FFFFFF" />
+                  <Ionicons name="close" size={15} color="#FFFFFF" />
                 </Pressable>
-              )}
 
-              <Pressable
-                onPress={() => onMove(idx, "right")}
-                disabled={idx === photos.length - 1}
-                hitSlop={8}
-                style={{ opacity: idx === photos.length - 1 ? 0.35 : 1, padding: 2 }}
-              >
-                <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />
-              </Pressable>
-            </View>
-          </View>
-        ))}
+                {/* Make cover — bottom-right star (hidden on the current cover) */}
+                {!isCover && (
+                  <Pressable
+                    onPress={() => onMakeCover(item.uri)}
+                    accessibilityLabel={t("addListing.makeCover")}
+                    hitSlop={6}
+                    style={{
+                      position: "absolute",
+                      bottom: 6,
+                      right: 6,
+                      width: 24,
+                      height: 24,
+                      borderRadius: 12,
+                      backgroundColor: "rgba(20,18,24,0.7)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons name="star" size={14} color="#FFFFFF" />
+                  </Pressable>
+                )}
+              </View>
+            );
+          }}
+        />
+      )}
 
-        {canAddMore && (
-          <Pressable
-            onPress={onAdd}
-            style={({ pressed }) => ({
-              width: PHOTO_SIZE,
-              height: PHOTO_SIZE,
-              borderRadius: 12,
-              borderWidth: 1.5,
-              borderColor: brand.violet,
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
-              opacity: pressed ? 0.6 : 1,
-            })}
-          >
-            <Ionicons name="add" size={28} color={brand.violet} />
-            <Text style={{ color: brand.violet, fontSize: 12, fontWeight: "700" }}>{t("addListing.addPhoto")}</Text>
-          </Pressable>
-        )}
-      </View>
+      {/* Add tile — OUTSIDE the sortable grid (not draggable) */}
+      {canAddMore && (
+        <Pressable
+          onPress={onAdd}
+          style={({ pressed }) => ({
+            width: PHOTO_SIZE,
+            height: PHOTO_SIZE,
+            borderRadius: 12,
+            borderWidth: 1.5,
+            borderColor: brand.violet,
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 4,
+            opacity: pressed ? 0.6 : 1,
+          })}
+        >
+          <Ionicons name="add" size={28} color={brand.violet} />
+          <Text style={{ color: brand.violet, fontSize: 12, fontWeight: "700" }}>{t("addListing.addPhoto")}</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
