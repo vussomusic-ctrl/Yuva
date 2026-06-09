@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +23,7 @@ import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { Segmented } from "../components/Segmented";
 import { RegionPickerSheet } from "../components/RegionPickerSheet";
+import { BottomSheet } from "../components/BottomSheet";
 import { PropertyCard } from "../components/PropertyCard";
 import { PrimaryButton, SecondaryButton } from "../components/Button";
 import { LoadingState } from "../components/ListState";
@@ -36,6 +38,7 @@ import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import Sortable from "react-native-sortables";
 import { formatPrice, Listing } from "../lib/mock/listings";
 import { createListing, updateListing, fetchListingRow } from "../lib/api/listings";
+import { generateDescription } from "../lib/api/ai";
 import { ListingFormInput, PhotoItem, rowToForm, rowToPhotoItems } from "../lib/adapters/listing";
 import { useAuth } from "../lib/auth";
 import { useMapPick } from "../lib/map-pick";
@@ -46,7 +49,7 @@ const PHOTO_SIZE = (Dimensions.get("window").width - 32 - GRID_GAP * 2) / 3;
 
 export default function AddListingModal() {
   const { t } = useTranslation();
-  const { current: lang } = useLanguage();
+  const { current: lang, languages } = useLanguage();
   const { colors } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
@@ -89,6 +92,8 @@ export default function AddListingModal() {
   const [published, setPublished] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [genOpen, setGenOpen] = useState(false); // AI description language sheet
+  const [generating, setGenerating] = useState(false);
 
   // Map-picked coordinates come back via the shared store (router can't return a
   // value). `clear()` runs ONLY on mount = start of a new listing — NOT on focus
@@ -232,6 +237,67 @@ export default function AddListingModal() {
       const item = prev.find((p) => p.uri === uri);
       return item ? [item, ...prev.filter((p) => p.uri !== uri)] : prev;
     });
+
+  // --- AI description ---
+  // Enough facts to describe? (type + area + a place/pin).
+  const canGenerate =
+    propertyType != null && Number(area) > 0 && (placeId != null || picked != null);
+
+  // Human-readable location in the chosen language (region › Baku area, + metro).
+  const resolveLocation = (targetLang: "az" | "ru" | "en"): string => {
+    if (!placeId) return "";
+    const p = placeById(placeId);
+    if (!p) return "";
+    const base =
+      placeId !== "baku" && regionOfPlace(placeId) === "baku"
+        ? `${placeName(placeById("baku")!, targetLang)} › ${placeName(p, targetLang)}`
+        : placeName(p, targetLang);
+    const metro = metroId ? `, ${placeName(placeById(metroId)!, targetLang)}` : "";
+    return base + metro;
+  };
+
+  const applyDescription = (text: string) => {
+    if (description.trim() === "") {
+      setDescription(text);
+    } else {
+      Alert.alert(t("addListing.replaceDescTitle"), t("addListing.replaceDescMsg"), [
+        { text: t("common.cancel"), style: "cancel" },
+        { text: t("addListing.replace"), onPress: () => setDescription(text) },
+      ]);
+    }
+  };
+
+  const onGenerate = async (targetLang: "az" | "ru" | "en") => {
+    setGenOpen(false);
+    if (!canGenerate || generating) return;
+    setGenerating(true);
+    try {
+      const text = await generateDescription(
+        {
+          dealType,
+          propertyType: propertyType!,
+          buildType: isLand ? null : buildType,
+          area: Number(area) || null,
+          areaUnit: isLand ? "sot" : "m2",
+          rooms: isLand ? null : Number(rooms) || null,
+          baths: isLand ? null : Number(baths) || null,
+          floor: isLand ? null : Number(floor) || null,
+          floorTotal: isLand ? null : Number(floorTotal) || null,
+          price: Number(price) || null,
+          currency: "₼",
+          furnished: isLand ? false : furnished,
+          mortgage,
+          location: resolveLocation(targetLang),
+        },
+        targetLang,
+      );
+      applyDescription(text);
+    } catch {
+      Alert.alert(t("addListing.errGenerate"));
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   // --- Validation (gates the Next button per step) ---
   const phoneOk = phone.replace(/[^\d]/g, "").length >= 9;
@@ -583,6 +649,35 @@ export default function AddListingModal() {
               </Field>
 
               <Field label={t("addListing.descriptionLabel")} colors={colors}>
+                <Pressable
+                  onPress={() => setGenOpen(true)}
+                  disabled={!canGenerate || generating}
+                  style={({ pressed }) => ({
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    paddingVertical: 12,
+                    borderRadius: 12,
+                    borderWidth: 1.5,
+                    borderColor: brand.violet,
+                    opacity: !canGenerate || generating ? 0.45 : pressed ? 0.7 : 1,
+                  })}
+                >
+                  {generating ? (
+                    <ActivityIndicator size="small" color={brand.violet} />
+                  ) : (
+                    <Ionicons name="sparkles-outline" size={18} color={brand.violet} />
+                  )}
+                  <Text style={{ color: brand.violet, fontSize: 15, fontWeight: "700" }}>
+                    {generating ? t("addListing.generating") : t("addListing.generate")}
+                  </Text>
+                </Pressable>
+                {!canGenerate && (
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                    {t("addListing.generateHint")}
+                  </Text>
+                )}
                 <Input
                   colors={colors}
                   value={description}
@@ -745,6 +840,40 @@ export default function AddListingModal() {
         onSelectMetro={(id) => setMetroId(id)}
         lang={lang}
       />
+
+      {/* AI description — pick the language to generate in */}
+      <BottomSheet visible={genOpen} onClose={() => setGenOpen(false)}>
+        <Text
+          style={{ color: colors.text, fontSize: 17, fontWeight: "700", textAlign: "center", paddingTop: 6, paddingBottom: 8 }}
+        >
+          {t("addListing.descLang")}
+        </Text>
+        {languages.map((l, i) => {
+          const active = l.code === lang;
+          return (
+            <Pressable
+              key={l.code}
+              onPress={() => onGenerate(l.code as "az" | "ru" | "en")}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                paddingVertical: 16,
+                borderTopWidth: i === 0 ? 1 : 0,
+                borderBottomWidth: 1,
+                borderColor: colors.border,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Text style={{ color: active ? brand.violet : colors.text, fontSize: 16, fontWeight: active ? "700" : "500" }}>
+                {l.name}
+              </Text>
+              {active && <Ionicons name="sparkles" size={20} color={brand.violet} />}
+            </Pressable>
+          );
+        })}
+      </BottomSheet>
 
       {/* Publish confirmation toast */}
       {published && (

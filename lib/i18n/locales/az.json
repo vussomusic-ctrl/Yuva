@@ -160,7 +160,15 @@
     "updatedTitle": "Elan yeniləndi",
     "updatedDesc": "Dəyişikliklər saxlanıldı",
     "photoPermission": "Şəkilləri elana əlavə etmək üçün foto-kitabxanaya icazə verin",
-    "makeCover": "Əsas şəkil et"
+    "makeCover": "Əsas şəkil et",
+    "generate": "Təsvir yarat",
+    "generating": "Yaradılır…",
+    "descLang": "Təsvir dili",
+    "replaceDescTitle": "Təsviri əvəz etmək?",
+    "replaceDescMsg": "Cari mətn əvəz olunacaq",
+    "replace": "Əvəz et",
+    "errGenerate": "Yaratmaq alınmadı. Yenidən cəhd edin.",
+    "generateHint": "Növ, sahə və yerləşməni doldurun"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",

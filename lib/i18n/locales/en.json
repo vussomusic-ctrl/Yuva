@@ -160,7 +160,15 @@
     "updatedTitle": "Listing updated",
     "updatedDesc": "Your changes were saved",
     "photoPermission": "Allow photo access to add them to your listing",
-    "makeCover": "Make cover"
+    "makeCover": "Make cover",
+    "generate": "Generate description",
+    "generating": "Generating…",
+    "descLang": "Description language",
+    "replaceDescTitle": "Replace description?",
+    "replaceDescMsg": "The current text will be replaced",
+    "replace": "Replace",
+    "errGenerate": "Couldn't generate. Please try again.",
+    "generateHint": "Fill in type, area and location"
   },
   "search": {
     "resultsCount": "{{count}} listings found",
