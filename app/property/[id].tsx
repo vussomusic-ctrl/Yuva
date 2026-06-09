@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { ListingDetail, formatPrice, formatArea } from "../../lib/mock/listings";
+import { isLandType } from "../../lib/propertyTypes";
 import { fetchListingDetail } from "../../lib/api/listings";
 import { useFavorites } from "../../lib/favorites";
 import { LoadingState, ErrorState } from "../../components/ListState";
@@ -197,7 +198,9 @@ export default function PropertyDetailScreen() {
           {/* Specs row */}
           <View style={{ flexDirection: "row", gap: 12, marginTop: 20 }}>
             <SpecCard colors={colors} icon="resize-outline" label={t("propertyDetail.area")} value={formatArea(listing, t)} />
-            <SpecCard colors={colors} icon="bed-outline" label={t("propertyDetail.rooms")} value={`${listing.rooms}`} />
+            {!isLandType(listing.propertyType) && (
+              <SpecCard colors={colors} icon="bed-outline" label={t("propertyDetail.rooms")} value={`${listing.rooms}`} />
+            )}
             {listing.floor != null && listing.floorTotal != null && (
               <SpecCard
                 colors={colors}

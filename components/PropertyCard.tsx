@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { Listing, formatPrice, formatArea } from "../lib/mock/listings";
+import { isLandType } from "../lib/propertyTypes";
 import { buildListingTitle } from "../lib/listingTitle";
 import { useLanguage } from "../lib/i18n/languages";
 
@@ -136,7 +137,9 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
           }}
         >
           <Spec icon="resize-outline" text={formatArea(listing, t)} color={colors.textSecondary} />
-          <Spec icon="bed-outline" text={`${listing.rooms} ${t("home.roomsUnit")}`} color={colors.textSecondary} />
+          {!isLandType(listing.propertyType) && (
+            <Spec icon="bed-outline" text={`${listing.rooms} ${t("home.roomsUnit")}`} color={colors.textSecondary} />
+          )}
           {!carousel && listing.floor != null && listing.floorTotal != null && (
             <Spec
               icon="layers-outline"
