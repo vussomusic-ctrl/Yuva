@@ -31,7 +31,8 @@ import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
 import { placeById, placeName, coordsForPlace, regionOfPlace } from "../lib/places";
 import { useLanguage } from "../lib/i18n/languages";
 import { buildListingTitle } from "../lib/listingTitle";
-import { stockListingPhotos } from "../lib/mock/photos";
+import * as ImagePicker from "expo-image-picker";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { formatPrice, Listing } from "../lib/mock/listings";
 import { createListing, updateListing, fetchListingRow } from "../lib/api/listings";
 import { ListingFormInput, rowToForm } from "../lib/adapters/listing";
@@ -64,8 +65,9 @@ export default function AddListingModal() {
 
   const [step, setStep] = useState(1);
 
-  // One form state for the whole flow.
-  const [photos, setPhotos] = useState<string[]>([]);
+  // One form state for the whole flow. Photos hold a local/remote `uri` (preview)
+  // and, for freshly-picked create photos, the compressed JPEG `base64` (upload).
+  const [photos, setPhotos] = useState<{ uri: string; base64?: string }[]>([]);
   const [dealType, setDealType] = useState<DealKey>("sale");
   const [propertyType, setPropertyType] = useState<PropertyTypeKey | null>(null);
   const [buildType, setBuildType] = useState<BuildKey>("new");
@@ -126,7 +128,10 @@ export default function AddListingModal() {
         setMortgage(f.mortgage);
         setDescription(f.description);
         setPhotos(
-          (row.listing_photos ?? []).slice().sort((a, b) => a.sort - b.sort).map((p) => p.url),
+          (row.listing_photos ?? [])
+            .slice()
+            .sort((a, b) => a.sort - b.sort)
+            .map((p) => ({ uri: p.url })),
         );
         if (row.lat != null && row.lng != null) setPicked({ lat: row.lat, lng: row.lng });
         setEditStatus("ok");
@@ -186,12 +191,42 @@ export default function AddListingModal() {
       },
     });
 
-  // --- Photos ---
-  const addPhoto = () => {
-    const next = stockListingPhotos.find((u) => !photos.includes(u));
-    if (next) setPhotos((p) => [...p, next]);
+  // --- Photos (create) ---
+  // Pick from gallery → compress each (≤1280 long side, JPEG 0.7) right here, so
+  // the form state already holds the compressed base64 (createListing only
+  // uploads, never compresses). Capped at 10.
+  const addPhoto = async () => {
+    if (photos.length >= 10) return;
+
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert(t("addListing.photoPermission"));
+      return;
+    }
+
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsMultipleSelection: true,
+      selectionLimit: 10 - photos.length,
+      quality: 1,
+    });
+    if (res.canceled || !res.assets) return;
+
+    const compressed = await Promise.all(
+      res.assets.map(async (a) => {
+        const ctx = ImageManipulator.manipulate(a.uri);
+        if (Math.max(a.width, a.height) > 1280) {
+          if (a.width >= a.height) ctx.resize({ width: 1280 });
+          else ctx.resize({ height: 1280 });
+        }
+        const img = await ctx.renderAsync();
+        const out = await img.saveAsync({ format: SaveFormat.JPEG, compress: 0.7, base64: true });
+        return { uri: out.uri, base64: out.base64 };
+      }),
+    );
+    setPhotos((p) => [...p, ...compressed].slice(0, 10));
   };
-  const removePhoto = (u: string) => setPhotos((p) => p.filter((x) => x !== u));
+  const removePhoto = (uri: string) => setPhotos((p) => p.filter((x) => x.uri !== uri));
 
   // --- Validation (gates the Next button per step) ---
   const phoneOk = phone.replace(/[^\d]/g, "").length >= 9;
@@ -246,7 +281,11 @@ export default function AddListingModal() {
         return;
       }
     } else {
-      const res = await createListing(form, user.id, photos);
+      const res = await createListing(
+        form,
+        user.id,
+        photos.map((p) => ({ base64: p.base64 ?? "" })),
+      );
       setPublishing(false);
       if (!res.ok) {
         // Surface both failure modes explicitly — don't pretend it worked.
@@ -271,7 +310,7 @@ export default function AddListingModal() {
   // Preview listing built from the current form (Step 4 + PropertyCard reuse).
   const previewListing: Listing = {
     id: "preview",
-    image: photos[0] ?? "",
+    image: photos[0]?.uri ?? "",
     priceAzn: Number(price) || 0,
     areaM2: isLand ? 0 : Number(area) || 0,
     landAreaSot: isLand ? Number(area) || 0 : undefined,
@@ -360,7 +399,7 @@ export default function AddListingModal() {
               photos={photos}
               onAdd={addPhoto}
               onRemove={removePhoto}
-              canAddMore={!isEdit && photos.length < stockListingPhotos.length}
+              canAddMore={!isEdit && photos.length < 10}
               readOnly={isEdit}
             />
           )}
@@ -753,9 +792,9 @@ function Step1Photos({
 }: {
   colors: Theme;
   t: (k: string) => string;
-  photos: string[];
+  photos: { uri: string; base64?: string }[];
   onAdd: () => void;
-  onRemove: (u: string) => void;
+  onRemove: (uri: string) => void;
   canAddMore: boolean;
   readOnly?: boolean;
 }) {
@@ -763,9 +802,9 @@ function Step1Photos({
     <View style={{ gap: 12, paddingTop: 4 }}>
       <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{t("addListing.photosHint")}</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: GRID_GAP }}>
-        {photos.map((uri, idx) => (
+        {photos.map((photo, idx) => (
           <View
-            key={uri}
+            key={photo.uri}
             style={{
               width: PHOTO_SIZE,
               height: PHOTO_SIZE,
@@ -776,7 +815,7 @@ function Step1Photos({
               borderColor: colors.border,
             }}
           >
-            <Image source={{ uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+            <Image source={{ uri: photo.uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
             {/* Cover badge on the first photo */}
             {idx === 0 && (
               <LinearGradient
@@ -792,7 +831,7 @@ function Step1Photos({
             )}
             {!readOnly && (
               <Pressable
-                onPress={() => onRemove(uri)}
+                onPress={() => onRemove(photo.uri)}
                 hitSlop={6}
                 style={{
                   position: "absolute",

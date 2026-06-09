@@ -47,7 +47,7 @@ export default function MyListingsScreen() {
     const index = snapshot.findIndex((l) => l.id === item.id);
     setItems(snapshot.filter((l) => l.id !== item.id));
 
-    const { ok } = await deleteListing(item.id);
+    const { ok } = await deleteListing(item.id, item.ownerId);
     if (!ok) {
       setItems((cur) => {
         const arr = [...(cur ?? [])];

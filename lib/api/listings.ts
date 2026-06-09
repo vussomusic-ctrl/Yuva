@@ -11,6 +11,7 @@ import {
   rowToDetail,
   formToRow,
 } from "../adapters/listing";
+import { uploadListingPhoto, removeListingFiles } from "./photos";
 
 // One query, cover embedded (no N+1).
 const LIST_SELECT = "*, listing_photos(url, sort)";
@@ -82,14 +83,18 @@ export type CreateListingResult =
   | { ok: false; step: "listing" | "photos"; id: string | null };
 
 /**
- * Create a listing then its photo rows ("2 inserts", no RPC). If the photos
- * insert fails after the listing was created, returns step:"photos" WITH the
- * new id — the caller surfaces this explicitly (does not pretend it succeeded).
+ * Create a listing with real photos (listing-first). Order:
+ *   1. insert listing → id (nothing uploaded yet → no orphans if this fails)
+ *   2. upload each compressed JPEG to {uid}/{id}/{i}.jpg → public URL
+ *   3. insert listing_photos rows with those URLs
+ * Any photo-stage failure does a FULL rollback (remove files + delete listing)
+ * and returns step:"photos" — never a coverless half-listing. Storage isn't
+ * transactional with Postgres, so rollback is best-effort.
  */
 export async function createListing(
   form: ListingFormInput,
   ownerId: string,
-  photoUrls: string[],
+  photos: { base64: string }[],
 ): Promise<CreateListingResult> {
   const { data, error } = await supabase
     .from("listings")
@@ -100,10 +105,27 @@ export async function createListing(
   if (error || !data) return { ok: false, step: "listing", id: null };
   const id = (data as { id: string }).id;
 
-  if (photoUrls.length > 0) {
-    const rows = photoUrls.map((url, i) => ({ listing_id: id, url, sort: i }));
+  // 2. Upload files.
+  const urls: string[] = [];
+  try {
+    for (let i = 0; i < photos.length; i++) {
+      urls.push(await uploadListingPhoto(ownerId, id, i, photos[i].base64));
+    }
+  } catch {
+    await removeListingFiles(ownerId, id);
+    await deleteListing(id, ownerId);
+    return { ok: false, step: "photos", id };
+  }
+
+  // 3. Insert photo rows.
+  if (urls.length > 0) {
+    const rows = urls.map((url, i) => ({ listing_id: id, url, sort: i }));
     const { error: photoErr } = await supabase.from("listing_photos").insert(rows);
-    if (photoErr) return { ok: false, step: "photos", id };
+    if (photoErr) {
+      await removeListingFiles(ownerId, id);
+      await deleteListing(id, ownerId);
+      return { ok: false, step: "photos", id };
+    }
   }
 
   return { ok: true, id };
@@ -127,10 +149,13 @@ export async function updateListing(
 
 /**
  * Delete a listing the user owns. The FK ON DELETE CASCADE removes its
- * listing_photos + favorites rows automatically; RLS (listings_delete_own)
- * restricts it to the owner. Errors are caught into { ok: false } (not thrown).
+ * listing_photos + favorites ROWS, but NOT the Storage files — those must be
+ * removed via the Storage API or they orphan. So after deleting the row we
+ * best-effort remove the listing's files. RLS: listings_delete_own.
  */
-export async function deleteListing(id: string): Promise<{ ok: boolean }> {
+export async function deleteListing(id: string, ownerId?: string): Promise<{ ok: boolean }> {
   const { error } = await supabase.from("listings").delete().eq("id", id);
-  return { ok: !error };
+  if (error) return { ok: false };
+  if (ownerId) await removeListingFiles(ownerId, id);
+  return { ok: true };
 }

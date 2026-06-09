@@ -157,7 +157,8 @@
     "publishing": "Publishing...",
     "save": "Save",
     "updatedTitle": "Listing updated",
-    "updatedDesc": "Your changes were saved"
+    "updatedDesc": "Your changes were saved",
+    "photoPermission": "Allow photo access to add them to your listing"
   },
   "search": {
     "resultsCount": "{{count}} listings found",
