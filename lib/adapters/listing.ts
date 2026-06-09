@@ -6,10 +6,11 @@ import { DealKey } from "../dealTypes";
 import { PropertyTypeKey, isLandType } from "../propertyTypes";
 import { BuildKey } from "../buildTypes";
 import { Listing, ListingDetail, Agent } from "../mock/listings";
+import { storagePathFromUrl } from "../api/photos";
 
 // --- DB row shapes (what PostgREST returns with our embeds) ---
 
-export type ListingPhotoRow = { url: string; sort: number };
+export type ListingPhotoRow = { id: string; url: string; sort: number };
 
 export type OwnerRow = {
   full_name: string | null;
@@ -68,6 +69,16 @@ export type ListingFormInput = {
   description: string;
   lat: number | null;
   lng: number | null;
+};
+
+// Form photo item. `existing` = already in DB (rowId + storagePath); `new` =
+// freshly picked (base64 to upload). `uri` is the preview source for both.
+export type PhotoItem = {
+  uri: string;
+  base64?: string;
+  rowId?: string;
+  storagePath?: string;
+  kind: "existing" | "new";
 };
 
 // Photos sorted by `sort`; cover = first url (or "" if none).
@@ -194,4 +205,18 @@ export function rowToForm(row: ListingRow): ListingFormInput {
     lat: row.lat,
     lng: row.lng,
   };
+}
+
+// DB row → edit-prefill photo items (existing photos, ordered by sort). Each
+// carries its rowId (for diff/sort on Save) and parsed storagePath.
+export function rowToPhotoItems(row: ListingRow): PhotoItem[] {
+  return (row.listing_photos ?? [])
+    .slice()
+    .sort((a, b) => a.sort - b.sort)
+    .map((p) => ({
+      uri: p.url,
+      rowId: p.id,
+      storagePath: storagePathFromUrl(p.url) ?? undefined,
+      kind: "existing" as const,
+    }));
 }

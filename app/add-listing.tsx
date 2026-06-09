@@ -35,7 +35,7 @@ import * as ImagePicker from "expo-image-picker";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { formatPrice, Listing } from "../lib/mock/listings";
 import { createListing, updateListing, fetchListingRow } from "../lib/api/listings";
-import { ListingFormInput, rowToForm } from "../lib/adapters/listing";
+import { ListingFormInput, PhotoItem, rowToForm, rowToPhotoItems } from "../lib/adapters/listing";
 import { useAuth } from "../lib/auth";
 import { useMapPick } from "../lib/map-pick";
 
@@ -65,9 +65,9 @@ export default function AddListingModal() {
 
   const [step, setStep] = useState(1);
 
-  // One form state for the whole flow. Photos hold a local/remote `uri` (preview)
-  // and, for freshly-picked create photos, the compressed JPEG `base64` (upload).
-  const [photos, setPhotos] = useState<{ uri: string; base64?: string }[]>([]);
+  // One form state for the whole flow. Photos: existing (rowId/storagePath) or
+  // new (compressed base64 to upload). `uri` is the preview source for both.
+  const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [dealType, setDealType] = useState<DealKey>("sale");
   const [propertyType, setPropertyType] = useState<PropertyTypeKey | null>(null);
   const [buildType, setBuildType] = useState<BuildKey>("new");
@@ -127,12 +127,7 @@ export default function AddListingModal() {
         setFurnished(f.furnished);
         setMortgage(f.mortgage);
         setDescription(f.description);
-        setPhotos(
-          (row.listing_photos ?? [])
-            .slice()
-            .sort((a, b) => a.sort - b.sort)
-            .map((p) => ({ uri: p.url })),
-        );
+        setPhotos(rowToPhotoItems(row));
         if (row.lat != null && row.lng != null) setPicked({ lat: row.lat, lng: row.lng });
         setEditStatus("ok");
       })
@@ -221,7 +216,7 @@ export default function AddListingModal() {
         }
         const img = await ctx.renderAsync();
         const out = await img.saveAsync({ format: SaveFormat.JPEG, compress: 0.7, base64: true });
-        return { uri: out.uri, base64: out.base64 };
+        return { uri: out.uri, base64: out.base64, kind: "new" as const };
       }),
     );
     setPhotos((p) => [...p, ...compressed].slice(0, 10));
@@ -274,10 +269,10 @@ export default function AddListingModal() {
     };
 
     if (isEdit) {
-      const res = await updateListing(id!, form);
+      const res = await updateListing(id!, form, user.id, photos);
       setPublishing(false);
       if (!res.ok) {
-        setPublishError(t("addListing.errSave"));
+        setPublishError(res.step === "photos" ? t("addListing.errPhotos") : t("addListing.errSave"));
         return;
       }
     } else {
@@ -399,8 +394,7 @@ export default function AddListingModal() {
               photos={photos}
               onAdd={addPhoto}
               onRemove={removePhoto}
-              canAddMore={!isEdit && photos.length < 10}
-              readOnly={isEdit}
+              canAddMore={photos.length < 10}
             />
           )}
 
@@ -788,15 +782,13 @@ function Step1Photos({
   onAdd,
   onRemove,
   canAddMore,
-  readOnly,
 }: {
   colors: Theme;
   t: (k: string) => string;
-  photos: { uri: string; base64?: string }[];
+  photos: PhotoItem[];
   onAdd: () => void;
   onRemove: (uri: string) => void;
   canAddMore: boolean;
-  readOnly?: boolean;
 }) {
   return (
     <View style={{ gap: 12, paddingTop: 4 }}>
@@ -829,25 +821,23 @@ function Step1Photos({
                 </Text>
               </LinearGradient>
             )}
-            {!readOnly && (
-              <Pressable
-                onPress={() => onRemove(photo.uri)}
-                hitSlop={6}
-                style={{
-                  position: "absolute",
-                  top: 6,
-                  right: 6,
-                  width: 24,
-                  height: 24,
-                  borderRadius: 12,
-                  backgroundColor: "rgba(20,18,24,0.7)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Ionicons name="close" size={15} color="#FFFFFF" />
-              </Pressable>
-            )}
+            <Pressable
+              onPress={() => onRemove(photo.uri)}
+              hitSlop={6}
+              style={{
+                position: "absolute",
+                top: 6,
+                right: 6,
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: "rgba(20,18,24,0.7)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons name="close" size={15} color="#FFFFFF" />
+            </Pressable>
           </View>
         ))}
 

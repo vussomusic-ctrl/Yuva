@@ -7,17 +7,23 @@ import { Listing, ListingDetail } from "../mock/listings";
 import {
   ListingRow,
   ListingFormInput,
+  PhotoItem,
   rowToListing,
   rowToDetail,
   formToRow,
 } from "../adapters/listing";
-import { uploadListingPhoto, removeListingFiles } from "./photos";
+import {
+  uploadListingPhoto,
+  removeListingFiles,
+  removePhotoFiles,
+  storagePathFromUrl,
+} from "./photos";
 
 // One query, cover embedded (no N+1).
-const LIST_SELECT = "*, listing_photos(url, sort)";
+const LIST_SELECT = "*, listing_photos(id, url, sort)";
 // Detail also embeds the owner profile for the agent card.
 const DETAIL_SELECT =
-  "*, listing_photos(url, sort), owner:profiles!listings_owner_id_fkey(full_name, avatar_url, verified)";
+  "*, listing_photos(id, url, sort), owner:profiles!listings_owner_id_fkey(full_name, avatar_url, verified)";
 
 /** Active listings, newest first (Home feed + Search). */
 export async function fetchFeed(): Promise<Listing[]> {
@@ -109,7 +115,7 @@ export async function createListing(
   const urls: string[] = [];
   try {
     for (let i = 0; i < photos.length; i++) {
-      urls.push(await uploadListingPhoto(ownerId, id, i, photos[i].base64));
+      urls.push(await uploadListingPhoto(ownerId, id, `${i}.jpg`, photos[i].base64));
     }
   } catch {
     await removeListingFiles(ownerId, id);
@@ -141,10 +147,86 @@ export async function createListing(
 export async function updateListing(
   id: string,
   form: ListingFormInput,
-): Promise<{ ok: boolean }> {
+  ownerId: string,
+  photos: PhotoItem[],
+): Promise<{ ok: true } | { ok: false; step: "fields" | "photos" }> {
+  // Step 0 — listings fields. Fail before touching Storage → no orphans.
   const { owner_id, ...patch } = formToRow(form, "");
-  const { error } = await supabase.from("listings").update(patch).eq("id", id);
-  return { ok: !error };
+  const { error: fieldErr } = await supabase.from("listings").update(patch).eq("id", id);
+  if (fieldErr) return { ok: false, step: "fields" };
+
+  // Re-read current photo rows (source of truth for removed detection + paths).
+  const { data: currentRows, error: readErr } = await supabase
+    .from("listing_photos")
+    .select("id, url")
+    .eq("listing_id", id);
+  if (readErr) return { ok: false, step: "photos" };
+  const current = (currentRows ?? []) as { id: string; url: string }[];
+
+  // Diff by rowId.
+  const keptIds = new Set(
+    photos.filter((p) => p.kind === "existing" && p.rowId).map((p) => p.rowId as string),
+  );
+  const removed = current.filter((r) => !keptIds.has(r.id));
+
+  // sort for both kept and new = the item's index in the final array (one dense
+  // 0..n-1 sequence, existing + new interleaved by array order).
+  const uploadedPaths: string[] = [];
+  const newUrls = new Map<number, string>(); // final index → uploaded url
+
+  // Steps 1-3 are the "savable" zone: any failure → clean THIS attempt's files
+  // (uploadedPaths) and bail. Storage isn't transactional, so we roll back files.
+  try {
+    // 1. Upload new files (token name, not position-based).
+    for (let i = 0; i < photos.length; i++) {
+      const p = photos[i];
+      if (p.kind === "new") {
+        const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`;
+        const url = await uploadListingPhoto(ownerId, id, fileName, p.base64 ?? "");
+        uploadedPaths.push(`${ownerId}/${id}/${fileName}`);
+        newUrls.set(i, url);
+      }
+    }
+    // 2. Update sort on kept rows (by rowId).
+    for (let i = 0; i < photos.length; i++) {
+      const p = photos[i];
+      if (p.kind === "existing" && p.rowId) {
+        const { error } = await supabase.from("listing_photos").update({ sort: i }).eq("id", p.rowId);
+        if (error) throw error;
+      }
+    }
+    // 3. Insert new rows.
+    const insertRows = photos
+      .map((p, i) => (p.kind === "new" ? { listing_id: id, url: newUrls.get(i)!, sort: i } : null))
+      .filter((r): r is { listing_id: string; url: string; sort: number } => r !== null);
+    if (insertRows.length > 0) {
+      const { error } = await supabase.from("listing_photos").insert(insertRows);
+      if (error) throw error;
+    }
+  } catch {
+    await removePhotoFiles(uploadedPaths);
+    return { ok: false, step: "photos" };
+  }
+
+  // 4. Delete removed rows — BEST-EFFORT (main change already saved; don't fail
+  // even on a thrown network error).
+  if (removed.length > 0) {
+    try {
+      await supabase
+        .from("listing_photos")
+        .delete()
+        .in(
+          "id",
+          removed.map((r) => r.id),
+        );
+    } catch {
+      // swallow — removed rows clean up on the next Save / GC
+    }
+  }
+  // 5. Delete removed files — BEST-EFFORT, last (a row never points at a gone file).
+  await removePhotoFiles(removed.map((r) => storagePathFromUrl(r.url)));
+
+  return { ok: true };
 }
 
 /**
