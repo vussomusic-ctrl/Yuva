@@ -220,7 +220,12 @@
     "startConversation": "Söhbətə başlayın",
     "errSend": "Göndərilmədi",
     "noMessages": "Mesaj yoxdur",
-    "listingUnavailable": "Elan silinib"
+    "listingUnavailable": "Elan silinib",
+    "pin": "Sabitlə",
+    "unpin": "Sabitləməni ləğv et",
+    "delete": "Sil",
+    "deleteConfirmTitle": "Söhbəti sil?",
+    "deleteConfirmMsg": "Söhbət yalnız sizdə silinəcək"
   },
   "myListings": {
     "title": "Mənim elanlarım",

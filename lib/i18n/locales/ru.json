@@ -220,7 +220,12 @@
     "startConversation": "Начните диалог",
     "errSend": "Не удалось отправить",
     "noMessages": "Нет сообщений",
-    "listingUnavailable": "Объявление снято"
+    "listingUnavailable": "Объявление снято",
+    "pin": "Закрепить",
+    "unpin": "Открепить",
+    "delete": "Удалить",
+    "deleteConfirmTitle": "Удалить диалог?",
+    "deleteConfirmMsg": "Диалог исчезнет только у вас"
   },
   "myListings": {
     "title": "Мои объявления",

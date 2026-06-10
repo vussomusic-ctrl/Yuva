@@ -26,7 +26,20 @@ export type ConversationListItem = {
   // conversation has no listing_id or the listing was removed → row shows
   // "listing unavailable" instead.
   listing: { district: string; priceAzn: number } | null;
+  isPinned: boolean; // my-side pin (sorts above unpinned)
+  iAmBuyer: boolean; // which side I am → which *_hidden_at/*_pinned column is mine
 };
+
+/**
+ * Chat-list order: pinned first, then most-recent activity. Shared by
+ * getMyConversations and the live-list patch (4G) so both stay consistent.
+ */
+export function sortConversations(items: ConversationListItem[]): ConversationListItem[] {
+  return items.sort((a, b) => {
+    if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+    return b.lastAt.localeCompare(a.lastAt);
+  });
+}
 
 async function currentUserId(): Promise<string> {
   const { data } = await supabase.auth.getSession();
@@ -128,7 +141,7 @@ export async function getMyConversations(): Promise<ConversationListItem[]> {
   const { data: convData, error: convErr } = await supabase
     .from("conversations")
     .select(
-      "id, listing_id, buyer_id, seller_id, created_at, buyer:profiles!conversations_buyer_id_fkey(full_name, avatar_url), seller:profiles!conversations_seller_id_fkey(full_name, avatar_url)",
+      "id, listing_id, buyer_id, seller_id, created_at, buyer_hidden_at, seller_hidden_at, buyer_pinned, seller_pinned, buyer:profiles!conversations_buyer_id_fkey(full_name, avatar_url), seller:profiles!conversations_seller_id_fkey(full_name, avatar_url)",
     )
     .or(`buyer_id.eq.${me},seller_id.eq.${me}`);
   if (convErr) throw convErr;
@@ -139,6 +152,10 @@ export async function getMyConversations(): Promise<ConversationListItem[]> {
     buyer_id: string;
     seller_id: string;
     created_at: string;
+    buyer_hidden_at: string | null;
+    seller_hidden_at: string | null;
+    buyer_pinned: boolean;
+    seller_pinned: boolean;
     buyer: { full_name: string | null; avatar_url: string | null } | null;
     seller: { full_name: string | null; avatar_url: string | null } | null;
   };
@@ -173,24 +190,61 @@ export async function getMyConversations(): Promise<ConversationListItem[]> {
     for (const l of listings) listingMap.set(l.id, { district: l.district, priceAzn: l.priceAzn });
   }
 
-  const items: ConversationListItem[] = convs.map((c) => {
-    const peer = c.buyer_id === me ? c.seller : c.buyer;
+  const items: ConversationListItem[] = convs.flatMap((c) => {
+    const iAmBuyer = c.buyer_id === me;
+    const myHiddenAt = iAmBuyer ? c.buyer_hidden_at : c.seller_hidden_at;
+    const isPinned = iAmBuyer ? c.buyer_pinned : c.seller_pinned;
     const s = summary.get(c.id);
+    const lastAt = s?.lastAt ?? c.created_at;
+    // Hidden-on-my-side: drop unless a newer message arrived after I hid it
+    // (lastAt > myHiddenAt auto-returns the conversation, Telegram-style).
+    if (myHiddenAt != null && lastAt <= myHiddenAt) return [];
+
+    const peer = iAmBuyer ? c.seller : c.buyer;
     const listing = (c.listing_id && listingMap.get(c.listing_id)) || null;
-    return {
+    return [{
       id: c.id,
       peerName: peer?.full_name ?? "",
       peerAvatar: peer?.avatar_url ?? "",
       lastBody: s?.lastBody ?? "",
-      lastAt: s?.lastAt ?? c.created_at,
+      lastAt,
       unreadCount: s?.unreadCount ?? 0,
       listingId: c.listing_id,
       listing,
-    };
+      isPinned,
+      iAmBuyer,
+    }];
   });
 
-  items.sort((a, b) => b.lastAt.localeCompare(a.lastAt));
-  return items;
+  return sortConversations(items);
+}
+
+/**
+ * Hide a conversation on my side only ("delete for me"). Stamps my *_hidden_at;
+ * getMyConversations drops it until a newer message un-hides it. iAmBuyer picks
+ * my column. RLS (conversations_update_participant) gates this to participants.
+ */
+export async function hideConversation(conversationId: string, iAmBuyer: boolean): Promise<void> {
+  const col = iAmBuyer ? "buyer_hidden_at" : "seller_hidden_at";
+  const { error } = await supabase
+    .from("conversations")
+    .update({ [col]: new Date().toISOString() })
+    .eq("id", conversationId);
+  if (error) throw error;
+}
+
+/** Pin/unpin a conversation on my side (sorts above unpinned). */
+export async function setConversationPinned(
+  conversationId: string,
+  iAmBuyer: boolean,
+  pinned: boolean,
+): Promise<void> {
+  const col = iAmBuyer ? "buyer_pinned" : "seller_pinned";
+  const { error } = await supabase
+    .from("conversations")
+    .update({ [col]: pinned })
+    .eq("id", conversationId);
+  if (error) throw error;
 }
 
 /**

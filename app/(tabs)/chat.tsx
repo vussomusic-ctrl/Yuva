@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
-import { View, Text, Image, Pressable, FlatList } from "react-native";
+import { View, Text, Image, Pressable, FlatList, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
@@ -10,7 +11,12 @@ import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { useAuth } from "../../lib/auth";
-import { getMyConversations, ConversationListItem } from "../../lib/api/chats";
+import {
+  getMyConversations,
+  hideConversation,
+  setConversationPinned,
+  ConversationListItem,
+} from "../../lib/api/chats";
 import { formatPrice } from "../../lib/mock/listings";
 
 const formatListTime = (iso: string) => {
@@ -79,7 +85,13 @@ export default function ChatListScreen() {
             </View>
           }
           renderItem={({ item }) => (
-            <ChatRow colors={colors} item={item} t={t} onPress={() => router.push(`/chat/${item.id}`)} />
+            <ChatRow
+              colors={colors}
+              item={item}
+              t={t}
+              onPress={() => router.push(`/chat/${item.id}`)}
+              onAfterChange={load}
+            />
           )}
         />
       )}
@@ -92,15 +104,59 @@ function ChatRow({
   item,
   t,
   onPress,
+  onAfterChange,
 }: {
   colors: Theme;
   item: ConversationListItem;
   t: (k: string) => string;
   onPress: () => void;
+  onAfterChange: () => void;
 }) {
   const preview = item.lastBody || t("messages.noMessages");
 
   return (
+    <ReanimatedSwipeable
+      friction={2}
+      rightThreshold={40}
+      renderRightActions={(_progress, _translation, methods) => (
+        <View style={{ flexDirection: "row" }}>
+          {/* Pin / unpin — my-side toggle, no confirm */}
+          <Pressable
+            onPress={() => {
+              methods.close();
+              setConversationPinned(item.id, item.iAmBuyer, !item.isPinned)
+                .then(onAfterChange)
+                .catch(() => {});
+            }}
+            style={{ width: 76, backgroundColor: brand.violet, alignItems: "center", justifyContent: "center", gap: 4 }}
+          >
+            <Ionicons name={item.isPinned ? "pin-outline" : "pin"} size={20} color="#FFFFFF" />
+            <Text style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "700" }}>
+              {t(item.isPinned ? "messages.unpin" : "messages.pin")}
+            </Text>
+          </Pressable>
+          {/* Delete — hide on my side only, with confirm */}
+          <Pressable
+            onPress={() => {
+              methods.close();
+              Alert.alert(t("messages.deleteConfirmTitle"), t("messages.deleteConfirmMsg"), [
+                { text: t("common.cancel"), style: "cancel" },
+                {
+                  text: t("messages.delete"),
+                  style: "destructive",
+                  onPress: () =>
+                    hideConversation(item.id, item.iAmBuyer).then(onAfterChange).catch(() => {}),
+                },
+              ]);
+            }}
+            style={{ width: 76, backgroundColor: brand.magenta, alignItems: "center", justifyContent: "center", gap: 4 }}
+          >
+            <Ionicons name="trash" size={20} color="#FFFFFF" />
+            <Text style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "700" }}>{t("messages.delete")}</Text>
+          </Pressable>
+        </View>
+      )}
+    >
     <Pressable
       onPress={onPress}
       style={({ pressed }) => ({
@@ -109,6 +165,7 @@ function ChatRow({
         gap: 12,
         paddingHorizontal: 16,
         paddingVertical: 12,
+        backgroundColor: colors.bg,
         opacity: pressed ? 0.6 : 1,
       })}
     >
@@ -127,6 +184,9 @@ function ChatRow({
           <Text numberOfLines={1} style={{ flex: 1, color: colors.text, fontSize: 16, fontWeight: "700" }}>
             {item.peerName}
           </Text>
+          {item.isPinned && (
+            <Ionicons name="pin" size={12} color={colors.textSecondary} style={{ marginLeft: 6 }} />
+          )}
           <Text style={{ color: colors.textSecondary, fontSize: 12, marginLeft: 8 }}>
             {formatListTime(item.lastAt)}
           </Text>
@@ -169,5 +229,6 @@ function ChatRow({
         </View>
       </View>
     </Pressable>
+    </ReanimatedSwipeable>
   );
 }

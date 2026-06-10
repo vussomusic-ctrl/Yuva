@@ -220,7 +220,12 @@
     "startConversation": "Start the conversation",
     "errSend": "Couldn't send",
     "noMessages": "No messages",
-    "listingUnavailable": "Listing removed"
+    "listingUnavailable": "Listing removed",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete conversation?",
+    "deleteConfirmMsg": "The conversation is removed only for you"
   },
   "myListings": {
     "title": "My listings",
