@@ -218,7 +218,8 @@
     "emptyDesc": "Elan səhifəsindən satıcıya yazın",
     "inputPlaceholder": "Mesaj yazın...",
     "startConversation": "Söhbətə başlayın",
-    "errSend": "Göndərilmədi"
+    "errSend": "Göndərilmədi",
+    "noMessages": "Mesaj yoxdur"
   },
   "myListings": {
     "title": "Mənim elanlarım",

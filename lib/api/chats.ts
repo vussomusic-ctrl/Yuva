@@ -13,6 +13,16 @@ export type Message = {
   created_at: string;
 };
 
+export type ConversationListItem = {
+  id: string;
+  peerName: string;
+  peerAvatar: string;
+  lastBody: string;
+  lastAt: string; // ISO; falls back to the conversation's created_at
+  unreadCount: number;
+  listingId: string | null;
+};
+
 async function currentUserId(): Promise<string> {
   const { data } = await supabase.auth.getSession();
   const uid = data.session?.user?.id;
@@ -92,6 +102,72 @@ export async function getMessages(conversationId: string): Promise<Message[]> {
     .order("created_at", { ascending: true });
   if (error) throw error;
   return (data as Message[]) ?? [];
+}
+
+/**
+ * My conversations (as buyer or seller) for the Chats list. Two queries, no
+ * VIEW/RPC: (1) conversations + both profiles; (2) all their messages, folded
+ * in one JS pass into last-message + unread-count per conversation. Sorted by
+ * most recent activity. Conversations with no messages are kept (a "Написать"
+ * tap creates one before the first message).
+ */
+export async function getMyConversations(): Promise<ConversationListItem[]> {
+  const me = await currentUserId();
+
+  const { data: convData, error: convErr } = await supabase
+    .from("conversations")
+    .select(
+      "id, listing_id, buyer_id, seller_id, created_at, buyer:profiles!conversations_buyer_id_fkey(full_name, avatar_url), seller:profiles!conversations_seller_id_fkey(full_name, avatar_url)",
+    )
+    .or(`buyer_id.eq.${me},seller_id.eq.${me}`);
+  if (convErr) throw convErr;
+
+  type ConvRow = {
+    id: string;
+    listing_id: string | null;
+    buyer_id: string;
+    seller_id: string;
+    created_at: string;
+    buyer: { full_name: string | null; avatar_url: string | null } | null;
+    seller: { full_name: string | null; avatar_url: string | null } | null;
+  };
+  const convs = (convData as unknown as ConvRow[]) ?? [];
+  if (convs.length === 0) return [];
+
+  // (2) last message + unread per conversation, folded in one pass.
+  const ids = convs.map((c) => c.id);
+  const summary = new Map<string, { lastBody: string; lastAt: string; unreadCount: number }>();
+  const { data: msgData, error: msgErr } = await supabase
+    .from("messages")
+    .select("conversation_id, sender_id, body, read, created_at")
+    .in("conversation_id", ids)
+    .order("created_at", { ascending: true });
+  if (msgErr) throw msgErr;
+
+  for (const m of (msgData as Message[]) ?? []) {
+    const cur = summary.get(m.conversation_id) ?? { lastBody: "", lastAt: "", unreadCount: 0 };
+    cur.lastBody = m.body; // asc order → last seen wins
+    cur.lastAt = m.created_at;
+    if (m.sender_id !== me && !m.read) cur.unreadCount += 1;
+    summary.set(m.conversation_id, cur);
+  }
+
+  const items: ConversationListItem[] = convs.map((c) => {
+    const peer = c.buyer_id === me ? c.seller : c.buyer;
+    const s = summary.get(c.id);
+    return {
+      id: c.id,
+      peerName: peer?.full_name ?? "",
+      peerAvatar: peer?.avatar_url ?? "",
+      lastBody: s?.lastBody ?? "",
+      lastAt: s?.lastAt ?? c.created_at,
+      unreadCount: s?.unreadCount ?? 0,
+      listingId: c.listing_id,
+    };
+  });
+
+  items.sort((a, b) => b.lastAt.localeCompare(a.lastAt));
+  return items;
 }
 
 /** Send a message; returns the inserted row (id + created_at for the UI). */

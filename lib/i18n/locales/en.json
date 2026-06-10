@@ -218,7 +218,8 @@
     "emptyDesc": "Message a seller from a listing page",
     "inputPlaceholder": "Type a message...",
     "startConversation": "Start the conversation",
-    "errSend": "Couldn't send"
+    "errSend": "Couldn't send",
+    "noMessages": "No messages"
   },
   "myListings": {
     "title": "My listings",
