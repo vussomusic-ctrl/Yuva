@@ -223,8 +223,22 @@ create table if not exists public.conversations (
   buyer_id    uuid not null references public.profiles (id) on delete cascade,
   seller_id   uuid not null references public.profiles (id) on delete cascade,
   created_at  timestamptz not null default now(),
+  -- Per-user chat state (each participant independently). "Delete for me" is a
+  -- timestamp, not a flag: a message newer than it auto-returns the
+  -- conversation (Telegram-style). Pin sorts the conversation to the top.
+  buyer_hidden_at  timestamptz,
+  seller_hidden_at timestamptz,
+  buyer_pinned     boolean not null default false,
+  seller_pinned    boolean not null default false,
   unique (listing_id, buyer_id)
 );
+
+-- Idempotent for databases created before the per-user chat-state columns.
+alter table public.conversations
+  add column if not exists buyer_hidden_at  timestamptz,
+  add column if not exists seller_hidden_at timestamptz,
+  add column if not exists buyer_pinned  boolean not null default false,
+  add column if not exists seller_pinned boolean not null default false;
 
 create index if not exists conversations_buyer_idx on public.conversations (buyer_id);
 create index if not exists conversations_seller_idx on public.conversations (seller_id);
@@ -240,6 +254,13 @@ create policy "conversations_select_participant"
 drop policy if exists "conversations_insert_buyer" on public.conversations;
 create policy "conversations_insert_buyer"
   on public.conversations for insert
+  with check (buyer_id = auth.uid() or seller_id = auth.uid());
+
+-- Either participant may update the conversation row (their hide/pin state).
+drop policy if exists "conversations_update_participant" on public.conversations;
+create policy "conversations_update_participant"
+  on public.conversations for update
+  using (buyer_id = auth.uid() or seller_id = auth.uid())
   with check (buyer_id = auth.uid() or seller_id = auth.uid());
 
 -- =============================================================================
@@ -365,3 +386,15 @@ create policy "listing_photos_delete_own"
     bucket_id = 'listing-photos'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- =============================================================================
+-- Realtime: live chat (stage 4C delivery + 4G live conversation list)
+-- =============================================================================
+-- Publish messages so realtime postgres_changes broadcasts INSERTs (RLS-filtered
+-- to participants). "add table" errors if it's already a member → guard it.
+do $$
+begin
+  alter publication supabase_realtime add table public.messages;
+exception
+  when duplicate_object then null;
+end $$;
