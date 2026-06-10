@@ -219,7 +219,8 @@
     "inputPlaceholder": "Mesaj yazın...",
     "startConversation": "Söhbətə başlayın",
     "errSend": "Göndərilmədi",
-    "noMessages": "Mesaj yoxdur"
+    "noMessages": "Mesaj yoxdur",
+    "listingUnavailable": "Elan silinib"
   },
   "myListings": {
     "title": "Mənim elanlarım",

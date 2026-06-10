@@ -19,7 +19,11 @@ import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { useAuth } from "../../lib/auth";
+import { useLanguage } from "../../lib/i18n/languages";
 import { getMessages, getConversationMeta, sendMessage, Message } from "../../lib/api/chats";
+import { fetchListingsByIds } from "../../lib/api/listings";
+import { buildListingTitle } from "../../lib/listingTitle";
+import { Listing, formatPrice } from "../../lib/mock/listings";
 
 const formatTime = (iso: string) => {
   const d = new Date(iso);
@@ -31,6 +35,7 @@ export default function ConversationScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
+  const { current: lang } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const listRef = useRef<FlatList<Message>>(null);
@@ -38,6 +43,10 @@ export default function ConversationScreen() {
   const [meta, setMeta] = useState<{ peerName: string; peerAvatar: string } | null>(null);
   const [error, setError] = useState(false);
   const [draft, setDraft] = useState("");
+  // Pinned listing card: "hidden" (loading / network fail), "card" (loaded),
+  // "unavailable" (no listing_id or not found → removed/archived).
+  const [card, setCard] = useState<Listing | null>(null);
+  const [cardState, setCardState] = useState<"hidden" | "card" | "unavailable">("hidden");
 
   // Load messages + peer meta on focus (no realtime yet — that's 4C; the peer's
   // new messages appear after a refetch / re-entering the screen).
@@ -48,6 +57,21 @@ export default function ConversationScreen() {
       .then(([msgs, m]) => {
         setMessages(msgs);
         setMeta(m);
+        // Listing card — own catch: a card failure must not break the chat.
+        if (!m.listingId) {
+          setCard(null);
+          setCardState("unavailable");
+          return;
+        }
+        fetchListingsByIds([m.listingId])
+          .then((res) => {
+            setCard(res[0] ?? null);
+            setCardState(res[0] ? "card" : "unavailable");
+          })
+          .catch(() => {
+            setCard(null);
+            setCardState("hidden");
+          });
       })
       .catch(() => setError(true));
   }, [id]);
@@ -90,6 +114,45 @@ export default function ConversationScreen() {
         name={meta?.peerName}
         avatar={meta?.peerAvatar}
       />
+
+      {/* Pinned listing card — which property this chat is about */}
+      {cardState === "card" && card && (
+        <Pressable
+          onPress={() => router.push(`/property/${card.id}`)}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            opacity: pressed ? 0.6 : 1,
+          })}
+        >
+          {card.image ? (
+            <Image source={{ uri: card.image }} style={{ width: 52, height: 52, borderRadius: 10, backgroundColor: colors.card }} />
+          ) : (
+            <View style={{ width: 52, height: 52, borderRadius: 10, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="image-outline" size={22} color={colors.textSecondary} />
+            </View>
+          )}
+          <View style={{ flex: 1 }}>
+            <Text numberOfLines={1} style={{ color: colors.text, fontSize: 14, fontWeight: "700" }}>
+              {buildListingTitle(card, t, lang)}
+            </Text>
+            <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "800", marginTop: 2 }}>
+              {formatPrice(card.priceAzn)}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+        </Pressable>
+      )}
+      {cardState === "unavailable" && (
+        <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+          <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{t("messages.listingUnavailable")}</Text>
+        </View>
+      )}
 
       {loading ? (
         <LoadingState colors={colors} />

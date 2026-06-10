@@ -219,7 +219,8 @@
     "inputPlaceholder": "Напишите сообщение...",
     "startConversation": "Начните диалог",
     "errSend": "Не удалось отправить",
-    "noMessages": "Нет сообщений"
+    "noMessages": "Нет сообщений",
+    "listingUnavailable": "Объявление снято"
   },
   "myListings": {
     "title": "Мои объявления",

@@ -219,7 +219,8 @@
     "inputPlaceholder": "Type a message...",
     "startConversation": "Start the conversation",
     "errSend": "Couldn't send",
-    "noMessages": "No messages"
+    "noMessages": "No messages",
+    "listingUnavailable": "Listing removed"
   },
   "myListings": {
     "title": "My listings",

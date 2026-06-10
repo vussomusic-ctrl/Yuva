@@ -69,28 +69,33 @@ export async function getOrCreateConversation(
   return (again.data as { id: string }).id;
 }
 
-/** The other participant's display name + avatar for the conversation header. */
+/** Peer name/avatar + the listing this conversation is about (for the header). */
 export async function getConversationMeta(
   conversationId: string,
-): Promise<{ peerName: string; peerAvatar: string }> {
+): Promise<{ peerName: string; peerAvatar: string; listingId: string | null }> {
   const me = await currentUserId();
   const { data, error } = await supabase
     .from("conversations")
     .select(
-      "buyer_id, seller_id, buyer:profiles!conversations_buyer_id_fkey(full_name, avatar_url), seller:profiles!conversations_seller_id_fkey(full_name, avatar_url)",
+      "listing_id, buyer_id, seller_id, buyer:profiles!conversations_buyer_id_fkey(full_name, avatar_url), seller:profiles!conversations_seller_id_fkey(full_name, avatar_url)",
     )
     .eq("id", conversationId)
     .single();
   if (error) throw error;
 
   const row = data as unknown as {
+    listing_id: string | null;
     buyer_id: string;
     seller_id: string;
     buyer: { full_name: string | null; avatar_url: string | null } | null;
     seller: { full_name: string | null; avatar_url: string | null } | null;
   };
   const peer = row.buyer_id === me ? row.seller : row.buyer;
-  return { peerName: peer?.full_name ?? "", peerAvatar: peer?.avatar_url ?? "" };
+  return {
+    peerName: peer?.full_name ?? "",
+    peerAvatar: peer?.avatar_url ?? "",
+    listingId: row.listing_id,
+  };
 }
 
 /** All messages in a conversation, oldest first. */
