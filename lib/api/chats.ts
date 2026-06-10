@@ -3,6 +3,7 @@
 // an error/retry state.
 
 import { supabase } from "../supabase";
+import { fetchListingsByIds } from "./listings";
 
 export type Message = {
   id: string;
@@ -21,6 +22,10 @@ export type ConversationListItem = {
   lastAt: string; // ISO; falls back to the conversation's created_at
   unreadCount: number;
   listingId: string | null;
+  // Compact listing subtitle (which property this chat is about). null when the
+  // conversation has no listing_id or the listing was removed → row shows
+  // "listing unavailable" instead.
+  listing: { district: string; priceAzn: number } | null;
 };
 
 async function currentUserId(): Promise<string> {
@@ -110,11 +115,12 @@ export async function getMessages(conversationId: string): Promise<Message[]> {
 }
 
 /**
- * My conversations (as buyer or seller) for the Chats list. Two queries, no
+ * My conversations (as buyer or seller) for the Chats list. Three queries, no
  * VIEW/RPC: (1) conversations + both profiles; (2) all their messages, folded
- * in one JS pass into last-message + unread-count per conversation. Sorted by
- * most recent activity. Conversations with no messages are kept (a "Написать"
- * tap creates one before the first message).
+ * in one JS pass into last-message + unread-count per conversation; (3) the
+ * referenced listings (district + price for the row subtitle), keyed by id.
+ * Sorted by most recent activity. Conversations with no messages are kept (a
+ * "Написать" tap creates one before the first message).
  */
 export async function getMyConversations(): Promise<ConversationListItem[]> {
   const me = await currentUserId();
@@ -157,9 +163,20 @@ export async function getMyConversations(): Promise<ConversationListItem[]> {
     summary.set(m.conversation_id, cur);
   }
 
+  // (3) referenced listings → Map by id, for the compact row subtitle.
+  const listingIds = Array.from(
+    new Set(convs.map((c) => c.listing_id).filter((x): x is string => x != null)),
+  );
+  const listingMap = new Map<string, { district: string; priceAzn: number }>();
+  if (listingIds.length > 0) {
+    const listings = await fetchListingsByIds(listingIds);
+    for (const l of listings) listingMap.set(l.id, { district: l.district, priceAzn: l.priceAzn });
+  }
+
   const items: ConversationListItem[] = convs.map((c) => {
     const peer = c.buyer_id === me ? c.seller : c.buyer;
     const s = summary.get(c.id);
+    const listing = (c.listing_id && listingMap.get(c.listing_id)) || null;
     return {
       id: c.id,
       peerName: peer?.full_name ?? "",
@@ -168,6 +185,7 @@ export async function getMyConversations(): Promise<ConversationListItem[]> {
       lastAt: s?.lastAt ?? c.created_at,
       unreadCount: s?.unreadCount ?? 0,
       listingId: c.listing_id,
+      listing,
     };
   });
 

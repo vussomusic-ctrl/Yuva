@@ -11,6 +11,7 @@ import { brand, Theme } from "../../lib/theme/colors";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { useAuth } from "../../lib/auth";
 import { getMyConversations, ConversationListItem } from "../../lib/api/chats";
+import { formatPrice } from "../../lib/mock/listings";
 
 const formatListTime = (iso: string) => {
   const d = new Date(iso);
@@ -130,6 +131,12 @@ function ChatRow({
             {formatListTime(item.lastAt)}
           </Text>
         </View>
+        {/* Which property this chat is about — district · price, or "removed". */}
+        <Text numberOfLines={1} style={{ color: colors.textSecondary, fontSize: 12 }}>
+          {item.listing
+            ? `${item.listing.district} · ${formatPrice(item.listing.priceAzn)}`
+            : t("messages.listingUnavailable")}
+        </Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Text
             numberOfLines={1}
