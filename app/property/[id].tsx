@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   ScrollView,
   Linking,
   Share,
+  Alert,
+  ActivityIndicator,
   useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -28,6 +30,8 @@ import ListingMiniMap from "../../components/ListingMiniMap";
 import { Header } from "../my-listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { useLanguage } from "../../lib/i18n/languages";
+import { detectLang } from "../../lib/langDetect";
+import { translateDescription } from "../../lib/api/ai";
 
 const WHATSAPP_GREEN = "#25D366";
 
@@ -52,6 +56,12 @@ export default function PropertyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const { isFavorite, toggle } = useFavorites();
+  // Description translation (in-memory cache per target language; per screen).
+  const [translating, setTranslating] = useState(false);
+  const [translated, setTranslated] = useState<string | null>(null);
+  const [showOriginal, setShowOriginal] = useState(false);
+  const transCache = useRef<Map<string, string>>(new Map());
+
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [status, setStatus] = useState<"loading" | "error" | "notfound" | "ok">("loading");
   const [page, setPage] = useState(0);
@@ -97,6 +107,30 @@ export default function PropertyDetailScreen() {
 
   // Title is derived on the fly in the current language (no stored string).
   const title = buildListingTitle(listing, t, lang);
+
+  // Translate: show the button only when the description's language differs from
+  // the UI language. Tap caches per target language, so toggling is free.
+  const origLang = detectLang(listing.description);
+  const onTranslate = async () => {
+    const cached = transCache.current.get(lang);
+    if (cached) {
+      setTranslated(cached);
+      setShowOriginal(false);
+      return;
+    }
+    setTranslating(true);
+    try {
+      const out = await translateDescription(listing.description, lang as "az" | "ru" | "en");
+      transCache.current.set(lang, out);
+      setTranslated(out);
+      setShowOriginal(false);
+    } catch {
+      Alert.alert(t("propertyDetail.errTranslate"));
+    } finally {
+      setTranslating(false);
+    }
+  };
+  const showingTranslation = translated != null && !showOriginal;
 
   const onShare = () =>
     Share.share({ message: `${title} — ${formatPrice(listing.priceAzn)} · Yuva` }).catch(() => {});
@@ -224,8 +258,29 @@ export default function PropertyDetailScreen() {
           {listing.description.trim() !== "" && (
             <Section title={t("propertyDetail.description")} colors={colors}>
               <Text style={{ color: colors.textSecondary, fontSize: 15, lineHeight: 22 }}>
-                {listing.description}
+                {showingTranslation ? translated : listing.description}
               </Text>
+
+              {translating ? (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 10 }}>
+                  <ActivityIndicator size="small" color={brand.violet} />
+                  <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "600" }}>
+                    {t("propertyDetail.translating")}
+                  </Text>
+                </View>
+              ) : showingTranslation ? (
+                <Pressable onPress={() => setShowOriginal(true)} hitSlop={8} style={{ marginTop: 10 }}>
+                  <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "700" }}>
+                    {t("propertyDetail.showOriginal")}
+                  </Text>
+                </Pressable>
+              ) : origLang !== lang ? (
+                <Pressable onPress={onTranslate} hitSlop={8} style={{ marginTop: 10 }}>
+                  <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "700" }}>
+                    {t("propertyDetail.translate")}
+                  </Text>
+                </Pressable>
+              ) : null}
             </Section>
           )}
 

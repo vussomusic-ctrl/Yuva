@@ -33,3 +33,16 @@ export async function generateDescription(
   if (!description) throw new Error("empty description");
   return description;
 }
+
+export async function translateDescription(
+  text: string,
+  targetLang: "az" | "ru" | "en",
+): Promise<string> {
+  const { data, error } = await supabase.functions.invoke("translate-description", {
+    body: { text, targetLang },
+  });
+  if (error) throw new Error(error.message ?? "translate-description failed");
+  const translation = (data as { translation?: string } | null)?.translation?.trim();
+  if (!translation) throw new Error("empty translation");
+  return translation;
+}

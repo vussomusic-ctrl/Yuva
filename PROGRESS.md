@@ -41,8 +41,33 @@
     грида; `GestureHandlerRootView` в root `_layout`). Стрелки удалены. Reorder =
     перестановка массива `photos` → `sort` пересчитывается на Save готовой
     реконсиляцией (`updateListing`/`createListing` не трогали).
-- **Этап 4 — живой чат + realtime — СЛЕДУЮЩИЙ** (моки `lib/mock/chats.ts` →
-  Supabase `conversations`/`messages` + realtime; RLS уже в `supabase/schema.sql`).
+- **Карта на property detail — ЗАКРЫТО** (`80365b5`): мини-карта на detail
+  (статичная, `react-native-maps`, маркер, не-интерактивная — не дерётся со
+  ScrollView) → тап → полноэкранный модальный экран `app/property-map.tsx`
+  (интерактивный зум/движение, маркер, чип района) + кнопка «Маршрут» (`Linking`
+  directions-URL `maps/dir/?api=1&destination=lat,lng`). Web-fallback `.web.tsx`
+  у обоих. `GestureHandlerRootView` в root `_layout`. Координаты уже доходят через
+  адаптер (`lat/lng`), карта скрыта при 0/0. `components/ListingMiniMap.tsx`/`.web`.
+- **AI-описания — ЗАКРЫТО** (`f467079`): Supabase **Edge Function**
+  `generate-description` (Deno; `ANTHROPIC_API_KEY` в секретах Supabase, НЕ в
+  бандле; `verify_jwt` on) → Anthropic **Claude Haiku 4.5** (`claude-haiku-4-5-20251001`),
+  факты-онли, валюта ₼, на выбранном языке. В форме — кнопка «Сгенерировать»
+  (гейт: тип+площадь+локация), `BottomSheet` выбора языка AZ/RU/EN (дефолт = язык
+  UI), replace-`Alert` если описание не пусто; вызов через `lib/api/ai.ts`
+  (`supabase.functions.invoke`). Локация резолвится на клиенте (`placeName`,
+  функция не знает `places.ts`). `tsconfig` исключает `supabase/functions` из
+  app-typecheck (Deno-глобалы).
+- **Перевод описания — ЗАКРЫТО:** Edge Function `translate-description` (Deno,
+  Anthropic Haiku 4.5, `verify_jwt` on, гость через anon-key; `{text,targetLang}`
+  → `{translation}`, факты/цифры сохраняются). Клиент: `lib/langDetect.ts`
+  (детектор по символам: кириллица→ru, аз-спецбуквы `ə/ğ/ı/İ`→az, фолбэк en),
+  `translateDescription` в `lib/api/ai.ts`; на property detail кнопка «Перевести
+  на {язык UI}» — показ только если `detectLang(description) !== UI lang`;
+  состояния оригинал/loading/перевод, кеш в памяти `Map<lang>`, тоггл «Показать
+  оригинал». i18n в 3 локали. Без миграции схемы, без БД-кеша.
+- **Следующее:** этап 4 — **живой чат + realtime** (моки `lib/mock/chats.ts` →
+  Supabase `conversations`/`messages` + realtime; RLS уже в `supabase/schema.sql`;
+  + увязать «Написать» на detail с диалогом объявления).
 
 ## What this is
 **Yuva** ("nest" in Azerbaijani) — a native mobile app for buying, selling and
