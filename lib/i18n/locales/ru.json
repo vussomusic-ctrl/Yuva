@@ -216,7 +216,9 @@
     "title": "Сообщения",
     "emptyTitle": "Сообщений пока нет",
     "emptyDesc": "Напишите продавцу со страницы объявления",
-    "inputPlaceholder": "Напишите сообщение..."
+    "inputPlaceholder": "Напишите сообщение...",
+    "startConversation": "Начните диалог",
+    "errSend": "Не удалось отправить"
   },
   "myListings": {
     "title": "Мои объявления",

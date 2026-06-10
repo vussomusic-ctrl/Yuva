@@ -216,7 +216,9 @@
     "title": "Mesajlar",
     "emptyTitle": "Hələ mesaj yoxdur",
     "emptyDesc": "Elan səhifəsindən satıcıya yazın",
-    "inputPlaceholder": "Mesaj yazın..."
+    "inputPlaceholder": "Mesaj yazın...",
+    "startConversation": "Söhbətə başlayın",
+    "errSend": "Göndərilmədi"
   },
   "myListings": {
     "title": "Mənim elanlarım",

@@ -216,7 +216,9 @@
     "title": "Messages",
     "emptyTitle": "No messages yet",
     "emptyDesc": "Message a seller from a listing page",
-    "inputPlaceholder": "Type a message..."
+    "inputPlaceholder": "Type a message...",
+    "startConversation": "Start the conversation",
+    "errSend": "Couldn't send"
   },
   "myListings": {
     "title": "My listings",

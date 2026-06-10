@@ -25,6 +25,8 @@ import { ListingDetail, formatPrice, formatArea } from "../../lib/mock/listings"
 import { isLandType } from "../../lib/propertyTypes";
 import { fetchListingDetail } from "../../lib/api/listings";
 import { useFavorites } from "../../lib/favorites";
+import { useAuth } from "../../lib/auth";
+import { getOrCreateConversation } from "../../lib/api/chats";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import ListingMiniMap from "../../components/ListingMiniMap";
 import { Header } from "../my-listings";
@@ -56,6 +58,8 @@ export default function PropertyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const { isFavorite, toggle } = useFavorites();
+  const { user } = useAuth();
+  const [creatingChat, setCreatingChat] = useState(false);
   // Description translation (in-memory cache per target language; per screen).
   const [translating, setTranslating] = useState(false);
   const [translated, setTranslated] = useState<string | null>(null);
@@ -131,6 +135,26 @@ export default function PropertyDetailScreen() {
     }
   };
   const showingTranslation = translated != null && !showOriginal;
+
+  // Message the seller: guest → login; own listing → button hidden; else
+  // get-or-create the conversation and open it.
+  const isOwnListing = !!user && listing.ownerId === user.id;
+  const onMessage = async () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (creatingChat) return;
+    setCreatingChat(true);
+    try {
+      const cid = await getOrCreateConversation(listing.id, listing.ownerId);
+      router.push(`/chat/${cid}`);
+    } catch {
+      Alert.alert(t("common.loadError"));
+    } finally {
+      setCreatingChat(false);
+    }
+  };
 
   const onShare = () =>
     Share.share({ message: `${title} — ${formatPrice(listing.priceAzn)} · Yuva` }).catch(() => {});
@@ -432,27 +456,33 @@ export default function PropertyDetailScreen() {
             <Text numberOfLines={1} style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "700" }}>WhatsApp</Text>
           </Pressable>
 
-          {/* PRIMARY — message (chat stub), brand gradient */}
-          <Pressable onPress={() => router.push("/chat")} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.9 : 1 })}>
-            <LinearGradient
-              colors={brand.gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{
-                paddingVertical: 14,
-                borderRadius: 14,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-              }}
-            >
-              <Ionicons name="chatbubble-ellipses" size={18} color="#FFFFFF" />
-              <Text numberOfLines={1} style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "700" }}>
-                {t("propertyDetail.write")}
-              </Text>
-            </LinearGradient>
-          </Pressable>
+          {/* PRIMARY — message the seller (gradient). Hidden on your own listing. */}
+          {!isOwnListing && (
+            <Pressable onPress={onMessage} disabled={creatingChat} style={({ pressed }) => ({ flex: 1, opacity: pressed || creatingChat ? 0.9 : 1 })}>
+              <LinearGradient
+                colors={brand.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  paddingVertical: 14,
+                  borderRadius: 14,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                {creatingChat ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Ionicons name="chatbubble-ellipses" size={18} color="#FFFFFF" />
+                )}
+                <Text numberOfLines={1} style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "700" }}>
+                  {t("propertyDetail.write")}
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          )}
         </View>
       </View>
     </View>
