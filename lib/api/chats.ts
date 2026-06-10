@@ -175,6 +175,33 @@ export async function getMyConversations(): Promise<ConversationListItem[]> {
   return items;
 }
 
+/**
+ * Live-subscribe to new messages in one conversation. Fires onInsert for every
+ * INSERT (own echo included — the screen dedups). Returns an unsubscribe fn.
+ */
+export function subscribeMessages(
+  conversationId: string,
+  onInsert: (m: Message) => void,
+): () => void {
+  const channel = supabase
+    .channel(`messages:${conversationId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      (payload) => onInsert(payload.new as Message),
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
 /** Send a message; returns the inserted row (id + created_at for the UI). */
 export async function sendMessage(conversationId: string, body: string): Promise<Message> {
   const me = await currentUserId();

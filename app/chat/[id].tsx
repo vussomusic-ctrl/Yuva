@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -20,7 +20,7 @@ import { brand, Theme } from "../../lib/theme/colors";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { useAuth } from "../../lib/auth";
 import { useLanguage } from "../../lib/i18n/languages";
-import { getMessages, getConversationMeta, sendMessage, Message } from "../../lib/api/chats";
+import { getMessages, getConversationMeta, sendMessage, subscribeMessages, Message } from "../../lib/api/chats";
 import { fetchListingsByIds } from "../../lib/api/listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { Listing, formatPrice } from "../../lib/mock/listings";
@@ -77,6 +77,40 @@ export default function ConversationScreen() {
   }, [id]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
+  // Realtime: append the peer's messages live, and reconcile our own echo with
+  // the optimistic bubble. Dedup is idempotent (id already present → skip), so
+  // a re-subscribe or an echo arriving after send()-resolve never doubles.
+  const onIncoming = useCallback(
+    (m: Message) => {
+      setMessages((prev) => {
+        const cur = prev ?? [];
+        if (cur.some((x) => x.id === m.id)) return cur; // already have the real row
+        if (m.sender_id === user?.id) {
+          // Our own message echoed back: swap the matching optimistic temp.
+          const i = cur.findIndex(
+            (x) => x.id.startsWith("temp-") && x.body === m.body && x.sender_id === m.sender_id,
+          );
+          if (i !== -1) {
+            const next = cur.slice();
+            next[i] = m;
+            return next;
+          }
+        }
+        return [...cur, m];
+      });
+    },
+    [user?.id],
+  );
+
+  // Subscribe for the lifetime of this conversation id (not tied to focus — the
+  // socket stays live while the screen is mounted). load() handles first-paint
+  // + any gap on re-focus; this keeps it live in between.
+  useEffect(() => {
+    if (!id) return;
+    const unsub = subscribeMessages(id, onIncoming);
+    return unsub;
+  }, [id, onIncoming]);
+
   const loading = messages === null && !error;
 
   // Optimistic send: show the bubble immediately, swap for the real row, or roll
@@ -97,7 +131,14 @@ export default function ConversationScreen() {
     setDraft("");
     try {
       const real = await sendMessage(id, body);
-      setMessages((cur) => (cur ?? []).map((m) => (m.id === tempId ? real : m)));
+      // The realtime echo may have already swapped our temp for the real row.
+      // If so, just drop the temp; otherwise swap it ourselves. Either path
+      // ends with exactly one copy of `real`.
+      setMessages((cur) => {
+        const list = cur ?? [];
+        if (list.some((m) => m.id === real.id)) return list.filter((m) => m.id !== tempId);
+        return list.map((m) => (m.id === tempId ? real : m));
+      });
     } catch {
       setMessages((cur) => (cur ?? []).filter((m) => m.id !== tempId));
       setDraft(body);
