@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, Image, Pressable, FlatList, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,7 +15,10 @@ import {
   getMyConversations,
   hideConversation,
   setConversationPinned,
+  subscribeMyConversations,
+  sortConversations,
   ConversationListItem,
+  Message,
 } from "../../lib/api/chats";
 import { formatPrice } from "../../lib/mock/listings";
 
@@ -37,6 +40,11 @@ export default function ChatListScreen() {
   const [list, setList] = useState<ConversationListItem[] | null>(null);
   const [error, setError] = useState(false);
 
+  // Mirror of `list` for the realtime handler — lets it decide patch-vs-refetch
+  // synchronously without depending on (and re-subscribing per) list changes.
+  const listRef = useRef<ConversationListItem[] | null>(null);
+  useEffect(() => { listRef.current = list; }, [list]);
+
   const load = useCallback(() => {
     if (!user) {
       setList([]);
@@ -47,7 +55,47 @@ export default function ChatListScreen() {
       .then(setList)
       .catch(() => setError(true));
   }, [user]);
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  // A new message in one of my conversations → patch that row live (last
+  // message / time / unread) and re-sort. Unknown conversation (brand-new) →
+  // full refetch to pull peer name + listing. unread++ only for the peer's
+  // messages (my own from another device bumps the row, not the badge).
+  const onListInsert = useCallback(
+    (m: Message) => {
+      const cur = listRef.current;
+      if (!cur || cur.findIndex((c) => c.id === m.conversation_id) === -1) {
+        load();
+        return;
+      }
+      setList((prev) => {
+        if (!prev) return prev;
+        const i = prev.findIndex((c) => c.id === m.conversation_id);
+        if (i === -1) return prev;
+        const next = prev.slice();
+        const row = next[i];
+        next[i] = {
+          ...row,
+          lastBody: m.body,
+          lastAt: m.created_at,
+          unreadCount: m.sender_id !== user?.id ? row.unreadCount + 1 : row.unreadCount,
+        };
+        return sortConversations(next);
+      });
+    },
+    [user?.id, load],
+  );
+
+  // On focus: refetch (full correctness, catches anything missed while away) +
+  // subscribe for live updates while watching. On blur: unsubscribe. Guests get
+  // neither (no conversations).
+  useFocusEffect(
+    useCallback(() => {
+      load();
+      if (!user) return;
+      const unsub = subscribeMyConversations(onListInsert);
+      return unsub;
+    }, [load, user, onListInsert]),
+  );
 
   const loading = list === null && !error;
 

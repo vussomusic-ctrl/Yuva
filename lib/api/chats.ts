@@ -290,6 +290,26 @@ export function subscribeMessages(
   };
 }
 
+/**
+ * Live-subscribe to message INSERTs across ALL my conversations (for the chat
+ * list). No conversation filter — RLS (messages_select_participant) already
+ * scopes the broadcast to conversations I'm a participant in. Returns unsub.
+ */
+export function subscribeMyConversations(onInsert: (m: Message) => void): () => void {
+  const channel = supabase
+    .channel("my-conversations")
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "messages" },
+      (payload) => onInsert(payload.new as Message),
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
 /** Send a message; returns the inserted row (id + created_at for the UI). */
 export async function sendMessage(conversationId: string, body: string): Promise<Message> {
   const me = await currentUserId();
