@@ -54,7 +54,9 @@ export default function NotificationsScreen() {
 
   const open = (n: AppNotification) => {
     setItems((cur) => cur.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
-    if (n.type === "message") router.push(`/chat/${n.chatId}`);
+    // Notifications are still mock; a mock chatId would 404 on the real DB.
+    // Until they're wired to real conversations, send message-type to the list.
+    if (n.type === "message") router.push("/chat");
     else router.push(`/property/${n.listingId}`);
   };
 

@@ -176,6 +176,22 @@ export async function getMyConversations(): Promise<ConversationListItem[]> {
 }
 
 /**
+ * Mark the peer's unread messages in this conversation as read. Filtered to
+ * sender_id != me and read=false so a repeat call writes nothing (idempotent).
+ * Fire-and-forget at the call site — a failure just leaves the badge unchanged.
+ */
+export async function markConversationRead(conversationId: string): Promise<void> {
+  const me = await currentUserId();
+  const { error } = await supabase
+    .from("messages")
+    .update({ read: true })
+    .eq("conversation_id", conversationId)
+    .neq("sender_id", me)
+    .eq("read", false);
+  if (error) throw error;
+}
+
+/**
  * Live-subscribe to new messages in one conversation. Fires onInsert for every
  * INSERT (own echo included — the screen dedups). Returns an unsubscribe fn.
  */

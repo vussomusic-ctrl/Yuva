@@ -20,7 +20,7 @@ import { brand, Theme } from "../../lib/theme/colors";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { useAuth } from "../../lib/auth";
 import { useLanguage } from "../../lib/i18n/languages";
-import { getMessages, getConversationMeta, sendMessage, subscribeMessages, Message } from "../../lib/api/chats";
+import { getMessages, getConversationMeta, sendMessage, subscribeMessages, markConversationRead, Message } from "../../lib/api/chats";
 import { fetchListingsByIds } from "../../lib/api/listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { Listing, formatPrice } from "../../lib/mock/listings";
@@ -57,6 +57,9 @@ export default function ConversationScreen() {
       .then(([msgs, m]) => {
         setMessages(msgs);
         setMeta(m);
+        // Mark the peer's messages read — fire-and-forget, separate from the
+        // load Promise.all so a write failure never trips setError.
+        markConversationRead(id).catch(() => {});
         // Listing card — own catch: a card failure must not break the chat.
         if (!m.listingId) {
           setCard(null);
@@ -82,6 +85,9 @@ export default function ConversationScreen() {
   // a re-subscribe or an echo arriving after send()-resolve never doubles.
   const onIncoming = useCallback(
     (m: Message) => {
+      // Peer message arriving while the chat is open → I'm reading it now. Mark
+      // read in the DB (fire-and-forget; no local state touch, no re-render).
+      if (m.sender_id !== user?.id && id) markConversationRead(id).catch(() => {});
       setMessages((prev) => {
         const cur = prev ?? [];
         if (cur.some((x) => x.id === m.id)) return cur; // already have the real row
@@ -99,7 +105,7 @@ export default function ConversationScreen() {
         return [...cur, m];
       });
     },
-    [user?.id],
+    [user?.id, id],
   );
 
   // Subscribe for the lifetime of this conversation id (not tied to focus — the
