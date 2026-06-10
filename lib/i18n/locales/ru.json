@@ -108,7 +108,7 @@
     "amKitchen": "Встроенная кухня"
   },
   "profile": {
-    "roleUser": "Пользователь",
+    "roleUser": "Владелец",
     "roleAgent": "Агент",
     "myListings": "Мои объявления",
     "saved": "Сохранённые",
@@ -118,6 +118,17 @@
     "logout": "Выйти из аккаунта",
     "guest": "Гость",
     "login": "Войти"
+  },
+  "editProfile": {
+    "title": "Изменить профиль",
+    "nameLabel": "Имя",
+    "accountType": "Тип аккаунта",
+    "typeOwner": "Владелец",
+    "typeAgent": "Агент",
+    "pickPhoto": "Выбрать фото",
+    "changePhoto": "Изменить фото",
+    "save": "Сохранить",
+    "errSave": "Не удалось сохранить. Попробуйте снова."
   },
   "addListing": {
     "title": "Подать объявление",

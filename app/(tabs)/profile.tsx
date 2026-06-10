@@ -35,7 +35,7 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
         {/* Contextual header: avatar (with upload affordance) + name + role. No logo. */}
         <View style={{ alignItems: "center", paddingTop: 16, paddingBottom: 8, gap: 10 }}>
-          <Pressable onPress={() => { /* TODO: image picker upload */ }}>
+          <Pressable onPress={() => router.push("/edit-profile")}>
             {avatarUrl ? (
               <Image
                 source={{ uri: avatarUrl }}

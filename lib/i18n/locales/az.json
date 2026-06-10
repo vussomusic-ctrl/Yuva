@@ -108,7 +108,7 @@
     "amKitchen": "Quraşdırılmış mətbəx"
   },
   "profile": {
-    "roleUser": "İstifadəçi",
+    "roleUser": "Sahib",
     "roleAgent": "Agent",
     "myListings": "Mənim elanlarım",
     "saved": "Yadda saxlanılanlar",
@@ -118,6 +118,17 @@
     "logout": "Hesabdan çıx",
     "guest": "Qonaq",
     "login": "Daxil ol"
+  },
+  "editProfile": {
+    "title": "Profili redaktə et",
+    "nameLabel": "Ad",
+    "accountType": "Hesab növü",
+    "typeOwner": "Sahib",
+    "typeAgent": "Agent",
+    "pickPhoto": "Şəkil seç",
+    "changePhoto": "Şəkli dəyiş",
+    "save": "Yadda saxla",
+    "errSave": "Saxlamaq alınmadı. Yenidən cəhd edin."
   },
   "addListing": {
     "title": "Elan yerləşdir",

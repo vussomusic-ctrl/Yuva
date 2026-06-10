@@ -43,7 +43,7 @@ export default function SettingsScreen() {
         {/* Account */}
         <SectionLabel colors={colors} text={t("settings.account")} />
         <Card colors={colors}>
-          <LinkRow colors={colors} icon="person-outline" label={t("settings.editProfile")} />
+          <LinkRow colors={colors} icon="person-outline" label={t("settings.editProfile")} onPress={() => router.push("/edit-profile")} />
           <LinkRow colors={colors} icon="call-outline" label={t("settings.editContact")} />
           <LinkRow colors={colors} icon="trash-outline" label={t("settings.deleteAccount")} danger isLast />
         </Card>

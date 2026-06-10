@@ -108,7 +108,7 @@
     "amKitchen": "Fitted kitchen"
   },
   "profile": {
-    "roleUser": "User",
+    "roleUser": "Owner",
     "roleAgent": "Agent",
     "myListings": "My listings",
     "saved": "Saved",
@@ -118,6 +118,17 @@
     "logout": "Log out",
     "guest": "Guest",
     "login": "Log in"
+  },
+  "editProfile": {
+    "title": "Edit profile",
+    "nameLabel": "Name",
+    "accountType": "Account type",
+    "typeOwner": "Owner",
+    "typeAgent": "Agent",
+    "pickPhoto": "Choose photo",
+    "changePhoto": "Change photo",
+    "save": "Save",
+    "errSave": "Couldn't save. Please try again."
   },
   "addListing": {
     "title": "Add listing",
