@@ -64,10 +64,11 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
           press.style,
         ]}
       >
-        {/* Photo flush to the card top, full width; only the top corners round
-            (they inherit the card radius). Bottom edge straight — content sits
-            on the card below it. */}
-        <View style={{ width: "100%", aspectRatio: carousel ? 4 / 3 : 16 / 10, borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: "hidden", backgroundColor: colors.bg }}>
+        {/* Photo fills the card width to the edges; all corners rounded to match
+            the card (24). Gradient/price/badges/counter live inside this block. */}
+        <View
+          style={{ alignSelf: "stretch", height: carousel ? 150 : 210, borderRadius: 24, overflow: "hidden", backgroundColor: colors.bg }}
+        >
           <Image source={{ uri: listing.image }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
 
           {/* Bottom third darkening for price legibility */}
@@ -140,12 +141,13 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
                 position: "absolute",
                 bottom: 12,
                 right: 12,
+                height: 28,
                 flexDirection: "row",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: 4,
-                backgroundColor: "rgba(0,0,0,0.45)",
-                paddingHorizontal: 8,
-                paddingVertical: 4,
+                backgroundColor: "rgba(0,0,0,0.5)",
+                paddingHorizontal: 10,
                 borderRadius: 999,
               }}
             >
@@ -155,20 +157,32 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
           )}
         </View>
 
-        {/* Body */}
-        <View style={{ padding: 14, gap: 8 }}>
+        {/* Body — left edge aligns with the photo (both inset 10) */}
+        <View style={{ paddingHorizontal: 10, paddingTop: 6, paddingBottom: 16 }}>
           <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 17 }}>
             {title}
           </Text>
 
           {!carousel && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 }}>
               <Ionicons name="location-outline" size={15} color={colors.textSecondary} />
               <Text numberOfLines={1} style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, flex: 1 }}>
                 {listing.district}
               </Text>
             </View>
           )}
+
+          {/* Divider between title/location and specs. Explicit hairline pair —
+              the theme `border` token is too faint as a 1px line on the card. */}
+          <View
+            style={{
+              height: 1.5,
+              backgroundColor: mode === "dark" ? "#2E2838" : "#E4DEF0",
+              opacity: 1,
+              alignSelf: "stretch",
+              marginVertical: 12,
+            }}
+          />
 
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 2 }}>
             <Spec kind="area" icon="resize-outline" text={formatArea(listing, t)} colors={colors} mode={mode} />
