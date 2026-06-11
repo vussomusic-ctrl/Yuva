@@ -296,7 +296,12 @@ function Category({
         {/* Icon is the hero — fixed size, contain (no %/aspectRatio on the Image
             itself: it breaks layout inside an aspectRatio tile). */}
         <Image source={image} style={{ width: 44, height: 44 }} resizeMode="contain" />
-        <Text numberOfLines={1} style={{ color: colors.text, fontSize: 12, fontWeight: "700" }}>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
+          style={{ color: colors.text, fontSize: 11, fontWeight: "700" }}
+        >
           {label}
         </Text>
       </Animated.View>
