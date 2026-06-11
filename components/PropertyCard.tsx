@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 import { Listing, formatPrice, formatArea } from "../lib/mock/listings";
 import { isLandType } from "../lib/propertyTypes";
 import { buildListingTitle } from "../lib/listingTitle";
@@ -88,7 +89,7 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
                 borderRadius: 8,
               }}
             >
-              <Text style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "800", letterSpacing: 0.5 }}>
+              <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
                 {t("home.badgeNew")}
               </Text>
             </View>
@@ -125,8 +126,8 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
               left: 14,
               right: 72,
               color: "#FFFFFF",
+              fontFamily: font.extrabold,
               fontSize: 26,
-              fontWeight: "800",
             }}
           >
             {formatPrice(listing.priceAzn)}
@@ -149,21 +150,21 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
               }}
             >
               <Ionicons name="image-outline" size={13} color="#FFFFFF" />
-              <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}>{`1/${listing.photoCount}`}</Text>
+              <Text style={{ color: "#FFFFFF", fontFamily: font.semibold, fontSize: 12 }}>{`1/${listing.photoCount}`}</Text>
             </View>
           )}
         </View>
 
         {/* Body */}
         <View style={{ padding: 14, gap: 8 }}>
-          <Text numberOfLines={1} style={{ color: colors.text, fontSize: 17, fontWeight: "800" }}>
+          <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 17 }}>
             {title}
           </Text>
 
           {!carousel && (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <Ionicons name="location-outline" size={15} color={colors.textSecondary} />
-              <Text numberOfLines={1} style={{ color: colors.textSecondary, fontSize: 14, flex: 1 }}>
+              <Text numberOfLines={1} style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, flex: 1 }}>
                 {listing.district}
               </Text>
             </View>
@@ -218,7 +219,7 @@ function Spec({
       >
         <Ionicons name={icon} size={15} color={tint.icon} />
       </View>
-      <Text style={{ color: colors.text, fontSize: 13, fontWeight: "600" }}>{text}</Text>
+      <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 13 }}>{text}</Text>
     </View>
   );
 }

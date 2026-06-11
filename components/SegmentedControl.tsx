@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 import { useSpringSlide } from "../lib/animations";
 
 export type SegmentItem = { key: string; labelKey: string };
@@ -87,8 +88,8 @@ export function SegmentedControl({ items, value, onChange }: Props) {
             <Text
               style={{
                 color: active ? "#FFFFFF" : colors.textSecondary,
+                fontFamily: active ? font.bold : font.semibold,
                 fontSize: 14,
-                fontWeight: active ? "700" : "600",
               }}
             >
               {t(it.labelKey)}

@@ -2,6 +2,15 @@
 
 Read the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before writing any code.
 
+# Типографика
+
+> Источник правды — родительский `../CLAUDE.md` (раздел Typography). Дубль здесь — для версионирования.
+
+- Гарнитура приложения — **Inter** (`@expo-google-fonts/inter`), грузится в `app/_layout.tsx`.
+- Веса ТОЛЬКО через `lib/theme/typography.ts` (`fontFamily`, НЕ `fontWeight`): кастомный
+  шрифт игнорирует числовой `fontWeight` и ломается на Android.
+- Новые экраны — сразу на `typography`; старые мигрируем волнами.
+
 # Анимации
 
 > Источник правды — родительский `../CLAUDE.md` (секция «Анимации»). Дубль здесь — для версионирования.

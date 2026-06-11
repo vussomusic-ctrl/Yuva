@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
+import { font } from "../../lib/theme/typography";
 import { usePressScale } from "../../lib/animations";
 import { PropertyCard } from "../../components/PropertyCard";
 import { SearchBar } from "../../components/SearchBar";
@@ -132,7 +133,7 @@ export default function HomeScreen() {
               opacity: pressed ? 0.6 : 1,
             })}
           >
-            <Text style={{ color: brand.violet, fontWeight: "800", fontSize: 12, letterSpacing: 1 }}>
+            <Text style={{ color: brand.violet, fontFamily: font.extrabold, fontSize: 12, letterSpacing: 1 }}>
               {current.toUpperCase()}
             </Text>
           </Pressable>
@@ -147,7 +148,7 @@ export default function HomeScreen() {
         <View style={{ paddingHorizontal: 16, gap: 8, marginTop: 4 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Ionicons name="location" size={16} color={colors.textSecondary} />
-            <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{t("home.location")}</Text>
+            <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>{t("home.location")}</Text>
           </View>
           <SearchBar value={query} onChangeText={setQuery} onPressFilter={() => router.push("/filters")} />
         </View>
@@ -204,13 +205,13 @@ export default function HomeScreen() {
 
             {/* New listings feed */}
             <View style={{ gap: 16, paddingHorizontal: 16 }}>
-              <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>
+              <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 18 }}>
                 {t("home.newListings")}
               </Text>
               {(feed ?? []).length === 0 ? (
                 <View style={{ alignItems: "center", paddingVertical: 32, gap: 8 }}>
                   <Ionicons name="home-outline" size={44} color={colors.textSecondary} />
-                  <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: "center" }}>
+                  <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, textAlign: "center" }}>
                     {t("myListings.emptyDesc")}
                   </Text>
                 </View>
@@ -254,9 +255,9 @@ function SectionHeader({
         paddingHorizontal: 16,
       }}
     >
-      <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{title}</Text>
+      <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 18 }}>{title}</Text>
       <Pressable onPress={onAction} hitSlop={8}>
-        <Text style={{ color: brand.violet, fontSize: 13, fontWeight: "700" }}>{action}</Text>
+        <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 13 }}>{action}</Text>
       </Pressable>
     </View>
   );
@@ -300,7 +301,7 @@ function Category({
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.8}
-          style={{ color: colors.text, fontSize: 11, fontWeight: "700" }}
+          style={{ color: colors.text, fontFamily: font.bold, fontSize: 11 }}
         >
           {label}
         </Text>
