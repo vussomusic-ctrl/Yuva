@@ -82,6 +82,35 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- =============================================================================
+-- agencies  (real-estate agencies; profiles.agency_id links an agent to one)
+-- =============================================================================
+create table if not exists public.agencies (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null,
+  logo_url    text,
+  phone       text,
+  email       text,
+  website     text,
+  is_partner  boolean not null default false,
+  created_at  timestamptz not null default now()
+);
+
+alter table public.agencies enable row level security;
+
+-- Agencies are publicly readable (logo/name shown on listings + profiles).
+-- No insert/update/delete policies on purpose — agencies are managed only via
+-- the Dashboard / service_role, never the client.
+drop policy if exists "agencies_select_all" on public.agencies;
+create policy "agencies_select_all"
+  on public.agencies for select
+  to anon, authenticated
+  using (true);
+
+-- Link an agent's profile to its agency. Idempotent for existing databases.
+alter table public.profiles
+  add column if not exists agency_id uuid references public.agencies (id) on delete set null;
+
+-- =============================================================================
 -- listings
 -- =============================================================================
 create table if not exists public.listings (

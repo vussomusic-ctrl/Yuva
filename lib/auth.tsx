@@ -23,6 +23,7 @@ export type Profile = {
   phone: string | null;
   role: UserRole;
   verified: boolean;
+  agencyId: string | null;
 };
 
 export type SignUpInput = {
@@ -46,7 +47,7 @@ type AuthContextValue = {
   refreshProfile: () => Promise<void>;
 };
 
-const PROFILE_COLUMNS = "id, full_name, avatar_url, phone, role, verified";
+const PROFILE_COLUMNS = "id, full_name, avatar_url, phone, role, verified, agency_id";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -61,7 +62,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select(PROFILE_COLUMNS)
       .eq("id", uid)
       .single();
-    setProfile((data as Profile) ?? null);
+    if (!data) {
+      setProfile(null);
+      return;
+    }
+    // Explicit snake → camel map: every column is named, so a new field can't
+    // silently land as undefined (the row is snake_case, Profile is camel for
+    // agencyId).
+    const row = data as {
+      id: string;
+      full_name: string | null;
+      avatar_url: string | null;
+      phone: string | null;
+      role: UserRole;
+      verified: boolean;
+      agency_id: string | null;
+    };
+    setProfile({
+      id: row.id,
+      full_name: row.full_name,
+      avatar_url: row.avatar_url,
+      phone: row.phone,
+      role: row.role,
+      verified: row.verified,
+      agencyId: row.agency_id ?? null,
+    });
   };
 
   useEffect(() => {

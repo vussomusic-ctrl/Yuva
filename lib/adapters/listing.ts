@@ -8,6 +8,7 @@ import { BuildKey } from "../buildTypes";
 import { Listing, ListingDetail, Agent } from "../mock/listings";
 import { storagePathFromUrl } from "../api/photos";
 import type { UserRole } from "../auth";
+import { rowToAgency, AgencyRow } from "./agency";
 
 // --- DB row shapes (what PostgREST returns with our embeds) ---
 
@@ -18,6 +19,7 @@ export type OwnerRow = {
   avatar_url: string | null;
   verified: boolean;
   role: UserRole | null;
+  agency: AgencyRow | null;
 };
 
 export type ListingRow = {
@@ -118,7 +120,7 @@ export function rowToListing(row: ListingRow): Listing {
   };
 }
 
-const FALLBACK_AGENT: Agent = { name: "Yuva", avatar: "", verified: false, phone: "", role: "user" };
+const FALLBACK_AGENT: Agent = { name: "Yuva", avatar: "", verified: false, phone: "", role: "user", agency: null };
 
 export function rowToDetail(row: ListingRow): ListingDetail {
   const base = rowToListing(row);
@@ -130,6 +132,7 @@ export function rowToDetail(row: ListingRow): ListingDetail {
         verified: row.owner.verified,
         phone: row.contact_phone ?? "",
         role: row.owner.role ?? "user",
+        agency: row.owner.agency ? rowToAgency(row.owner.agency) : null,
       }
     : { ...FALLBACK_AGENT, phone: row.contact_phone ?? "" };
   return {

@@ -404,6 +404,20 @@ export default function PropertyDetailScreen() {
             </View>
           )}
           <View style={{ flex: 1 }}>
+            {/* Agency line — only for agents who belong to one. Logo optional. */}
+            {listing.agent.role === "agent" && listing.agent.agency && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                {listing.agent.agency.logoUrl ? (
+                  <Image
+                    source={{ uri: listing.agent.agency.logoUrl }}
+                    style={{ width: 26, height: 26, borderRadius: 6, backgroundColor: colors.bg }}
+                  />
+                ) : null}
+                <Text numberOfLines={1} style={{ flex: 1, color: colors.textSecondary, fontSize: 13, fontWeight: "600" }}>
+                  {listing.agent.agency.name}
+                </Text>
+              </View>
+            )}
             <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>{listing.agent.name}</Text>
             <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>
               {listing.agent.role === "agent" ? t("profile.roleAgent") : t("profile.roleUser")}
