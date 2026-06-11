@@ -34,9 +34,19 @@ const CATEGORIES: { key: string; label: string; image: number; type: PropertyTyp
   { key: "objects", label: "home.catObjects", image: require("../../assets/icons/categories/obyektler.png"), type: "object" },
 ];
 
+// Pastel category tints (soft clay tiles), per category and theme. No theme
+// token exists for these yet → local map. Dark = same hue at low lightness so
+// the 3D icons (and their shadows) still read against the tile.
+const CATEGORY_TINT: Record<string, { light: string; dark: string }> = {
+  apartments: { light: "#EFE7FB", dark: "#2A2138" }, // violet
+  houses: { light: "#E3EEFB", dark: "#1E2A3C" }, // blue
+  land: { light: "#E5F4E3", dark: "#20301F" }, // green
+  objects: { light: "#FBEFE0", dark: "#382B1C" }, // peach
+};
+
 export default function HomeScreen() {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, mode } = useTheme();
   const router = useRouter();
   const { current, cycleLanguage } = useLanguage();
 
@@ -146,9 +156,16 @@ export default function HomeScreen() {
         <DealTypeChips value={deal} onChange={setDeal} />
 
         {/* Categories */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 16 }}>
+        <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16 }}>
           {CATEGORIES.map((c) => (
-            <Category key={c.key} image={c.image} label={t(c.label)} colors={colors} onPress={() => openCategory(c.type)} />
+            <Category
+              key={c.key}
+              image={c.image}
+              label={t(c.label)}
+              colors={colors}
+              bg={CATEGORY_TINT[c.key][mode === "dark" ? "dark" : "light"]}
+              onPress={() => openCategory(c.type)}
+            />
           ))}
         </View>
 
@@ -249,32 +266,39 @@ function Category({
   image,
   label,
   colors,
+  bg,
   onPress,
 }: {
   image: number;
   label: string;
   colors: Theme;
+  bg: string;
   onPress: () => void;
 }) {
   const press = usePressScale();
   return (
-    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View style={[{ alignItems: "center", gap: 8 }, press.style]}>
-        <View
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: 20,
-            backgroundColor: colors.card,
-            borderWidth: 1,
-            borderColor: colors.border,
+    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={{ flex: 1 }}>
+      <Animated.View
+        style={[
+          {
+            aspectRatio: 1.0, // square tile
+            borderRadius: 22,
+            backgroundColor: bg,
+            paddingVertical: 12,
+            paddingHorizontal: 8,
             alignItems: "center",
             justifyContent: "center",
-          }}
-        >
-          <Image source={image} style={{ width: 64, height: 64 }} resizeMode="contain" />
-        </View>
-        <Text style={{ color: colors.textSecondary, fontSize: 11, fontWeight: "600" }}>{label}</Text>
+            gap: 6,
+          },
+          press.style,
+        ]}
+      >
+        {/* Icon is the hero — fixed size, contain (no %/aspectRatio on the Image
+            itself: it breaks layout inside an aspectRatio tile). */}
+        <Image source={image} style={{ width: 44, height: 44 }} resizeMode="contain" />
+        <Text numberOfLines={1} style={{ color: colors.text, fontSize: 12, fontWeight: "700" }}>
+          {label}
+        </Text>
       </Animated.View>
     </Pressable>
   );
