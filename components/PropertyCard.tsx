@@ -54,7 +54,6 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
           {
             backgroundColor: colors.card,
             borderRadius: 24,
-            padding: 14,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.08,
@@ -64,8 +63,10 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
           press.style,
         ]}
       >
-        {/* Photo (all corners rounded) with bottom darkening gradient + overlays */}
-        <View style={{ width: "100%", aspectRatio: carousel ? 4 / 3 : 16 / 10, borderRadius: 24, overflow: "hidden", backgroundColor: colors.bg }}>
+        {/* Photo flush to the card top, full width; only the top corners round
+            (they inherit the card radius). Bottom edge straight — content sits
+            on the card below it. */}
+        <View style={{ width: "100%", aspectRatio: carousel ? 4 / 3 : 16 / 10, borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: "hidden", backgroundColor: colors.bg }}>
           <Image source={{ uri: listing.image }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
 
           {/* Bottom third darkening for price legibility */}
@@ -154,7 +155,7 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
         </View>
 
         {/* Body */}
-        <View style={{ paddingTop: 12, gap: 8 }}>
+        <View style={{ padding: 14, gap: 8 }}>
           <Text numberOfLines={1} style={{ color: colors.text, fontSize: 17, fontWeight: "800" }}>
             {title}
           </Text>
@@ -168,12 +169,12 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
             </View>
           )}
 
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 2 }}>
             <Spec kind="area" icon="resize-outline" text={formatArea(listing, t)} colors={colors} mode={mode} />
             {!isLandType(listing.propertyType) && (
               <Spec kind="rooms" icon="bed-outline" text={`${listing.rooms} ${t("home.roomsUnit")}`} colors={colors} mode={mode} />
             )}
-            {!carousel && listing.floor != null && listing.floorTotal != null && (
+            {listing.floor != null && listing.floorTotal != null && (
               <Spec
                 kind="floor"
                 icon="layers-outline"
