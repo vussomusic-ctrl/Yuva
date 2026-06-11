@@ -24,6 +24,7 @@ export type Profile = {
   role: UserRole;
   verified: boolean;
   agencyId: string | null;
+  isAdmin: boolean;
 };
 
 export type SignUpInput = {
@@ -47,7 +48,7 @@ type AuthContextValue = {
   refreshProfile: () => Promise<void>;
 };
 
-const PROFILE_COLUMNS = "id, full_name, avatar_url, phone, role, verified, agency_id";
+const PROFILE_COLUMNS = "id, full_name, avatar_url, phone, role, verified, agency_id, is_admin";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -77,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: UserRole;
       verified: boolean;
       agency_id: string | null;
+      is_admin: boolean | null;
     };
     setProfile({
       id: row.id,
@@ -86,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: row.role,
       verified: row.verified,
       agencyId: row.agency_id ?? null,
+      isAdmin: row.is_admin ?? false,
     });
   };
 

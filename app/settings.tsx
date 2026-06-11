@@ -8,12 +8,14 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
+import { useAuth } from "../lib/auth";
 import { Header } from "./my-listings";
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
+  const { profile } = useAuth();
 
   // Notification preferences — local only for now (Supabase later).
   const [newMatches, setNewMatches] = useState(true);
@@ -45,6 +47,16 @@ export default function SettingsScreen() {
         <Card colors={colors}>
           <LinkRow colors={colors} icon="business-outline" label={t("agencies.title")} onPress={() => router.push("/agencies")} isLast />
         </Card>
+
+        {/* Admin — only for admins */}
+        {profile?.isAdmin && (
+          <>
+            <SectionLabel colors={colors} text={t("settings.admin")} />
+            <Card colors={colors}>
+              <LinkRow colors={colors} icon="shield-checkmark-outline" label={t("settings.manageAgencies")} onPress={() => router.push("/admin/agencies")} isLast />
+            </Card>
+          </>
+        )}
 
         {/* Account */}
         <SectionLabel colors={colors} text={t("settings.account")} />

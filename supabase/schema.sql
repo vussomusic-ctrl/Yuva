@@ -30,12 +30,29 @@ create table if not exists public.profiles (
   phone       text,                       -- +994…
   role        text not null default 'user' check (role in ('user', 'agent')),
   verified    boolean not null default false,
+  is_admin    boolean not null default false,  -- in-app agency admin (Vusal)
   agency_name text,
   bio         text,
   created_at  timestamptz not null default now()
 );
 
+-- Idempotent for databases created before the is_admin column.
+alter table public.profiles
+  add column if not exists is_admin boolean not null default false;
+
 alter table public.profiles enable row level security;
+
+-- Admin check via SECURITY DEFINER (runs as table owner → bypasses RLS), so a
+-- policy ON profiles can call it WITHOUT recursing into profiles' own RLS.
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select coalesce((select is_admin from public.profiles where id = auth.uid()), false);
+$$;
 
 -- Profiles are publicly readable (seller name/avatar shown on listings).
 drop policy if exists "profiles_select_all" on public.profiles;
@@ -54,6 +71,15 @@ create policy "profiles_update_own"
   on public.profiles for update
   using (auth.uid() = id)
   with check (auth.uid() = id);
+
+-- Admin may update any profile (used to bind/unbind agents to an agency).
+-- Additive to profiles_update_own (OR'd) — own-profile updates still work.
+drop policy if exists "profiles_update_admin" on public.profiles;
+create policy "profiles_update_admin"
+  on public.profiles for update
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
 
 -- On signup, auto-create the matching profile row from the signUp metadata
 -- (full_name, phone, role passed in options.data on the client).
@@ -105,6 +131,14 @@ create policy "agencies_select_all"
   on public.agencies for select
   to anon, authenticated
   using (true);
+
+-- Admin manages agencies in-app (create/edit/delete). All others: read-only.
+drop policy if exists "agencies_admin_write" on public.agencies;
+create policy "agencies_admin_write"
+  on public.agencies for all
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
 
 -- Link an agent's profile to its agency. Idempotent for existing databases.
 alter table public.profiles
@@ -469,3 +503,24 @@ create policy "avatars_delete_own"
     bucket_id = 'avatars'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- =============================================================================
+-- Storage: agency-logos bucket (managed in-app by the admin only)
+-- =============================================================================
+insert into storage.buckets (id, name, public)
+values ('agency-logos', 'agency-logos', true)
+on conflict (id) do nothing;
+
+-- Public read for agency logos (shown on listings / agency pages).
+drop policy if exists "agency_logos_public_read" on storage.objects;
+create policy "agency_logos_public_read"
+  on storage.objects for select
+  using (bucket_id = 'agency-logos');
+
+-- Only the admin may upload/replace/remove agency logos.
+drop policy if exists "agency_logos_admin_write" on storage.objects;
+create policy "agency_logos_admin_write"
+  on storage.objects for all
+  to authenticated
+  using (bucket_id = 'agency-logos' and public.is_admin())
+  with check (bucket_id = 'agency-logos' and public.is_admin());
