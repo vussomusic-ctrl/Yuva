@@ -254,6 +254,13 @@
     "emptyTitle": "Seçilmişlər boşdur",
     "emptyDesc": "Bəyəndiyiniz elanları ürək düyməsi ilə saxlayın"
   },
+  "agencies": {
+    "title": "Agentliklər",
+    "agents": "Agentlər",
+    "listings": "Elanlar",
+    "empty": "Hələ tərəfdaş agentlik yoxdur",
+    "emptyAgency": "Agentliyin hələ agenti və elanı yoxdur"
+  },
   "notifications": {
     "title": "Bildirişlər",
     "priceDrop": "Qiymət düşdü",

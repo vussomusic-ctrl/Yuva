@@ -404,9 +404,19 @@ export default function PropertyDetailScreen() {
             </View>
           )}
           <View style={{ flex: 1 }}>
-            {/* Agency line — only for agents who belong to one. Logo optional. */}
+            {/* Agency line — only for agents who belong to one. Logo optional.
+                Taps through to the agency page. */}
             {listing.agent.role === "agent" && listing.agent.agency && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 2 }}>
+              <Pressable
+                onPress={() => router.push(`/agencies/${listing.agent.agency!.id}`)}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  marginBottom: 2,
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
                 {listing.agent.agency.logoUrl ? (
                   <Image
                     source={{ uri: listing.agent.agency.logoUrl }}
@@ -416,7 +426,7 @@ export default function PropertyDetailScreen() {
                 <Text numberOfLines={1} style={{ flex: 1, color: colors.textSecondary, fontSize: 13, fontWeight: "600" }}>
                   {listing.agent.agency.name}
                 </Text>
-              </View>
+              </Pressable>
             )}
             <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>{listing.agent.name}</Text>
             <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>

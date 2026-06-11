@@ -51,6 +51,8 @@ function RootInner() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="property/[id]" />
         <Stack.Screen name="chat/[id]" />
+        <Stack.Screen name="agencies/index" />
+        <Stack.Screen name="agencies/[id]" />
         <Stack.Screen name="my-listings" />
         <Stack.Screen name="saved" />
         <Stack.Screen name="notifications" />

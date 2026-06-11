@@ -254,6 +254,13 @@
     "emptyTitle": "Nothing saved yet",
     "emptyDesc": "Tap the heart to save listings you like"
   },
+  "agencies": {
+    "title": "Agencies",
+    "agents": "Agents",
+    "listings": "Listings",
+    "empty": "No partner agencies yet",
+    "emptyAgency": "This agency has no agents or listings yet"
+  },
   "notifications": {
     "title": "Notifications",
     "priceDrop": "Price dropped",

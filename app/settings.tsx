@@ -40,6 +40,12 @@ export default function SettingsScreen() {
           <ToggleRow colors={colors} label={t("settings.notifMessages")} value={messages} onValueChange={setMessages} isLast />
         </Card>
 
+        {/* Browse */}
+        <SectionLabel colors={colors} text={t("agencies.title")} />
+        <Card colors={colors}>
+          <LinkRow colors={colors} icon="business-outline" label={t("agencies.title")} onPress={() => router.push("/agencies")} isLast />
+        </Card>
+
         {/* Account */}
         <SectionLabel colors={colors} text={t("settings.account")} />
         <Card colors={colors}>
