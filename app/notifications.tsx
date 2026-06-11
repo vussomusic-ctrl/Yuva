@@ -1,18 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { View, Text, Pressable, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 import { Header, EmptyState } from "./my-listings";
-import { notifications as seed, AppNotification } from "../lib/mock/notifications";
+import { LoadingState, ErrorState } from "../components/ListState";
+import { AppNotification, buildMockNotifications } from "../lib/mock/notifications";
 import { Listing, formatPrice } from "../lib/mock/listings";
-import { fetchListingsByIds } from "../lib/api/listings";
+import { fetchFeed } from "../lib/api/listings";
 import { buildListingTitle } from "../lib/listingTitle";
 import { useLanguage } from "../lib/i18n/languages";
+import { useAuth } from "../lib/auth";
 
 const META: Record<
   AppNotification["type"],
@@ -37,27 +40,38 @@ export default function NotificationsScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
+  const { session } = useAuth();
 
-  const [items, setItems] = useState<AppNotification[]>(seed);
-
-  // Resolve the referenced listings once (for previews), keyed by id. No N+1.
-  const listingIds = useMemo(
-    () => items.filter((n) => n.type !== "message").map((n) => (n as { listingId: string }).listingId),
-    [items],
-  );
+  const [items, setItems] = useState<AppNotification[] | null>(null);
   const [byId, setById] = useState<Record<string, Listing>>({});
-  useEffect(() => {
-    fetchListingsByIds(listingIds)
-      .then((list) => setById(Object.fromEntries(list.map((l) => [l.id, l]))))
-      .catch(() => setById({}));
-  }, [listingIds]);
+  const [error, setError] = useState(false);
+
+  // Build mock notifications from real listings (one fetch powers both the
+  // notifications and their preview titles). Refresh on focus.
+  const load = useCallback(() => {
+    setError(false);
+    fetchFeed()
+      .then((feed) => {
+        setById(Object.fromEntries(feed.map((l) => [l.id, l])));
+        setItems(buildMockNotifications(feed));
+      })
+      .catch(() => setError(true));
+  }, []);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const loading = items === null && !error;
+  const hasUnread = (items ?? []).some((n) => !n.read);
+
+  const markAllRead = () => setItems((cur) => (cur ?? []).map((x) => ({ ...x, read: true })));
 
   const open = (n: AppNotification) => {
-    setItems((cur) => cur.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
-    // Notifications are still mock; a mock chatId would 404 on the real DB.
-    // Until they're wired to real conversations, send message-type to the list.
-    if (n.type === "message") router.push("/chat");
-    else router.push(`/property/${n.listingId}`);
+    setItems((cur) => (cur ?? []).map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+    if (n.type === "message") {
+      // Mock chatId → no real conversation: send to the chat list (guest → login).
+      router.push(session ? "/chat" : "/login");
+    } else {
+      router.push(`/property/${n.listingId}`);
+    }
   };
 
   return (
@@ -69,24 +83,43 @@ export default function NotificationsScreen() {
         onBack={() => (router.canGoBack() ? router.back() : router.replace("/home"))}
       />
 
-      <FlatList
-        data={items}
-        keyExtractor={(n) => n.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
-        ItemSeparatorComponent={() => (
-          <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 72 }} />
-        )}
-        ListEmptyComponent={
-          <EmptyState
-            colors={colors}
-            icon="notifications-outline"
-            title={t("notifications.emptyTitle")}
-            desc={t("notifications.emptyDesc")}
-          />
-        }
-        renderItem={({ item }) => <Row item={item} byId={byId} onPress={() => open(item)} />}
-      />
+      {loading ? (
+        <LoadingState colors={colors} />
+      ) : error ? (
+        <ErrorState colors={colors} onRetry={load} />
+      ) : (
+        <FlatList
+          data={items ?? []}
+          keyExtractor={(n) => n.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
+          ListHeaderComponent={
+            hasUnread ? (
+              <Pressable
+                onPress={markAllRead}
+                hitSlop={8}
+                style={({ pressed }) => ({ alignSelf: "flex-end", paddingHorizontal: 16, paddingVertical: 10, opacity: pressed ? 0.6 : 1 })}
+              >
+                <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 13 }}>
+                  {t("notifications.markAllRead")}
+                </Text>
+              </Pressable>
+            ) : null
+          }
+          ItemSeparatorComponent={() => (
+            <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 72 }} />
+          )}
+          ListEmptyComponent={
+            <EmptyState
+              colors={colors}
+              icon="notifications-outline"
+              title={t("notifications.emptyTitle")}
+              desc={t("notifications.emptyDesc")}
+            />
+          }
+          renderItem={({ item }) => <Row item={item} byId={byId} onPress={() => open(item)} />}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -146,24 +179,26 @@ function Row({
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Text
             numberOfLines={1}
-            style={{ flex: 1, color: colors.text, fontSize: 15, fontWeight: item.read ? "600" : "700" }}
+            style={{ flex: 1, color: colors.text, fontFamily: item.read ? font.semibold : font.bold, fontSize: 15 }}
           >
             {t(meta.titleKey)}
           </Text>
-          <Text style={{ color: colors.textSecondary, fontSize: 12, marginLeft: 8 }}>{item.time}</Text>
+          <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12, marginLeft: 8 }}>
+            {item.time}
+          </Text>
         </View>
 
-        <Text numberOfLines={1} style={{ color: colors.textSecondary, fontSize: 14 }}>
+        <Text numberOfLines={1} style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
           {subtitle}
         </Text>
 
         {item.type === "price_drop" && (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
-            <Text style={{ color: colors.textSecondary, fontSize: 13, textDecorationLine: "line-through" }}>
+            <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13, textDecorationLine: "line-through" }}>
               {formatPrice(item.oldPrice)}
             </Text>
             <Ionicons name="arrow-forward" size={12} color={colors.textSecondary} />
-            <Text style={{ color: brand.magenta, fontSize: 14, fontWeight: "800" }}>
+            <Text style={{ color: brand.magenta, fontFamily: font.extrabold, fontSize: 14 }}>
               {formatPrice(item.newPrice)}
             </Text>
           </View>
