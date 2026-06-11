@@ -382,6 +382,7 @@ export default function AddListingModal() {
   const previewListing: Listing = {
     id: "preview",
     image: photos[0]?.uri ?? "",
+    photoCount: photos.length,
     priceAzn: Number(price) || 0,
     areaM2: isLand ? 0 : Number(area) || 0,
     landAreaSot: isLand ? Number(area) || 0 : undefined,
