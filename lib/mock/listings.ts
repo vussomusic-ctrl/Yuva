@@ -8,6 +8,7 @@
 import { DealKey } from "../dealTypes";
 import { PropertyTypeKey } from "../propertyTypes";
 import { BuildKey } from "../buildTypes";
+import type { UserRole } from "../auth";
 
 export type Listing = {
   id: string;
@@ -40,6 +41,7 @@ export type Agent = {
   avatar: string;
   verified: boolean;
   phone: string;
+  role: UserRole;
 };
 
 export type ListingDetail = Listing & {

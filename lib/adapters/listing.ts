@@ -7,6 +7,7 @@ import { PropertyTypeKey, isLandType } from "../propertyTypes";
 import { BuildKey } from "../buildTypes";
 import { Listing, ListingDetail, Agent } from "../mock/listings";
 import { storagePathFromUrl } from "../api/photos";
+import type { UserRole } from "../auth";
 
 // --- DB row shapes (what PostgREST returns with our embeds) ---
 
@@ -16,6 +17,7 @@ export type OwnerRow = {
   full_name: string | null;
   avatar_url: string | null;
   verified: boolean;
+  role: UserRole | null;
 };
 
 export type ListingRow = {
@@ -116,7 +118,7 @@ export function rowToListing(row: ListingRow): Listing {
   };
 }
 
-const FALLBACK_AGENT: Agent = { name: "Yuva", avatar: "", verified: false, phone: "" };
+const FALLBACK_AGENT: Agent = { name: "Yuva", avatar: "", verified: false, phone: "", role: "user" };
 
 export function rowToDetail(row: ListingRow): ListingDetail {
   const base = rowToListing(row);
@@ -127,6 +129,7 @@ export function rowToDetail(row: ListingRow): ListingDetail {
         avatar: row.owner.avatar_url ?? "",
         verified: row.owner.verified,
         phone: row.contact_phone ?? "",
+        role: row.owner.role ?? "user",
       }
     : { ...FALLBACK_AGENT, phone: row.contact_phone ?? "" };
   return {

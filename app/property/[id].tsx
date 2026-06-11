@@ -405,6 +405,9 @@ export default function PropertyDetailScreen() {
           )}
           <View style={{ flex: 1 }}>
             <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>{listing.agent.name}</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>
+              {listing.agent.role === "agent" ? t("profile.roleAgent") : t("profile.roleUser")}
+            </Text>
             {listing.agent.verified && (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                 <Ionicons name="shield-checkmark" size={13} color={brand.blue} />

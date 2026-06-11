@@ -4,6 +4,7 @@
 
 import { supabase } from "../supabase";
 import { fetchListingsByIds } from "./listings";
+import type { UserRole } from "../auth";
 
 export type Message = {
   id: string;
@@ -90,12 +91,12 @@ export async function getOrCreateConversation(
 /** Peer name/avatar + the listing this conversation is about (for the header). */
 export async function getConversationMeta(
   conversationId: string,
-): Promise<{ peerName: string; peerAvatar: string; listingId: string | null }> {
+): Promise<{ peerName: string; peerAvatar: string; peerRole: UserRole; listingId: string | null }> {
   const me = await currentUserId();
   const { data, error } = await supabase
     .from("conversations")
     .select(
-      "listing_id, buyer_id, seller_id, buyer:profiles!conversations_buyer_id_fkey(full_name, avatar_url), seller:profiles!conversations_seller_id_fkey(full_name, avatar_url)",
+      "listing_id, buyer_id, seller_id, buyer:profiles!conversations_buyer_id_fkey(full_name, avatar_url, role), seller:profiles!conversations_seller_id_fkey(full_name, avatar_url, role)",
     )
     .eq("id", conversationId)
     .single();
@@ -105,13 +106,14 @@ export async function getConversationMeta(
     listing_id: string | null;
     buyer_id: string;
     seller_id: string;
-    buyer: { full_name: string | null; avatar_url: string | null } | null;
-    seller: { full_name: string | null; avatar_url: string | null } | null;
+    buyer: { full_name: string | null; avatar_url: string | null; role: UserRole | null } | null;
+    seller: { full_name: string | null; avatar_url: string | null; role: UserRole | null } | null;
   };
   const peer = row.buyer_id === me ? row.seller : row.buyer;
   return {
     peerName: peer?.full_name ?? "",
     peerAvatar: peer?.avatar_url ?? "",
+    peerRole: peer?.role ?? "user",
     listingId: row.listing_id,
   };
 }

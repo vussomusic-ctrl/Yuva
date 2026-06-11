@@ -23,7 +23,7 @@ import {
 const LIST_SELECT = "*, listing_photos(id, url, sort)";
 // Detail also embeds the owner profile for the agent card.
 const DETAIL_SELECT =
-  "*, listing_photos(id, url, sort), owner:profiles!listings_owner_id_fkey(full_name, avatar_url, verified)";
+  "*, listing_photos(id, url, sort), owner:profiles!listings_owner_id_fkey(full_name, avatar_url, verified, role)";
 
 /** Active listings, newest first (Home feed + Search). */
 export async function fetchFeed(): Promise<Listing[]> {

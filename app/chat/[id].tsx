@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { LoadingState, ErrorState } from "../../components/ListState";
-import { useAuth } from "../../lib/auth";
+import { useAuth, UserRole } from "../../lib/auth";
 import { useLanguage } from "../../lib/i18n/languages";
 import { getMessages, getConversationMeta, sendMessage, subscribeMessages, markConversationRead, Message } from "../../lib/api/chats";
 import { fetchListingsByIds } from "../../lib/api/listings";
@@ -40,7 +40,7 @@ export default function ConversationScreen() {
 
   const listRef = useRef<FlatList<Message>>(null);
   const [messages, setMessages] = useState<Message[] | null>(null);
-  const [meta, setMeta] = useState<{ peerName: string; peerAvatar: string } | null>(null);
+  const [meta, setMeta] = useState<{ peerName: string; peerAvatar: string; peerRole: UserRole } | null>(null);
   const [error, setError] = useState(false);
   const [draft, setDraft] = useState("");
   // Pinned listing card: "hidden" (loading / network fail), "card" (loaded),
@@ -160,6 +160,7 @@ export default function ConversationScreen() {
         onBack={() => (router.canGoBack() ? router.back() : router.replace("/chat"))}
         name={meta?.peerName}
         avatar={meta?.peerAvatar}
+        role={meta?.peerRole}
       />
 
       {/* Pinned listing card — which property this chat is about */}
@@ -294,12 +295,15 @@ function Header({
   onBack,
   name,
   avatar,
+  role,
 }: {
   colors: Theme;
   onBack: () => void;
   name?: string;
   avatar?: string;
+  role?: UserRole;
 }) {
+  const { t } = useTranslation();
   return (
     <View
       style={{
@@ -326,9 +330,14 @@ function Header({
         </View>
       )}
       {name != null && (
-        <Text numberOfLines={1} style={{ flex: 1, color: colors.text, fontSize: 17, fontWeight: "700" }}>
-          {name}
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text numberOfLines={1} style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>
+            {name}
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 1 }}>
+            {role === "agent" ? t("profile.roleAgent") : t("profile.roleUser")}
+          </Text>
+        </View>
       )}
     </View>
   );
