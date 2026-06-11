@@ -1,4 +1,5 @@
-import { View, Text, Image, Pressable } from "react-native";
+import { useState } from "react";
+import { View, Text, Image, Pressable, ScrollView } from "react-native";
 import Animated from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,7 +12,7 @@ import { Listing, formatPrice, formatArea } from "../lib/mock/listings";
 import { isLandType } from "../lib/propertyTypes";
 import { buildListingTitle } from "../lib/listingTitle";
 import { useLanguage } from "../lib/i18n/languages";
-import { usePressScale } from "../lib/animations";
+import { usePressShrink } from "../lib/animations";
 
 type Props = {
   listing: Listing;
@@ -34,7 +35,7 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
   const { t } = useTranslation();
   const { current: lang } = useLanguage();
   const { colors, mode } = useTheme();
-  const press = usePressScale();
+  const press = usePressShrink(0.97);
   const carousel = variant === "carousel";
   const title = buildListingTitle(listing, t, lang);
 
@@ -43,13 +44,20 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
     return Number.isFinite(ts) && Date.now() - ts < NEW_WINDOW_MS;
   })();
 
+  // Feed-only photo swiper: slide width = measured photo-block width; current
+  // index drives the live counter. Carousel keeps a static first photo (nested
+  // horizontal scrolls inside the recommended carousel would fight gestures).
+  const [slideW, setSlideW] = useState(0);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const useSwiper = !carousel && slideW > 0 && listing.photos.length > 1;
+
+  // Press-and-hold scale lives on the inner Pressables (slides / body) via
+  // press.onPressIn/Out; a clean tap opens detail. Never wrap the whole card in
+  // a Pressable — its responder swallows the photo swipe.
+  const handleTap = onPress;
+
   return (
-    <Pressable
-      onPress={onPress}
-      onPressIn={press.onPressIn}
-      onPressOut={press.onPressOut}
-      style={carousel ? { width: 260 } : { alignSelf: "stretch" }}
-    >
+    <View style={carousel ? { width: 260 } : { alignSelf: "stretch" }}>
       <Animated.View
         style={[
           {
@@ -67,12 +75,47 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
         {/* Photo fills the card width to the edges; all corners rounded to match
             the card (24). Gradient/price/badges/counter live inside this block. */}
         <View
+          onLayout={(e) => setSlideW(e.nativeEvent.layout.width)}
           style={{ alignSelf: "stretch", height: carousel ? 150 : 210, borderRadius: 24, overflow: "hidden", backgroundColor: colors.bg }}
         >
-          <Image source={{ uri: listing.image }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+          {useSwiper ? (
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(e) =>
+                setPhotoIndex(Math.round(e.nativeEvent.contentOffset.x / slideW))
+              }
+            >
+              {listing.photos.map((item, i) => (
+                <Pressable
+                  key={i}
+                  onPress={handleTap}
+                  onPressIn={press.onPressIn}
+                  onPressOut={press.onPressOut}
+                  unstable_pressDelay={60}
+                  style={{ width: slideW, height: "100%" }}
+                >
+                  <Image source={{ uri: item }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                </Pressable>
+              ))}
+            </ScrollView>
+          ) : (
+            <Pressable
+              onPress={handleTap}
+              onPressIn={press.onPressIn}
+              onPressOut={press.onPressOut}
+              unstable_pressDelay={60}
+              style={{ width: "100%", height: "100%" }}
+            >
+              <Image source={{ uri: listing.image }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+            </Pressable>
+          )}
 
-          {/* Bottom third darkening for price legibility */}
+          {/* Bottom third darkening for price legibility. pointerEvents none so it
+              never intercepts the horizontal photo swipe. */}
           <LinearGradient
+            pointerEvents="none"
             colors={["transparent", "rgba(0,0,0,0.55)"]}
             style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "40%" }}
           />
@@ -80,6 +123,7 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
           {/* NEW badge — listings younger than 72h */}
           {isNew && (
             <View
+              pointerEvents="none"
               style={{
                 position: "absolute",
                 top: 12,
@@ -118,6 +162,7 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
           {/* Price — bounded width (left/right) so long values shrink instead of
               colliding with the photo counter */}
           <Text
+            pointerEvents="none"
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.7}
@@ -134,9 +179,10 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
             {formatPrice(listing.priceAzn)}
           </Text>
 
-          {/* Photo counter — only when more than one photo */}
+          {/* Photo counter — live index when swiping (only when >1 photo) */}
           {listing.photoCount > 1 && (
             <View
+              pointerEvents="none"
               style={{
                 position: "absolute",
                 bottom: 12,
@@ -152,13 +198,21 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
               }}
             >
               <Ionicons name="image-outline" size={13} color="#FFFFFF" />
-              <Text style={{ color: "#FFFFFF", fontFamily: font.semibold, fontSize: 12 }}>{`1/${listing.photoCount}`}</Text>
+              <Text style={{ color: "#FFFFFF", fontFamily: font.semibold, fontSize: 12 }}>
+                {`${photoIndex + 1}/${listing.photoCount}`}
+              </Text>
             </View>
           )}
         </View>
 
-        {/* Body — left edge aligns with the photo (both inset 10) */}
-        <View style={{ paddingHorizontal: 10, paddingTop: 6, paddingBottom: 16 }}>
+        {/* Body — tap opens detail. Pressable lives here (not wrapping the card),
+            so it never competes with the photo swiper above. */}
+        <Pressable
+          onPress={handleTap}
+          onPressIn={press.onPressIn}
+          onPressOut={press.onPressOut}
+          style={{ paddingHorizontal: 10, paddingTop: 6, paddingBottom: 16 }}
+        >
           <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 17 }}>
             {title}
           </Text>
@@ -199,9 +253,9 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
               />
             )}
           </View>
-        </View>
+        </Pressable>
       </Animated.View>
-    </Pressable>
+    </View>
   );
 }
 

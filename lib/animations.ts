@@ -3,7 +3,50 @@
 // across screens. See CLAUDE.md → "Анимации".
 
 import { useCallback } from "react";
-import { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
+import {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withSequence,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
+
+/**
+ * Press-and-hold shrink with NO bounce: ease smoothly down to `scaleTo` on
+ * press-in, ease back to 1 on press-out (timing, not spring). Same handler/style
+ * shape as usePressScale. Put on inner Pressables (a child ScrollView cancels
+ * the press when a drag starts, so the card never sticks shrunk).
+ */
+export function usePressShrink(scaleTo = 0.97) {
+  const scale = useSharedValue(1);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const onPressIn = useCallback(() => {
+    scale.value = withTiming(scaleTo, { duration: 110, easing: Easing.out(Easing.quad) });
+  }, [scaleTo, scale]);
+  const onPressOut = useCallback(() => {
+    scale.value = withTiming(1, { duration: 160, easing: Easing.out(Easing.quad) });
+  }, [scale]);
+  return { style, onPressIn, onPressOut };
+}
+
+/**
+ * One-shot tap pulse: spring down to `dipScale` then back to 1. Fire `pulse()`
+ * from onPress and apply `style` to an Animated.View. Unlike usePressScale it
+ * attaches NO press-in/out handlers, so it never competes with a child gesture
+ * (e.g. a horizontal photo swiper inside the card).
+ */
+export function useTapPulse(dipScale = 0.96) {
+  const scale = useSharedValue(1);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const pulse = useCallback(() => {
+    scale.value = withSequence(
+      withSpring(dipScale, { damping: 18, stiffness: 400 }),
+      withSpring(1, { damping: 15, stiffness: 200 }),
+    );
+  }, [dipScale, scale]);
+  return { style, pulse };
+}
 
 /**
  * Sliding indicator for a segmented control. Tracks a 0..N-1 index and exposes

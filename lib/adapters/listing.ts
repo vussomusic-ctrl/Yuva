@@ -96,6 +96,7 @@ export function rowToListing(row: ListingRow): Listing {
   return {
     id: row.id,
     image: urls[0] ?? "",
+    photos: urls,
     photoCount: urls.length,
     priceAzn: row.price_azn,
     areaM2: row.area_m2 ?? 0,

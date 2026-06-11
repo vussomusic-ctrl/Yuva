@@ -14,6 +14,7 @@ import type { Agency } from "../adapters/agency";
 export type Listing = {
   id: string;
   image: string; // cover (first listing_photos by sort); "" if none
+  photos: string[]; // all photo URLs, ordered by sort (for the card swiper)
   photoCount: number; // total photos for this listing (for the card counter)
   priceAzn: number;
   areaM2: number; // 0 for land — land uses landAreaSot instead
