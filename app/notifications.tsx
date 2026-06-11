@@ -10,9 +10,15 @@ import { brand } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
 import { Header, EmptyState } from "./my-listings";
 import { LoadingState, ErrorState } from "../components/ListState";
-import { AppNotification, buildMockNotifications } from "../lib/mock/notifications";
+import { SecondaryButton } from "../components/Button";
+import {
+  AppNotification,
+  fetchNotifications,
+  markRead,
+  markAllRead,
+} from "../lib/api/notifications";
 import { Listing, formatPrice } from "../lib/mock/listings";
-import { fetchFeed } from "../lib/api/listings";
+import { fetchListingsByIds } from "../lib/api/listings";
 import { buildListingTitle } from "../lib/listingTitle";
 import { useLanguage } from "../lib/i18n/languages";
 import { useAuth } from "../lib/auth";
@@ -41,37 +47,59 @@ export default function NotificationsScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const { session } = useAuth();
+  const loggedIn = !!session;
 
   const [items, setItems] = useState<AppNotification[] | null>(null);
   const [byId, setById] = useState<Record<string, Listing>>({});
   const [error, setError] = useState(false);
 
-  // Build mock notifications from real listings (one fetch powers both the
-  // notifications and their preview titles). Refresh on focus.
+  // From the DB (RLS scopes to me). A second fetch resolves the listing titles
+  // for price_drop / new_match previews (message carries its own snapshot).
   const load = useCallback(() => {
+    if (!loggedIn) {
+      setItems([]);
+      setById({});
+      return;
+    }
     setError(false);
-    fetchFeed()
-      .then((feed) => {
-        setById(Object.fromEntries(feed.map((l) => [l.id, l])));
-        setItems(buildMockNotifications(feed));
+    fetchNotifications()
+      .then((list) => {
+        setItems(list);
+        const ids = Array.from(
+          new Set(
+            list
+              .filter((n) => n.type !== "message")
+              .map((n) => (n as { listingId: string }).listingId)
+              .filter(Boolean),
+          ),
+        );
+        if (ids.length === 0) {
+          setById({});
+          return;
+        }
+        fetchListingsByIds(ids)
+          .then((ls) => setById(Object.fromEntries(ls.map((l) => [l.id, l]))))
+          .catch(() => setById({}));
       })
       .catch(() => setError(true));
-  }, []);
+  }, [loggedIn]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const loading = items === null && !error;
   const hasUnread = (items ?? []).some((n) => !n.read);
 
-  const markAllRead = () => setItems((cur) => (cur ?? []).map((x) => ({ ...x, read: true })));
+  const onMarkAll = () => {
+    setItems((cur) => (cur ?? []).map((x) => ({ ...x, read: true })));
+    markAllRead().catch(() => {});
+  };
 
   const open = (n: AppNotification) => {
-    setItems((cur) => (cur ?? []).map((x) => (x.id === n.id ? { ...x, read: true } : x)));
-    if (n.type === "message") {
-      // Mock chatId → no real conversation: send to the chat list (guest → login).
-      router.push(session ? "/chat" : "/login");
-    } else {
-      router.push(`/property/${n.listingId}`);
+    if (!n.read) {
+      setItems((cur) => (cur ?? []).map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+      markRead(n.id).catch(() => {});
     }
+    if (n.type === "message") router.push(`/chat/${n.conversationId}`);
+    else router.push(`/property/${n.listingId}`);
   };
 
   return (
@@ -83,7 +111,15 @@ export default function NotificationsScreen() {
         onBack={() => (router.canGoBack() ? router.back() : router.replace("/home"))}
       />
 
-      {loading ? (
+      {!loggedIn ? (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 14 }}>
+          <Ionicons name="notifications-outline" size={48} color={colors.textSecondary} />
+          <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, textAlign: "center" }}>
+            {t("notifications.guestPrompt")}
+          </Text>
+          <SecondaryButton label={t("profile.login")} onPress={() => router.replace("/login")} style={{ marginTop: 6, paddingHorizontal: 32 }} />
+        </View>
+      ) : loading ? (
         <LoadingState colors={colors} />
       ) : error ? (
         <ErrorState colors={colors} onRetry={load} />
@@ -96,7 +132,7 @@ export default function NotificationsScreen() {
           ListHeaderComponent={
             hasUnread ? (
               <Pressable
-                onPress={markAllRead}
+                onPress={onMarkAll}
                 hitSlop={8}
                 style={({ pressed }) => ({ alignSelf: "flex-end", paddingHorizontal: 16, paddingVertical: 10, opacity: pressed ? 0.6 : 1 })}
               >

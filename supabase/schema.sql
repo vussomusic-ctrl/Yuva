@@ -413,6 +413,67 @@ create policy "notifications_update_own"
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+-- Rows are inserted ONLY by these SECURITY DEFINER triggers (no client insert
+-- policy). Snapshots (peer name / prices) are denormalized into payload.
+
+-- New message → notify the recipient (the participant who isn't the sender).
+create or replace function public.notify_on_message()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  c public.conversations;
+  recipient uuid;
+  sender_name text;
+begin
+  select * into c from public.conversations where id = new.conversation_id;
+  recipient := case when new.sender_id = c.buyer_id then c.seller_id else c.buyer_id end;
+  select full_name into sender_name from public.profiles where id = new.sender_id;
+  insert into public.notifications (user_id, type, payload)
+  values (recipient, 'message', jsonb_build_object(
+    'conversation_id', new.conversation_id,
+    'peer_name', coalesce(sender_name, ''),
+    'preview', left(new.body, 120)
+  ));
+  return new;
+end;
+$$;
+
+drop trigger if exists on_message_notify on public.messages;
+create trigger on_message_notify
+  after insert on public.messages
+  for each row execute function public.notify_on_message();
+
+-- Price drop → notify everyone who favorited the listing (except the owner).
+create or replace function public.notify_on_price_drop()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.price_azn < old.price_azn then
+    insert into public.notifications (user_id, type, payload)
+    select f.user_id, 'price_drop', jsonb_build_object(
+      'listing_id', new.id,
+      'old_price', old.price_azn,
+      'new_price', new.price_azn
+    )
+    from public.favorites f
+    where f.listing_id = new.id
+      and f.user_id <> new.owner_id;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_price_drop_notify on public.listings;
+create trigger on_price_drop_notify
+  after update of price_azn on public.listings
+  for each row execute function public.notify_on_price_drop();
+
 -- =============================================================================
 -- Storage: listing-photos bucket (used in stage 3)
 -- =============================================================================
@@ -463,6 +524,15 @@ create policy "listing_photos_delete_own"
 do $$
 begin
   alter publication supabase_realtime add table public.messages;
+exception
+  when duplicate_object then null;
+end $$;
+
+-- Publish notifications too, for the live bell badge (INSERT broadcast,
+-- RLS-filtered to the recipient).
+do $$
+begin
+  alter publication supabase_realtime add table public.notifications;
 exception
   when duplicate_object then null;
 end $$;

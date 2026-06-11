@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -26,7 +26,8 @@ import { useFilters } from "../../lib/filters-state";
 import { PropertyTypeKey } from "../../lib/propertyTypes";
 import { Listing } from "../../lib/mock/listings";
 import { fetchFeed } from "../../lib/api/listings";
-import { hasUnreadNotifications } from "../../lib/mock/notifications";
+import { unreadCount, subscribeNotifications } from "../../lib/api/notifications";
+import { useAuth } from "../../lib/auth";
 
 const CATEGORIES: { key: string; label: string; image: number; type: PropertyTypeKey }[] = [
   { key: "apartments", label: "home.catApartments", image: require("../../assets/icons/categories/menziller.png"), type: "apartment" },
@@ -50,6 +51,7 @@ export default function HomeScreen() {
   const { colors, mode } = useTheme();
   const router = useRouter();
   const { current, cycleLanguage } = useLanguage();
+  const { session } = useAuth();
 
   const [query, setQuery] = useState("");
   const [deal, setDeal] = useState<DealKey>("sale");
@@ -59,13 +61,32 @@ export default function HomeScreen() {
   // Feed from Supabase. Refetch whenever Home regains focus (e.g. after publish).
   const [feed, setFeed] = useState<Listing[] | null>(null);
   const [error, setError] = useState(false);
+  const [unread, setUnread] = useState(0); // live bell badge
   const load = useCallback(() => {
     setError(false);
     fetchFeed()
       .then(setFeed)
       .catch(() => setError(true));
   }, []);
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(
+    useCallback(() => {
+      load();
+      // Live unread count for the bell — guests have none.
+      if (session) unreadCount().then(setUnread).catch(() => setUnread(0));
+      else setUnread(0);
+    }, [load, session]),
+  );
+
+  // Realtime: a new notification → instant dot (refetch the exact count so it
+  // never drifts vs reads from another device). Guests don't subscribe.
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (!uid) return;
+    const unsub = subscribeNotifications(uid, () => {
+      unreadCount().then(setUnread).catch(() => {});
+    });
+    return unsub;
+  }, [session?.user?.id]);
 
   const loading = feed === null && !error;
   const recommended = (feed ?? []).filter((l) => l.premium);
@@ -105,7 +126,7 @@ export default function HomeScreen() {
             style={({ pressed }) => ({ padding: 4, opacity: pressed ? 0.6 : 1 })}
           >
             <Ionicons name="notifications-outline" size={24} color={colors.text} />
-            {hasUnreadNotifications && (
+            {unread > 0 && (
               <View
                 style={{
                   position: "absolute",

@@ -291,7 +291,8 @@
     "message": "Yeni mesaj",
     "markAllRead": "Hamısını oxu",
     "emptyTitle": "Bildiriş yoxdur",
-    "emptyDesc": "Yeni bildirişlər burada görünəcək"
+    "emptyDesc": "Yeni bildirişlər burada görünəcək",
+    "guestPrompt": "Bildirişləri görmək üçün daxil olun"
   },
   "settings": {
     "title": "Ayarlar",

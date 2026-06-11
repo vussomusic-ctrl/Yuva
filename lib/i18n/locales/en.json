@@ -291,7 +291,8 @@
     "message": "New message",
     "markAllRead": "Mark all read",
     "emptyTitle": "No notifications",
-    "emptyDesc": "New notifications will appear here"
+    "emptyDesc": "New notifications will appear here",
+    "guestPrompt": "Log in to see notifications"
   },
   "settings": {
     "title": "Settings",
