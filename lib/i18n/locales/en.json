@@ -33,6 +33,7 @@
     "subtitle": "Discover an exclusive collection of premium real estate.",
     "fullNameLabel": "Full name",
     "fullNamePlaceholder": "John Doe",
+    "accountType": "Account type",
     "emailLabel": "Email",
     "emailPlaceholder": "john@example.com",
     "phoneLabel": "Phone",

@@ -33,6 +33,7 @@
     "subtitle": "Откройте для себя эксклюзивную коллекцию премиальной недвижимости.",
     "fullNameLabel": "Полное имя",
     "fullNamePlaceholder": "Иван Иванов",
+    "accountType": "Тип аккаунта",
     "emailLabel": "Электронная почта",
     "emailPlaceholder": "ivan@example.com",
     "phoneLabel": "Телефон",

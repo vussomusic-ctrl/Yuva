@@ -18,7 +18,8 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
-import { useAuth, authErrorKey } from "../lib/auth";
+import { Segmented } from "../components/Segmented";
+import { useAuth, authErrorKey, UserRole } from "../lib/auth";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -29,6 +30,7 @@ export default function CreateAccountScreen() {
   const { signUp } = useAuth();
 
   const [fullName, setFullName] = useState("");
+  const [role, setRole] = useState<UserRole>("user");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("+994");
   const [password, setPassword] = useState("");
@@ -51,7 +53,7 @@ export default function CreateAccountScreen() {
     if (Object.keys(next).length > 0) return;
 
     setSubmitting(true);
-    const { error } = await signUp({ fullName, email, phone, password });
+    const { error } = await signUp({ fullName, email, phone, password, role });
     setSubmitting(false);
 
     if (error) {
@@ -137,6 +139,32 @@ export default function CreateAccountScreen() {
               error={errors.name}
               autoCapitalize="words"
             />
+
+            {/* Account type — owner (DB role "user") / agent */}
+            <View style={{ marginBottom: 16 }}>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "700",
+                  letterSpacing: 0.5,
+                  textTransform: "uppercase",
+                  color: colors.textSecondary,
+                  marginBottom: 8,
+                  marginLeft: 4,
+                }}
+              >
+                {t("createAccount.accountType")}
+              </Text>
+              <Segmented
+                options={[
+                  { key: "user", label: t("editProfile.typeOwner") },
+                  { key: "agent", label: t("editProfile.typeAgent") },
+                ]}
+                value={role}
+                onChange={(k) => setRole(k as UserRole)}
+              />
+            </View>
+
             <Field
               colors={colors}
               label={t("createAccount.emailLabel")}

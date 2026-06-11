@@ -30,6 +30,7 @@ export type SignUpInput = {
   email: string;
   phone: string;
   password: string;
+  role: UserRole;
 };
 
 type AuthResult = { error: string | null };
@@ -98,9 +99,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email,
     phone,
     password,
+    role,
   }) => {
     // Confirm email is OFF → this returns a session immediately. The trigger
-    // turns options.data into the profiles row.
+    // turns options.data into the profiles row (incl. the chosen account type).
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -108,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: {
           full_name: fullName.trim(),
           phone: phone.trim(),
-          role: "user",
+          role,
         },
       },
     });
