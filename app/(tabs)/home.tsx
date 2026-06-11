@@ -7,12 +7,14 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Animated from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
+import { usePressScale } from "../../lib/animations";
 import { PropertyCard } from "../../components/PropertyCard";
 import { SearchBar } from "../../components/SearchBar";
 import { DealTypeChips, DealKey } from "../../components/DealTypeChips";
@@ -25,11 +27,11 @@ import { Listing } from "../../lib/mock/listings";
 import { fetchFeed } from "../../lib/api/listings";
 import { hasUnreadNotifications } from "../../lib/mock/notifications";
 
-const CATEGORIES: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; type: PropertyTypeKey }[] = [
-  { key: "apartments", label: "home.catApartments", icon: "business-outline", type: "apartment" },
-  { key: "houses", label: "home.catHouses", icon: "home-outline", type: "house" },
-  { key: "land", label: "home.catLand", icon: "map-outline", type: "land" },
-  { key: "objects", label: "home.catObjects", icon: "storefront-outline", type: "object" },
+const CATEGORIES: { key: string; label: string; image: number; type: PropertyTypeKey }[] = [
+  { key: "apartments", label: "home.catApartments", image: require("../../assets/icons/categories/menziller.png"), type: "apartment" },
+  { key: "houses", label: "home.catHouses", image: require("../../assets/icons/categories/evler.png"), type: "house" },
+  { key: "land", label: "home.catLand", image: require("../../assets/icons/categories/torpaq.png"), type: "land" },
+  { key: "objects", label: "home.catObjects", image: require("../../assets/icons/categories/obyektler.png"), type: "object" },
 ];
 
 export default function HomeScreen() {
@@ -146,7 +148,7 @@ export default function HomeScreen() {
         {/* Categories */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 16 }}>
           {CATEGORIES.map((c) => (
-            <Category key={c.key} icon={c.icon} label={t(c.label)} colors={colors} onPress={() => openCategory(c.type)} />
+            <Category key={c.key} image={c.image} label={t(c.label)} colors={colors} onPress={() => openCategory(c.type)} />
           ))}
         </View>
 
@@ -244,33 +246,36 @@ function SectionHeader({
 }
 
 function Category({
-  icon,
+  image,
   label,
   colors,
   onPress,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
+  image: number;
   label: string;
   colors: Theme;
   onPress: () => void;
 }) {
+  const press = usePressScale();
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => ({ alignItems: "center", gap: 8, opacity: pressed ? 0.6 : 1 })}>
-      <View
-        style={{
-          width: 60,
-          height: 60,
-          borderRadius: 18,
-          backgroundColor: colors.card,
-          borderWidth: 1,
-          borderColor: colors.border,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Ionicons name={icon} size={26} color={brand.violet} />
-      </View>
-      <Text style={{ color: colors.textSecondary, fontSize: 11, fontWeight: "600" }}>{label}</Text>
+    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[{ alignItems: "center", gap: 8 }, press.style]}>
+        <View
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: 20,
+            backgroundColor: colors.card,
+            borderWidth: 1,
+            borderColor: colors.border,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Image source={image} style={{ width: 64, height: 64 }} resizeMode="contain" />
+        </View>
+        <Text style={{ color: colors.textSecondary, fontSize: 11, fontWeight: "600" }}>{label}</Text>
+      </Animated.View>
     </Pressable>
   );
 }

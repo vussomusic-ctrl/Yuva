@@ -1,12 +1,14 @@
 import { useCallback, useState } from "react";
 import { View, Text, Image, Pressable, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Animated from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
+import { usePressScale } from "../../lib/animations";
 import { Header } from "../my-listings";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { fetchPartnerAgencies } from "../../lib/api/agencies";
@@ -47,10 +49,10 @@ export default function AgenciesScreen() {
         <FlatList
           data={list ?? []}
           keyExtractor={(a) => a.id}
-          numColumns={2}
+          numColumns={3}
           showsVerticalScrollIndicator={false}
-          columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
-          contentContainerStyle={{ paddingVertical: 16, gap: 12, flexGrow: 1 }}
+          columnWrapperStyle={{ gap: 10, paddingHorizontal: 16 }}
+          contentContainerStyle={{ paddingVertical: 16, gap: 10, flexGrow: 1 }}
           ListEmptyComponent={
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 10 }}>
               <Ionicons name="business-outline" size={48} color={colors.textSecondary} />
@@ -69,46 +71,48 @@ export default function AgenciesScreen() {
 }
 
 function AgencyCard({ colors, agency, onPress }: { colors: Theme; agency: Agency; onPress: () => void }) {
+  const press = usePressScale();
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        flex: 1,
-        maxWidth: "48%", // keeps a lone last card from stretching full-width
-        backgroundColor: colors.card,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: colors.border,
-        padding: 16,
-        alignItems: "center",
-        gap: 10,
-        opacity: pressed ? 0.9 : 1,
-      })}
-    >
-      {agency.logoUrl ? (
-        <Image
-          source={{ uri: agency.logoUrl }}
-          style={{ width: 72, height: 72, borderRadius: 16, backgroundColor: colors.bg }}
-        />
-      ) : (
-        <View
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: 16,
-            backgroundColor: brand.violet,
+    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={{ flex: 1, maxWidth: "31%" }}>
+      <Animated.View
+        style={[
+          {
+            backgroundColor: colors.card,
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor: colors.border,
+            padding: 12,
             alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ color: "#FFFFFF", fontSize: 30, fontWeight: "800" }}>
-            {agency.name.charAt(0).toUpperCase()}
-          </Text>
-        </View>
-      )}
-      <Text numberOfLines={2} style={{ color: colors.text, fontSize: 14, fontWeight: "700", textAlign: "center" }}>
-        {agency.name}
-      </Text>
+            gap: 8,
+          },
+          press.style,
+        ]}
+      >
+        {agency.logoUrl ? (
+          <Image
+            source={{ uri: agency.logoUrl }}
+            style={{ width: 52, height: 52, borderRadius: 12, backgroundColor: colors.bg }}
+          />
+        ) : (
+          <View
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 12,
+              backgroundColor: brand.violet,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ color: "#FFFFFF", fontSize: 22, fontWeight: "800" }}>
+              {agency.name.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+        )}
+        <Text numberOfLines={1} style={{ color: colors.text, fontSize: 12, fontWeight: "700", textAlign: "center" }}>
+          {agency.name}
+        </Text>
+      </Animated.View>
     </Pressable>
   );
 }
