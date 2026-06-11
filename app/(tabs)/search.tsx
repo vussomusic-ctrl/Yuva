@@ -9,7 +9,7 @@ import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { SearchBar } from "../../components/SearchBar";
 import { DealTypeChips } from "../../components/DealTypeChips";
-import { Segmented } from "../../components/Segmented";
+import { SegmentedControl } from "../../components/SegmentedControl";
 import { PropertyCard } from "../../components/PropertyCard";
 import { SearchMap } from "../../components/SearchMap";
 import { BottomSheet } from "../../components/BottomSheet";
@@ -87,10 +87,10 @@ export default function SearchScreen() {
           onPressFilter={() => router.push("/filters")}
           filterBadge={activeCount}
         />
-        <Segmented
-          options={[
-            { key: "list", label: t("search.viewList") },
-            { key: "map", label: t("search.viewMap") },
+        <SegmentedControl
+          items={[
+            { key: "list", labelKey: "search.viewList" },
+            { key: "map", labelKey: "search.viewMap" },
           ]}
           value={view}
           onChange={(k) => setView(k as "list" | "map")}

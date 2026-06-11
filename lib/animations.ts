@@ -6,6 +6,36 @@ import { useCallback } from "react";
 import { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 
 /**
+ * Sliding indicator for a segmented control. Tracks a 0..N-1 index and exposes
+ * an animated style that translates by `index * segmentWidth`. `slideTo` springs
+ * to a new index; pass the measured segment width (e.g. from onLayout).
+ */
+export function useSpringSlide(initialIndex = 0) {
+  const index = useSharedValue(initialIndex);
+  const segWidth = useSharedValue(0);
+
+  const slideTo = useCallback(
+    (next: number) => {
+      index.value = withSpring(next, { damping: 18, stiffness: 180 });
+    },
+    [index],
+  );
+
+  const setSegmentWidth = useCallback(
+    (w: number) => {
+      segWidth.value = w;
+    },
+    [segWidth],
+  );
+
+  const style = useAnimatedStyle(() => ({
+    transform: [{ translateX: index.value * segWidth.value }],
+  }));
+
+  return { style, slideTo, setSegmentWidth };
+}
+
+/**
  * Press feedback: spring-scale down while pressed, spring back on release.
  * Spread `onPressIn`/`onPressOut` onto a Pressable and apply `style` to an
  * Animated.View wrapping the content.
