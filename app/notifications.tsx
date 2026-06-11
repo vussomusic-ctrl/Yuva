@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
-import { View, Text, Pressable, FlatList } from "react-native";
+import { View, Text, Image, Pressable, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import Animated from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -8,9 +10,9 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
+import { usePressScale } from "../lib/animations";
 import { Header, EmptyState } from "./my-listings";
 import { LoadingState, ErrorState } from "../components/ListState";
-import { SecondaryButton } from "../components/Button";
 import {
   AppNotification,
   fetchNotifications,
@@ -113,11 +115,11 @@ export default function NotificationsScreen() {
 
       {!loggedIn ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 14 }}>
-          <Ionicons name="notifications-outline" size={48} color={colors.textSecondary} />
+          <Image source={require("../assets/auth/bell-guest.png")} resizeMode="contain" style={{ width: 120, height: 120 }} />
           <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, textAlign: "center" }}>
             {t("notifications.guestPrompt")}
           </Text>
-          <SecondaryButton label={t("profile.login")} onPress={() => router.replace("/login")} style={{ marginTop: 6, paddingHorizontal: 32 }} />
+          <GradientButton label={t("profile.login")} onPress={() => router.replace("/login")} />
         </View>
       ) : loading ? (
         <LoadingState colors={colors} />
@@ -157,6 +159,24 @@ export default function NotificationsScreen() {
         />
       )}
     </SafeAreaView>
+  );
+}
+
+function GradientButton({ label, onPress }: { label: string; onPress: () => void }) {
+  const press = usePressScale();
+  return (
+    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={{ alignSelf: "center", marginTop: 6 }}>
+      <Animated.View style={press.style}>
+        <LinearGradient
+          colors={brand.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{ paddingVertical: 14, paddingHorizontal: 40, borderRadius: 999, alignItems: "center", justifyContent: "center" }}
+        >
+          <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 16 }}>{label}</Text>
+        </LinearGradient>
+      </Animated.View>
+    </Pressable>
   );
 }
 

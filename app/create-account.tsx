@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   View,
   Text,
+  Image,
   TextInput,
   Pressable,
   ScrollView,
@@ -18,6 +19,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 import { Segmented } from "../components/Segmented";
 import { useAuth, authErrorKey, UserRole } from "../lib/auth";
 
@@ -86,6 +88,13 @@ export default function CreateAccountScreen() {
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
           showsVerticalScrollIndicator={false}
         >
+          {/* Hero illustration — scrolls with the form */}
+          <Image
+            source={require("../assets/auth/bird-lock.png")}
+            resizeMode="contain"
+            style={{ width: 120, height: 120, alignSelf: "center", marginTop: 2, marginBottom: 6 }}
+          />
+
           <View
             style={{
               backgroundColor: colors.card,
@@ -103,8 +112,8 @@ export default function CreateAccountScreen() {
             {/* Title */}
             <Text
               style={{
+                fontFamily: font.extrabold,
                 fontSize: 30,
-                fontWeight: "800",
                 letterSpacing: -0.5,
                 textAlign: "center",
                 color: colors.text,
@@ -114,6 +123,7 @@ export default function CreateAccountScreen() {
             </Text>
             <Text
               style={{
+                fontFamily: font.regular,
                 fontSize: 14,
                 lineHeight: 20,
                 textAlign: "center",
@@ -144,8 +154,8 @@ export default function CreateAccountScreen() {
             <View style={{ marginBottom: 16 }}>
               <Text
                 style={{
+                  fontFamily: font.bold,
                   fontSize: 12,
-                  fontWeight: "700",
                   letterSpacing: 0.5,
                   textTransform: "uppercase",
                   color: colors.textSecondary,
@@ -225,7 +235,7 @@ export default function CreateAccountScreen() {
                 }}
               >
                 <Ionicons name="alert-circle" size={20} color="#BA1A1A" />
-                <Text style={{ flex: 1, color: mode === "dark" ? "#F2B8B5" : "#8C1D18", fontSize: 13 }}>
+                <Text style={{ flex: 1, color: mode === "dark" ? "#F2B8B5" : "#8C1D18", fontFamily: font.regular, fontSize: 13 }}>
                   {authError}
                 </Text>
               </View>
@@ -256,7 +266,7 @@ export default function CreateAccountScreen() {
                 }}
               >
                 {submitting && <ActivityIndicator size="small" color="#FFFFFF" />}
-                <Text style={{ color: "#FFFFFF", fontSize: 17, fontWeight: "700" }}>
+                <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 17 }}>
                   {submitting ? t("auth.signingUp") : t("createAccount.submit")}
                 </Text>
                 {!submitting && <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />}
@@ -268,8 +278,8 @@ export default function CreateAccountScreen() {
               <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
               <Text
                 style={{
+                  fontFamily: font.bold,
                   fontSize: 12,
-                  fontWeight: "700",
                   letterSpacing: 1.5,
                   textTransform: "uppercase",
                   color: colors.textSecondary,
@@ -302,7 +312,7 @@ export default function CreateAccountScreen() {
 
             {/* Footer — already have an account */}
             <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 24 }}>
-              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
                 {t("createAccount.haveAccount")}{" "}
               </Text>
               <Pressable
@@ -310,7 +320,7 @@ export default function CreateAccountScreen() {
                 hitSlop={8}
                 style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
               >
-                <Text style={{ color: brand.violet, fontSize: 15, fontWeight: "700" }}>
+                <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 15 }}>
                   {t("createAccount.login")}
                 </Text>
               </Pressable>
@@ -339,8 +349,8 @@ function Field({ colors, label, icon, error, rightIcon, onRightIconPress, ...inp
     <View style={{ marginBottom: 16 }}>
       <Text
         style={{
+          fontFamily: font.bold,
           fontSize: 12,
-          fontWeight: "700",
           letterSpacing: 0.5,
           textTransform: "uppercase",
           color: colors.textSecondary,
@@ -370,6 +380,7 @@ function Field({ colors, label, icon, error, rightIcon, onRightIconPress, ...inp
             paddingLeft: 48,
             paddingRight: rightIcon ? 48 : 16,
             paddingVertical: 14,
+            fontFamily: font.regular,
             fontSize: 16,
             color: colors.text,
           }}
@@ -385,7 +396,7 @@ function Field({ colors, label, icon, error, rightIcon, onRightIconPress, ...inp
         )}
       </View>
       {error && (
-        <Text style={{ color: "#BA1A1A", fontSize: 12, marginTop: 6, marginLeft: 4 }}>{error}</Text>
+        <Text style={{ color: "#BA1A1A", fontFamily: font.regular, fontSize: 12, marginTop: 6, marginLeft: 4 }}>{error}</Text>
       )}
     </View>
   );
@@ -419,7 +430,7 @@ function SocialButton({
       })}
     >
       <Ionicons name={icon} size={20} color={colors.text} />
-      <Text style={{ color: colors.text, fontSize: 16, fontWeight: "600" }}>{label}</Text>
+      <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 16 }}>{label}</Text>
     </Pressable>
   );
 }

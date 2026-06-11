@@ -2,7 +2,7 @@
 // animations here as reusable hooks — do NOT scatter inline reanimated configs
 // across screens. See CLAUDE.md → "Анимации".
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import {
   useSharedValue,
   useAnimatedStyle,
@@ -11,6 +11,22 @@ import {
   withTiming,
   Easing,
 } from "react-native-reanimated";
+
+/**
+ * Mount entrance: fade in + gentle scale-up, runs once when the component
+ * mounts. Apply `style` to an Animated.View (e.g. the welcome logo).
+ */
+export function useMountFadeScale(fromScale = 0.92, duration = 450) {
+  const progress = useSharedValue(0);
+  const style = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ scale: fromScale + (1 - fromScale) * progress.value }],
+  }));
+  useEffect(() => {
+    progress.value = withTiming(1, { duration, easing: Easing.out(Easing.cubic) });
+  }, [progress, duration]);
+  return style;
+}
 
 /**
  * Press-and-hold shrink with NO bounce: ease smoothly down to `scaleTo` on
