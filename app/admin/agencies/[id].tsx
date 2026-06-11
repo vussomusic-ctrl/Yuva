@@ -32,6 +32,7 @@ export default function AdminAgencyEditScreen() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
+  const [description, setDescription] = useState("");
   const [isPartner, setIsPartner] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
@@ -62,6 +63,7 @@ export default function AdminAgencyEditScreen() {
           setPhone(ag.phone ?? "");
           setEmail(ag.email ?? "");
           setWebsite(ag.website ?? "");
+          setDescription(ag.description ?? "");
           setIsPartner(ag.isPartner);
           setLogoUrl(ag.logoUrl);
         }
@@ -80,6 +82,7 @@ export default function AdminAgencyEditScreen() {
       phone: phone.trim() || null,
       email: email.trim() || null,
       website: website.trim() || null,
+      description: description.trim() || null,
       isPartner,
     })
       .then(() => Alert.alert(t("admin.saved")))
@@ -189,6 +192,7 @@ export default function AdminAgencyEditScreen() {
           <LabeledInput colors={colors} label={t("admin.phoneLabel")} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
           <LabeledInput colors={colors} label={t("admin.emailLabel")} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
           <LabeledInput colors={colors} label={t("admin.websiteLabel")} value={website} onChangeText={setWebsite} autoCapitalize="none" />
+          <LabeledInput colors={colors} label={t("admin.descriptionLabel")} value={description} onChangeText={setDescription} multiline />
 
           {/* Partner switch */}
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 4 }}>
@@ -304,6 +308,7 @@ function LabeledInput({
   onChangeText,
   keyboardType,
   autoCapitalize,
+  multiline,
 }: {
   colors: Theme;
   label: string;
@@ -311,6 +316,7 @@ function LabeledInput({
   onChangeText: (v: string) => void;
   keyboardType?: "default" | "phone-pad" | "email-address";
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  multiline?: boolean;
 }) {
   return (
     <View style={{ gap: 6 }}>
@@ -320,6 +326,7 @@ function LabeledInput({
         onChangeText={onChangeText}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
+        multiline={multiline}
         placeholderTextColor={colors.textSecondary}
         style={{
           color: colors.text,
@@ -331,6 +338,7 @@ function LabeledInput({
           backgroundColor: colors.card,
           paddingHorizontal: 16,
           paddingVertical: 14,
+          ...(multiline ? { minHeight: 100, textAlignVertical: "top" } : null),
         }}
       />
     </View>

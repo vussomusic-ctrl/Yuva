@@ -111,6 +111,16 @@ export default function AgencyDetailScreen() {
             )}
           </View>
 
+          {/* About — only when filled */}
+          {agency.description ? (
+            <View style={{ marginTop: 16 }}>
+              <SectionTitle colors={colors} text={t("agencies.about")} />
+              <Text style={{ color: colors.text, fontSize: 14, lineHeight: 21, paddingHorizontal: 16 }}>
+                {agency.description}
+              </Text>
+            </View>
+          ) : null}
+
           {/* Agents */}
           {agents.length > 0 && (
             <View style={{ marginTop: 16 }}>

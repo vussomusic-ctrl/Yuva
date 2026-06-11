@@ -36,6 +36,7 @@ export type AgencyUpdate = {
   phone?: string | null;
   email?: string | null;
   website?: string | null;
+  description?: string | null;
   logoUrl?: string | null;
   isPartner?: boolean;
 };
@@ -47,6 +48,7 @@ export async function updateAgency(id: string, fields: AgencyUpdate): Promise<vo
   if (fields.phone !== undefined) payload.phone = fields.phone;
   if (fields.email !== undefined) payload.email = fields.email;
   if (fields.website !== undefined) payload.website = fields.website;
+  if (fields.description !== undefined) payload.description = fields.description;
   if (fields.logoUrl !== undefined) payload.logo_url = fields.logoUrl;
   if (fields.isPartner !== undefined) payload.is_partner = fields.isPartner;
   const { error } = await supabase.from("agencies").update(payload).eq("id", id);

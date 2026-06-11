@@ -117,9 +117,14 @@ create table if not exists public.agencies (
   phone       text,
   email       text,
   website     text,
+  description text,
   is_partner  boolean not null default false,
   created_at  timestamptz not null default now()
 );
+
+-- Idempotent for databases created before the description column.
+alter table public.agencies
+  add column if not exists description text;
 
 alter table public.agencies enable row level security;
 

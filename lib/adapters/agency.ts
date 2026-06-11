@@ -8,6 +8,7 @@ export type AgencyRow = {
   phone: string | null;
   email: string | null;
   website: string | null;
+  description: string | null;
   is_partner: boolean;
   created_at: string;
 };
@@ -19,6 +20,7 @@ export type Agency = {
   phone: string | null;
   email: string | null;
   website: string | null;
+  description: string | null;
   isPartner: boolean;
   createdAt: string;
 };
@@ -31,6 +33,7 @@ export function rowToAgency(row: AgencyRow): Agency {
     phone: row.phone ?? null,
     email: row.email ?? null,
     website: row.website ?? null,
+    description: row.description ?? null,
     isPartner: row.is_partner,
     createdAt: row.created_at,
   };

@@ -260,7 +260,8 @@
     "agents": "Agents",
     "listings": "Listings",
     "empty": "No partner agencies yet",
-    "emptyAgency": "This agency has no agents or listings yet"
+    "emptyAgency": "This agency has no agents or listings yet",
+    "about": "About"
   },
   "admin": {
     "create": "Create",
@@ -280,7 +281,8 @@
     "unbindMsg": "The agent will no longer belong to the agency",
     "searchPlaceholder": "Search by name or phone",
     "inOtherAgency": "In another agency",
-    "alreadyHere": "Already in agency"
+    "alreadyHere": "Already in agency",
+    "descriptionLabel": "Description / About"
   },
   "notifications": {
     "title": "Notifications",

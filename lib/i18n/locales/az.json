@@ -260,7 +260,8 @@
     "agents": "Agentlər",
     "listings": "Elanlar",
     "empty": "Hələ tərəfdaş agentlik yoxdur",
-    "emptyAgency": "Agentliyin hələ agenti və elanı yoxdur"
+    "emptyAgency": "Agentliyin hələ agenti və elanı yoxdur",
+    "about": "Şirkət haqqında"
   },
   "admin": {
     "create": "Yarat",
@@ -280,7 +281,8 @@
     "unbindMsg": "Agent agentliyə aid olmayacaq",
     "searchPlaceholder": "Ad və ya telefonla axtar",
     "inOtherAgency": "Başqa agentlikdə",
-    "alreadyHere": "Artıq agentlikdə"
+    "alreadyHere": "Artıq agentlikdə",
+    "descriptionLabel": "Təsvir / Şirkət haqqında"
   },
   "notifications": {
     "title": "Bildirişlər",
