@@ -144,7 +144,8 @@
     "pickPhoto": "Choose photo",
     "changePhoto": "Change photo",
     "save": "Save",
-    "errSave": "Couldn't save. Please try again."
+    "errSave": "Couldn't save. Please try again.",
+    "guestPrompt": "Log in to edit your profile"
   },
   "addListing": {
     "title": "Add listing",

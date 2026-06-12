@@ -144,7 +144,8 @@
     "pickPhoto": "Şəkil seç",
     "changePhoto": "Şəkli dəyiş",
     "save": "Yadda saxla",
-    "errSave": "Saxlamaq alınmadı. Yenidən cəhd edin."
+    "errSave": "Saxlamaq alınmadı. Yenidən cəhd edin.",
+    "guestPrompt": "Profili redaktə etmək üçün daxil olun"
   },
   "addListing": {
     "title": "Elan yerləşdir",

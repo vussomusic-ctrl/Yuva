@@ -14,6 +14,7 @@ import { font } from "../lib/theme/typography";
 import { Header } from "./my-listings";
 import { Segmented } from "../components/Segmented";
 import { PrimaryButton } from "../components/Button";
+import { EmptyState } from "../components/EmptyState";
 import { useAuth, UserRole } from "../lib/auth";
 import { updateProfile, uploadAvatar } from "../lib/api/profile";
 
@@ -75,6 +76,26 @@ export default function EditProfileScreen() {
       setSaving(false);
     }
   };
+
+  // Route guard: editing requires an account. Guests reaching this screen
+  // (deep link, or the profile avatar tap) get a clay guest state — same
+  // EmptyState pattern as elsewhere. No redirect, so Back still works.
+  if (!user) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
+        <Header
+          colors={colors}
+          title={t("editProfile.title")}
+          onBack={() => (router.canGoBack() ? router.back() : router.replace("/profile"))}
+        />
+        <EmptyState
+          image={require("../assets/auth/bird-lock.png")}
+          title={t("editProfile.guestPrompt")}
+          cta={{ label: t("profile.login"), onPress: () => router.replace("/login") }}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>

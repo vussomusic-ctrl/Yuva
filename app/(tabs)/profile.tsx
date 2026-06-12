@@ -10,7 +10,6 @@ import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { font } from "../../lib/theme/typography";
 import { useLanguage } from "../../lib/i18n/languages";
-import { remove, ONBOARDING_SEEN } from "../../lib/storage";
 import { BottomSheet } from "../../components/BottomSheet";
 import { useAuth } from "../../lib/auth";
 
@@ -203,23 +202,6 @@ export default function ProfileScreen() {
             </Pressable>
           )}
         </View>
-
-        {/* DEV ONLY — remove before TestFlight */}
-        {__DEV__ && (
-          <View
-            style={{
-              marginTop: 16,
-              marginHorizontal: 16,
-              backgroundColor: colors.card,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.border,
-              overflow: "hidden",
-            }}
-          >
-            <Row colors={colors} icon="refresh-outline" label="Сбросить онбординг" onPress={() => remove(ONBOARDING_SEEN)} isLast />
-          </View>
-        )}
       </ScrollView>
 
       {/* Language picker */}

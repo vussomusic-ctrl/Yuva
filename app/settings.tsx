@@ -15,7 +15,8 @@ export default function SettingsScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
-  const { profile } = useAuth();
+  const { profile, session } = useAuth();
+  const loggedIn = !!session;
 
   // Notification preferences — local only for now (Supabase later).
   const [newMatches, setNewMatches] = useState(true);
@@ -34,13 +35,17 @@ export default function SettingsScreen() {
       />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
-        {/* Notifications */}
-        <SectionLabel colors={colors} text={t("settings.notifications")} />
-        <Card colors={colors}>
-          <ToggleRow colors={colors} label={t("settings.notifNewMatches")} value={newMatches} onValueChange={setNewMatches} />
-          <ToggleRow colors={colors} label={t("settings.notifPriceDrop")} value={priceDrop} onValueChange={setPriceDrop} />
-          <ToggleRow colors={colors} label={t("settings.notifMessages")} value={messages} onValueChange={setMessages} isLast />
-        </Card>
+        {/* Notifications — logged-in only (toggles are per-account prefs) */}
+        {loggedIn && (
+          <>
+            <SectionLabel colors={colors} text={t("settings.notifications")} />
+            <Card colors={colors}>
+              <ToggleRow colors={colors} label={t("settings.notifNewMatches")} value={newMatches} onValueChange={setNewMatches} />
+              <ToggleRow colors={colors} label={t("settings.notifPriceDrop")} value={priceDrop} onValueChange={setPriceDrop} />
+              <ToggleRow colors={colors} label={t("settings.notifMessages")} value={messages} onValueChange={setMessages} isLast />
+            </Card>
+          </>
+        )}
 
         {/* Browse */}
         <SectionLabel colors={colors} text={t("agencies.title")} />
@@ -58,13 +63,24 @@ export default function SettingsScreen() {
           </>
         )}
 
-        {/* Account */}
-        <SectionLabel colors={colors} text={t("settings.account")} />
-        <Card colors={colors}>
-          <LinkRow colors={colors} icon="person-outline" label={t("settings.editProfile")} onPress={() => router.push("/edit-profile")} />
-          <LinkRow colors={colors} icon="call-outline" label={t("settings.editContact")} />
-          <LinkRow colors={colors} icon="trash-outline" label={t("settings.deleteAccount")} danger isLast />
-        </Card>
+        {/* Account — logged-in only; guests get a Log in card instead */}
+        {loggedIn ? (
+          <>
+            <SectionLabel colors={colors} text={t("settings.account")} />
+            <Card colors={colors}>
+              <LinkRow colors={colors} icon="person-outline" label={t("settings.editProfile")} onPress={() => router.push("/edit-profile")} />
+              <LinkRow colors={colors} icon="call-outline" label={t("settings.editContact")} />
+              <LinkRow colors={colors} icon="trash-outline" label={t("settings.deleteAccount")} danger isLast />
+            </Card>
+          </>
+        ) : (
+          <>
+            <SectionLabel colors={colors} text={t("settings.account")} />
+            <Card colors={colors}>
+              <LinkRow colors={colors} icon="log-in-outline" label={t("profile.login")} onPress={() => router.replace("/login")} isLast />
+            </Card>
+          </>
+        )}
 
         {/* About */}
         <SectionLabel colors={colors} text={t("settings.about")} />
