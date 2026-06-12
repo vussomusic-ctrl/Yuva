@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 import { Segmented } from "../components/Segmented";
 import { RegionPickerSheet } from "../components/RegionPickerSheet";
 import { BottomSheet } from "../components/BottomSheet";
@@ -431,8 +432,8 @@ export default function AddListingModal() {
             right: 0,
             textAlign: "center",
             color: colors.text,
+            fontFamily: font.bold,
             fontSize: 18,
-            fontWeight: "700",
           }}
         >
           {stepTitle}
@@ -443,7 +444,7 @@ export default function AddListingModal() {
           <Pressable onPress={close} hitSlop={10} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
             <Ionicons name="close" size={26} color={colors.text} />
           </Pressable>
-          <Text style={{ color: colors.textSecondary, fontSize: 14, fontWeight: "700" }}>
+          <Text style={{ color: colors.textSecondary, fontFamily: font.bold, fontSize: 14 }}>
             {step}/{TOTAL_STEPS}
           </Text>
         </View>
@@ -522,15 +523,15 @@ export default function AddListingModal() {
                 <Text
                   style={{
                     color: colors.textSecondary,
+                    fontFamily: font.bold,
                     fontSize: 11,
-                    fontWeight: "700",
                     textTransform: "uppercase",
                     letterSpacing: 0.5,
                   }}
                 >
                   {t("addListing.titlePreview")}
                 </Text>
-                <Text style={{ color: colors.text, fontSize: 15, fontWeight: "600" }}>
+                <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 15 }}>
                   {generatedTitle || t("addListing.titlePlaceholder")}
                 </Text>
               </View>
@@ -591,11 +592,11 @@ export default function AddListingModal() {
                   })}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: placeId ? colors.text : colors.textSecondary, fontSize: 15 }}>
+                    <Text style={{ color: placeId ? colors.text : colors.textSecondary, fontFamily: font.regular, fontSize: 15 }}>
                       {placeId ? locationLabel : t("addListing.selectLocation")}
                     </Text>
                     {metroId && (
-                      <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                      <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12, marginTop: 2 }}>
                         {t("filters.metro")}: {placeName(placeById(metroId)!, lang)}
                       </Text>
                     )}
@@ -626,11 +627,11 @@ export default function AddListingModal() {
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
                     <Ionicons name={picked ? "location" : "map-outline"} size={20} color={brand.violet} />
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: colors.text, fontSize: 15, fontWeight: picked ? "700" : "500" }}>
+                      <Text style={{ color: colors.text, fontFamily: picked ? font.bold : font.medium, fontSize: 15 }}>
                         {picked ? t("addListing.pointSelected") : t("addListing.pickOnMap")}
                       </Text>
                       {picked && (
-                        <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                        <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12, marginTop: 2 }}>
                           {picked.lat.toFixed(5)}, {picked.lng.toFixed(5)}
                         </Text>
                       )}
@@ -671,12 +672,12 @@ export default function AddListingModal() {
                   ) : (
                     <Ionicons name="sparkles-outline" size={18} color={brand.violet} />
                   )}
-                  <Text style={{ color: brand.violet, fontSize: 15, fontWeight: "700" }}>
+                  <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 15 }}>
                     {generating ? t("addListing.generating") : t("addListing.generate")}
                   </Text>
                 </Pressable>
                 {!canGenerate && (
-                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                  <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12 }}>
                     {t("addListing.generateHint")}
                   </Text>
                 )}
@@ -698,7 +699,7 @@ export default function AddListingModal() {
 
           {step === 4 && (
             <View style={{ gap: 16, paddingTop: 4 }}>
-              <Text style={{ color: colors.textSecondary, fontSize: 14, fontWeight: "600" }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: font.semibold, fontSize: 14 }}>
                 {t("addListing.reviewTitle")}
               </Text>
               <PropertyCard
@@ -774,7 +775,7 @@ export default function AddListingModal() {
               </View>
 
               {description.trim() !== "" && (
-                <Text style={{ color: colors.textSecondary, fontSize: 14, lineHeight: 20 }}>{description.trim()}</Text>
+                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, lineHeight: 20 }}>{description.trim()}</Text>
               )}
             </View>
           )}
@@ -794,7 +795,7 @@ export default function AddListingModal() {
               }}
             >
               <Ionicons name="alert-circle" size={20} color="#BA1A1A" />
-              <Text style={{ flex: 1, color: "#8C1D18", fontSize: 13 }}>{publishError}</Text>
+              <Text style={{ flex: 1, color: "#8C1D18", fontFamily: font.regular, fontSize: 13 }}>{publishError}</Text>
             </View>
           </View>
         )}
@@ -846,7 +847,7 @@ export default function AddListingModal() {
       {/* AI description — pick the language to generate in */}
       <BottomSheet visible={genOpen} onClose={() => setGenOpen(false)}>
         <Text
-          style={{ color: colors.text, fontSize: 17, fontWeight: "700", textAlign: "center", paddingTop: 6, paddingBottom: 8 }}
+          style={{ color: colors.text, fontFamily: font.bold, fontSize: 17, textAlign: "center", paddingTop: 6, paddingBottom: 8 }}
         >
           {t("addListing.descLang")}
         </Text>
@@ -868,7 +869,7 @@ export default function AddListingModal() {
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text style={{ color: active ? brand.violet : colors.text, fontSize: 16, fontWeight: active ? "700" : "500" }}>
+              <Text style={{ color: active ? brand.violet : colors.text, fontFamily: active ? font.bold : font.medium, fontSize: 16 }}>
                 {l.name}
               </Text>
               {active && <Ionicons name="sparkles" size={20} color={brand.violet} />}
@@ -903,10 +904,10 @@ export default function AddListingModal() {
               <Ionicons name="checkmark" size={20} color="#FFFFFF" />
             </LinearGradient>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700" }}>
+              <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 15 }}>
                 {t(isEdit ? "addListing.updatedTitle" : "addListing.publishedTitle")}
               </Text>
-              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13 }}>
                 {t(isEdit ? "addListing.updatedDesc" : "addListing.publishedDesc")}
               </Text>
             </View>
@@ -940,7 +941,7 @@ function Step1Photos({
   const coverUri = photos[0]?.uri;
   return (
     <View style={{ gap: 12, paddingTop: 4 }}>
-      <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{t("addListing.photosHint")}</Text>
+      <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>{t("addListing.photosHint")}</Text>
 
       {/* Drag-to-reorder grid. Drag only from the photo (Sortable.Handle) — the
           remove/cover overlays sit outside the handle so taps reach them. */}
@@ -979,7 +980,7 @@ function Step1Photos({
                     end={{ x: 1, y: 0 }}
                     style={{ position: "absolute", top: 6, left: 6, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}
                   >
-                    <Text style={{ color: "#FFFFFF", fontSize: 9, fontWeight: "800", letterSpacing: 0.5 }}>
+                    <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 9, letterSpacing: 0.5 }}>
                       {t("addListing.cover").toUpperCase()}
                     </Text>
                   </LinearGradient>
@@ -1048,7 +1049,7 @@ function Step1Photos({
           })}
         >
           <Ionicons name="add" size={28} color={brand.violet} />
-          <Text style={{ color: brand.violet, fontSize: 12, fontWeight: "700" }}>{t("addListing.addPhoto")}</Text>
+          <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 12 }}>{t("addListing.addPhoto")}</Text>
         </Pressable>
       )}
     </View>
@@ -1059,7 +1060,7 @@ function Step1Photos({
 function Section({ title, colors, children }: { title: string; colors: Theme; children: React.ReactNode }) {
   return (
     <View style={{ gap: 12 }}>
-      <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>{title}</Text>
+      <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{title}</Text>
       {children}
     </View>
   );
@@ -1078,7 +1079,7 @@ function Field({
 }) {
   return (
     <View style={[{ gap: 8 }, style]}>
-      <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>{label}</Text>
+      <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 14 }}>{label}</Text>
       {children}
     </View>
   );
@@ -1110,6 +1111,7 @@ function Input({
         paddingHorizontal: 14,
         paddingVertical: multiline ? 12 : 0,
         color: colors.text,
+        fontFamily: font.regular,
         fontSize: 15,
         textAlignVertical: multiline ? "top" : "center",
       }}
@@ -1130,7 +1132,7 @@ function ToggleRow({
 }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-      <Text style={{ color: colors.text, fontSize: 16, fontWeight: "600" }}>{label}</Text>
+      <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 16 }}>{label}</Text>
       <Switch
         value={value}
         onValueChange={onValueChange}
@@ -1164,8 +1166,8 @@ function SummaryRow({
         borderBottomColor: colors.border,
       }}
     >
-      <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{label}</Text>
-      <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600", flexShrink: 1, textAlign: "right", marginLeft: 12 }}>
+      <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>{label}</Text>
+      <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 14, flexShrink: 1, textAlign: "right", marginLeft: 12 }}>
         {value}
       </Text>
     </View>

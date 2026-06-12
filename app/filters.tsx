@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 import { Segmented } from "../components/Segmented";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
@@ -101,8 +102,8 @@ export default function FiltersModal() {
             right: 0,
             textAlign: "center",
             color: colors.text,
+            fontFamily: font.bold,
             fontSize: 18,
-            fontWeight: "700",
           }}
         >
           {t("filters.title")}
@@ -114,7 +115,7 @@ export default function FiltersModal() {
             <Ionicons name="close" size={26} color={colors.text} />
           </Pressable>
           <Pressable onPress={clearAll} hitSlop={10} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-            <Text style={{ color: brand.violet, fontSize: 15, fontWeight: "600" }}>{t("filters.clear")}</Text>
+            <Text style={{ color: brand.violet, fontFamily: font.semibold, fontSize: 15 }}>{t("filters.clear")}</Text>
           </Pressable>
         </View>
       </View>
@@ -294,7 +295,7 @@ export default function FiltersModal() {
             end={{ x: 1, y: 0 }}
             style={{ paddingVertical: 16, borderRadius: 16, alignItems: "center" }}
           >
-            <Text style={{ color: "#FFFFFF", fontSize: 17, fontWeight: "700" }}>{t("filters.apply")}</Text>
+            <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 17 }}>{t("filters.apply")}</Text>
           </LinearGradient>
         </Pressable>
       </View>
@@ -305,7 +306,7 @@ export default function FiltersModal() {
 function Section({ title, colors, children }: { title: string; colors: Theme; children: React.ReactNode }) {
   return (
     <View style={{ gap: 12 }}>
-      <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>{title}</Text>
+      <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{title}</Text>
       {children}
     </View>
   );
@@ -338,7 +339,7 @@ function FilterChip({
         borderColor: active ? brand.violet : colors.border,
       }}
     >
-      <Text style={{ color: active ? "#FFFFFF" : colors.text, fontSize: 13, fontWeight: "600" }}>{label}</Text>
+      <Text style={{ color: active ? "#FFFFFF" : colors.text, fontFamily: font.semibold, fontSize: 13 }}>{label}</Text>
     </Pressable>
   );
 }
@@ -379,7 +380,7 @@ function RangeRow({
           placeholder={minPh}
           keyboardType="numeric"
           placeholderTextColor={colors.textSecondary}
-          style={{ color: colors.text, fontSize: 15 }}
+          style={{ color: colors.text, fontFamily: font.regular, fontSize: 15 }}
         />
       </View>
       <View style={box}>
@@ -389,7 +390,7 @@ function RangeRow({
           placeholder={maxPh}
           keyboardType="numeric"
           placeholderTextColor={colors.textSecondary}
-          style={{ color: colors.text, fontSize: 15 }}
+          style={{ color: colors.text, fontFamily: font.regular, fontSize: 15 }}
         />
       </View>
     </View>
@@ -409,7 +410,7 @@ function ToggleRow({
 }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-      <Text style={{ color: colors.text, fontSize: 16, fontWeight: "600" }}>{label}</Text>
+      <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 16 }}>{label}</Text>
       <Switch
         value={value}
         onValueChange={onValueChange}

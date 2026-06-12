@@ -2,6 +2,7 @@ import { Pressable, Text, View, StyleProp, ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { brand } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 
 type Props = {
   label: string;
@@ -24,7 +25,7 @@ export function PrimaryButton({ label, onPress, disabled, style }: Props) {
         end={{ x: 1, y: 0 }}
         style={{ paddingVertical: 16, borderRadius: 16, alignItems: "center", opacity: disabled ? 0.45 : 1 }}
       >
-        <Text style={{ color: "#FFFFFF", fontSize: 17, fontWeight: "700" }}>{label}</Text>
+        <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 17 }}>{label}</Text>
       </LinearGradient>
     </Pressable>
   );
@@ -48,7 +49,7 @@ export function SecondaryButton({ label, onPress, disabled, style }: Props) {
           opacity: disabled ? 0.45 : 1,
         }}
       >
-        <Text style={{ color: brand.violet, fontSize: 17, fontWeight: "700" }}>{label}</Text>
+        <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 17 }}>{label}</Text>
       </View>
     </Pressable>
   );

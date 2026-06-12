@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
+import { font } from "../../lib/theme/typography";
 import { Header } from "../my-listings";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { PropertyCard } from "../../components/PropertyCard";
@@ -85,12 +86,12 @@ export default function AgencyDetailScreen() {
                   justifyContent: "center",
                 }}
               >
-                <Text style={{ color: "#FFFFFF", fontSize: 40, fontWeight: "800" }}>
+                <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 40 }}>
                   {agency.name.charAt(0).toUpperCase()}
                 </Text>
               </View>
             )}
-            <Text style={{ color: colors.text, fontSize: 22, fontWeight: "800", textAlign: "center" }}>
+            <Text style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 22, textAlign: "center" }}>
               {agency.name}
             </Text>
             {(agency.phone || agency.email || agency.website) && (
@@ -115,7 +116,7 @@ export default function AgencyDetailScreen() {
           {agency.description ? (
             <View style={{ marginTop: 16 }}>
               <SectionTitle colors={colors} text={t("agencies.about")} />
-              <Text style={{ color: colors.text, fontSize: 14, lineHeight: 21, paddingHorizontal: 16 }}>
+              <Text style={{ color: colors.text, fontFamily: font.regular, fontSize: 14, lineHeight: 21, paddingHorizontal: 16 }}>
                 {agency.description}
               </Text>
             </View>
@@ -147,7 +148,7 @@ export default function AgencyDetailScreen() {
                         <Ionicons name="person" size={22} color="#FFFFFF" />
                       </View>
                     )}
-                    <Text numberOfLines={1} style={{ flex: 1, color: colors.text, fontSize: 15, fontWeight: "600" }}>
+                    <Text numberOfLines={1} style={{ flex: 1, color: colors.text, fontFamily: font.semibold, fontSize: 15 }}>
                       {ag.fullName ?? ""}
                     </Text>
                     {ag.verified && <Ionicons name="shield-checkmark" size={16} color={brand.blue} />}
@@ -178,7 +179,7 @@ export default function AgencyDetailScreen() {
 
           {agents.length === 0 && listings.length === 0 && (
             <View style={{ alignItems: "center", padding: 32 }}>
-              <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: "center" }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, textAlign: "center" }}>
                 {t("agencies.emptyAgency")}
               </Text>
             </View>
@@ -217,7 +218,7 @@ function ContactButton({
 
 function SectionTitle({ colors, text }: { colors: Theme; text: string }) {
   return (
-    <Text style={{ color: colors.text, fontSize: 18, fontWeight: "800", marginHorizontal: 16, marginBottom: 12 }}>
+    <Text style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 18, marginHorizontal: 16, marginBottom: 12 }}>
       {text}
     </Text>
   );

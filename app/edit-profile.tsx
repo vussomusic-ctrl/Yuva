@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 import { Header } from "./my-listings";
 import { Segmented } from "../components/Segmented";
 import { PrimaryButton } from "../components/Button";
@@ -134,7 +135,7 @@ export default function EditProfileScreen() {
             </LinearGradient>
           </Pressable>
           <Pressable onPress={pickAvatar} hitSlop={8} style={({ pressed }) => ({ marginTop: 10, opacity: pressed ? 0.6 : 1 })}>
-            <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "700" }}>
+            <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 14 }}>
               {previewUri ? t("editProfile.changePhoto") : t("editProfile.pickPhoto")}
             </Text>
           </Pressable>
@@ -142,7 +143,7 @@ export default function EditProfileScreen() {
 
         {/* Name */}
         <View style={{ gap: 8 }}>
-          <Text style={{ color: colors.textSecondary, fontSize: 13, fontWeight: "600" }}>
+          <Text style={{ color: colors.textSecondary, fontFamily: font.semibold, fontSize: 13 }}>
             {t("editProfile.nameLabel")}
           </Text>
           <TextInput
@@ -152,6 +153,7 @@ export default function EditProfileScreen() {
             placeholderTextColor={colors.textSecondary}
             style={{
               color: colors.text,
+              fontFamily: font.regular,
               fontSize: 16,
               borderRadius: 12,
               borderWidth: 1,
@@ -165,7 +167,7 @@ export default function EditProfileScreen() {
 
         {/* Account type — owner (DB role "user") / agent */}
         <View style={{ gap: 8 }}>
-          <Text style={{ color: colors.textSecondary, fontSize: 13, fontWeight: "600" }}>
+          <Text style={{ color: colors.textSecondary, fontFamily: font.semibold, fontSize: 13 }}>
             {t("editProfile.accountType")}
           </Text>
           <Segmented

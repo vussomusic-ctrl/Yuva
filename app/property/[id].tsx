@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
+import { font } from "../../lib/theme/typography";
 import { ListingDetail, formatPrice, formatArea } from "../../lib/mock/listings";
 import { isLandType } from "../../lib/propertyTypes";
 import { fetchListingDetail } from "../../lib/api/listings";
@@ -100,7 +101,7 @@ export default function PropertyDetailScreen() {
         {status === "notfound" && (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 10 }}>
             <Ionicons name="alert-circle-outline" size={48} color={colors.textSecondary} />
-            <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>
+            <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>
               {t("common.loadError")}
             </Text>
           </View>
@@ -251,15 +252,15 @@ export default function PropertyDetailScreen() {
         {/* Body */}
         <View style={{ paddingHorizontal: 20, marginTop: -4, paddingTop: 24 }}>
           {/* Price + title + location */}
-          <Text style={{ color: brand.violet, fontSize: 26, fontWeight: "800" }}>
+          <Text style={{ color: brand.violet, fontFamily: font.extrabold, fontSize: 26 }}>
             {formatPrice(listing.priceAzn)}
           </Text>
-          <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700", marginTop: 4 }}>
+          <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 20, marginTop: 4 }}>
             {title}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 8 }}>
             <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
-            <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{listing.district}</Text>
+            <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>{listing.district}</Text>
           </View>
 
           {/* Specs row */}
@@ -281,26 +282,26 @@ export default function PropertyDetailScreen() {
           {/* Description — only if the seller wrote one */}
           {listing.description.trim() !== "" && (
             <Section title={t("propertyDetail.description")} colors={colors}>
-              <Text style={{ color: colors.textSecondary, fontSize: 15, lineHeight: 22 }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 15, lineHeight: 22 }}>
                 {showingTranslation ? translated : listing.description}
               </Text>
 
               {translating ? (
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 10 }}>
                   <ActivityIndicator size="small" color={brand.violet} />
-                  <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "600" }}>
+                  <Text style={{ color: brand.violet, fontFamily: font.semibold, fontSize: 14 }}>
                     {t("propertyDetail.translating")}
                   </Text>
                 </View>
               ) : showingTranslation ? (
                 <Pressable onPress={() => setShowOriginal(true)} hitSlop={8} style={{ marginTop: 10 }}>
-                  <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "700" }}>
+                  <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 14 }}>
                     {t("propertyDetail.showOriginal")}
                   </Text>
                 </Pressable>
               ) : origLang !== lang ? (
                 <Pressable onPress={onTranslate} hitSlop={8} style={{ marginTop: 10 }}>
-                  <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "700" }}>
+                  <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 14 }}>
                     {t("propertyDetail.translate")}
                   </Text>
                 </Pressable>
@@ -321,7 +322,7 @@ export default function PropertyDetailScreen() {
                       style={{ width: "50%", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
                     >
                       <Ionicons name={meta.icon} size={20} color={brand.violet} />
-                      <Text style={{ color: colors.text, fontSize: 14, flex: 1 }}>{t(meta.labelKey)}</Text>
+                      <Text style={{ color: colors.text, fontFamily: font.regular, fontSize: 14, flex: 1 }}>{t(meta.labelKey)}</Text>
                     </View>
                   );
                 })}
@@ -423,19 +424,19 @@ export default function PropertyDetailScreen() {
                     style={{ width: 26, height: 26, borderRadius: 6, backgroundColor: colors.bg }}
                   />
                 ) : null}
-                <Text numberOfLines={1} style={{ flex: 1, color: colors.textSecondary, fontSize: 13, fontWeight: "600" }}>
+                <Text numberOfLines={1} style={{ flex: 1, color: colors.textSecondary, fontFamily: font.semibold, fontSize: 13 }}>
                   {listing.agent.agency.name}
                 </Text>
               </Pressable>
             )}
-            <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>{listing.agent.name}</Text>
-            <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>
+            <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{listing.agent.name}</Text>
+            <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13, marginTop: 2 }}>
               {listing.agent.role === "agent" ? t("profile.roleAgent") : t("profile.roleUser")}
             </Text>
             {listing.agent.verified && (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                 <Ionicons name="shield-checkmark" size={13} color={brand.blue} />
-                <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{t("propertyDetail.verifiedAgent")}</Text>
+                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13 }}>{t("propertyDetail.verifiedAgent")}</Text>
               </View>
             )}
           </View>
@@ -459,7 +460,7 @@ export default function PropertyDetailScreen() {
             })}
           >
             <Ionicons name="call-outline" size={18} color={brand.violet} />
-            <Text numberOfLines={1} style={{ color: brand.violet, fontSize: 14, fontWeight: "700" }}>
+            <Text numberOfLines={1} style={{ color: brand.violet, fontFamily: font.bold, fontSize: 14 }}>
               {t("propertyDetail.call")}
             </Text>
           </Pressable>
@@ -480,7 +481,7 @@ export default function PropertyDetailScreen() {
             })}
           >
             <Ionicons name="logo-whatsapp" size={19} color="#FFFFFF" />
-            <Text numberOfLines={1} style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "700" }}>WhatsApp</Text>
+            <Text numberOfLines={1} style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 14 }}>WhatsApp</Text>
           </Pressable>
 
           {/* PRIMARY — message the seller (gradient). Hidden on your own listing. */}
@@ -504,7 +505,7 @@ export default function PropertyDetailScreen() {
                 ) : (
                   <Ionicons name="chatbubble-ellipses" size={18} color="#FFFFFF" />
                 )}
-                <Text numberOfLines={1} style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "700" }}>
+                <Text numberOfLines={1} style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 14 }}>
                   {t("propertyDetail.write")}
                 </Text>
               </LinearGradient>
@@ -540,10 +541,10 @@ function SpecCard({
       }}
     >
       <Ionicons name={icon} size={20} color={brand.violet} />
-      <Text style={{ color: colors.textSecondary, fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 }}>
+      <Text style={{ color: colors.textSecondary, fontFamily: font.bold, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>
         {label}
       </Text>
-      <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700" }}>{value}</Text>
+      <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 15 }}>{value}</Text>
     </View>
   );
 }
@@ -551,7 +552,7 @@ function SpecCard({
 function Section({ title, colors, children }: { title: string; colors: Theme; children: React.ReactNode }) {
   return (
     <View style={{ marginTop: 24 }}>
-      <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", marginBottom: 12 }}>{title}</Text>
+      <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 17, marginBottom: 12 }}>{title}</Text>
       {children}
     </View>
   );

@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
+import { font } from "../../lib/theme/typography";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { EmptyState } from "../../components/EmptyState";
 import { useAuth } from "../../lib/auth";
@@ -104,7 +105,7 @@ export default function ChatListScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       {/* Contextual header: section title only. No logo. */}
       <View style={{ height: 56, justifyContent: "center", paddingHorizontal: 16 }}>
-        <Text style={{ color: colors.text, fontSize: 22, fontWeight: "800" }}>
+        <Text style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 22 }}>
           {t("messages.title")}
         </Text>
       </View>
@@ -176,7 +177,7 @@ function ChatRow({
             style={{ width: 76, backgroundColor: brand.violet, alignItems: "center", justifyContent: "center", gap: 4 }}
           >
             <Ionicons name={item.isPinned ? "pin-outline" : "pin"} size={20} color="#FFFFFF" />
-            <Text style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "700" }}>
+            <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 11 }}>
               {t(item.isPinned ? "messages.unpin" : "messages.pin")}
             </Text>
           </Pressable>
@@ -197,7 +198,7 @@ function ChatRow({
             style={{ width: 76, backgroundColor: brand.magenta, alignItems: "center", justifyContent: "center", gap: 4 }}
           >
             <Ionicons name="trash" size={20} color="#FFFFFF" />
-            <Text style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "700" }}>{t("messages.delete")}</Text>
+            <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 11 }}>{t("messages.delete")}</Text>
           </Pressable>
         </View>
       )}
@@ -226,18 +227,18 @@ function ChatRow({
       )}
       <View style={{ flex: 1, gap: 4 }}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text numberOfLines={1} style={{ flex: 1, color: colors.text, fontSize: 16, fontWeight: "700" }}>
+          <Text numberOfLines={1} style={{ flex: 1, color: colors.text, fontFamily: font.bold, fontSize: 16 }}>
             {item.peerName}
           </Text>
           {item.isPinned && (
             <Ionicons name="pin" size={12} color={colors.textSecondary} style={{ marginLeft: 6 }} />
           )}
-          <Text style={{ color: colors.textSecondary, fontSize: 12, marginLeft: 8 }}>
+          <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12, marginLeft: 8 }}>
             {formatListTime(item.lastAt)}
           </Text>
         </View>
         {/* Which property this chat is about — district · price, or "removed". */}
-        <Text numberOfLines={1} style={{ color: colors.textSecondary, fontSize: 12 }}>
+        <Text numberOfLines={1} style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12 }}>
           {item.listing
             ? `${item.listing.district} · ${formatPrice(item.listing.priceAzn)}`
             : t("messages.listingUnavailable")}
@@ -248,8 +249,8 @@ function ChatRow({
             style={{
               flex: 1,
               color: item.unreadCount > 0 ? colors.text : colors.textSecondary,
+              fontFamily: item.unreadCount > 0 ? font.semibold : font.regular,
               fontSize: 14,
-              fontWeight: item.unreadCount > 0 ? "600" : "400",
             }}
           >
             {preview}
@@ -268,7 +269,7 @@ function ChatRow({
                 justifyContent: "center",
               }}
             >
-              <Text style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "800" }}>{item.unreadCount}</Text>
+              <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11 }}>{item.unreadCount}</Text>
             </LinearGradient>
           )}
         </View>

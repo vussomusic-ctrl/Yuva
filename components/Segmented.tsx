@@ -2,6 +2,7 @@ import { View, Pressable, Text } from "react-native";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 
 type Option = { key: string; label: string };
 
@@ -44,8 +45,8 @@ export function Segmented({ options, value, onChange }: Props) {
             <Text
               style={{
                 color: active ? "#FFFFFF" : colors.textSecondary,
+                fontFamily: font.bold,
                 fontSize: 13,
-                fontWeight: "700",
               }}
             >
               {o.label}

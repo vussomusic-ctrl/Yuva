@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BottomSheet } from "./BottomSheet";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 import { Place, placeName } from "../lib/places";
 
 type Lang = "az" | "ru" | "en";
@@ -56,7 +57,7 @@ export function PlacePickerSheet({
   return (
     <BottomSheet visible={visible} onClose={onClose}>
       <Text
-        style={{ color: colors.text, fontSize: 17, fontWeight: "700", textAlign: "center", paddingTop: 6, paddingBottom: 10 }}
+        style={{ color: colors.text, fontFamily: font.bold, fontSize: 17, textAlign: "center", paddingTop: 6, paddingBottom: 10 }}
       >
         {title}
       </Text>
@@ -84,7 +85,7 @@ export function PlacePickerSheet({
           placeholder={searchPlaceholder}
           placeholderTextColor={colors.textSecondary}
           autoCorrect={false}
-          style={{ flex: 1, color: colors.text, fontSize: 15 }}
+          style={{ flex: 1, color: colors.text, fontFamily: font.regular, fontSize: 15 }}
         />
         {q.length > 0 && (
           <Pressable onPress={() => setQ("")} hitSlop={8}>
@@ -158,8 +159,8 @@ function Row({
       <Text
         style={{
           color: active ? brand.violet : muted ? colors.textSecondary : colors.text,
+          fontFamily: active ? font.bold : font.medium,
           fontSize: 16,
-          fontWeight: active ? "700" : "500",
         }}
       >
         {label}

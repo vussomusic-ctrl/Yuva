@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
+import { font } from "../../lib/theme/typography";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { EmptyState } from "../../components/EmptyState";
 import { useAuth, UserRole } from "../../lib/auth";
@@ -187,10 +188,10 @@ export default function ConversationScreen() {
             </View>
           )}
           <View style={{ flex: 1 }}>
-            <Text numberOfLines={1} style={{ color: colors.text, fontSize: 14, fontWeight: "700" }}>
+            <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.bold, fontSize: 14 }}>
               {buildListingTitle(card, t, lang)}
             </Text>
-            <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "800", marginTop: 2 }}>
+            <Text style={{ color: brand.violet, fontFamily: font.extrabold, fontSize: 14, marginTop: 2 }}>
               {formatPrice(card.priceAzn)}
             </Text>
           </View>
@@ -199,7 +200,7 @@ export default function ConversationScreen() {
       )}
       {cardState === "unavailable" && (
         <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-          <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{t("messages.listingUnavailable")}</Text>
+          <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13 }}>{t("messages.listingUnavailable")}</Text>
         </View>
       )}
 
@@ -265,7 +266,7 @@ export default function ConversationScreen() {
                 placeholder={t("messages.inputPlaceholder")}
                 placeholderTextColor={colors.textSecondary}
                 multiline
-                style={{ color: colors.text, fontSize: 15, padding: 0 }}
+                style={{ color: colors.text, fontFamily: font.regular, fontSize: 15, padding: 0 }}
                 onSubmitEditing={send}
               />
             </View>
@@ -331,10 +332,10 @@ function Header({
       )}
       {name != null && (
         <View style={{ flex: 1 }}>
-          <Text numberOfLines={1} style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>
+          <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.bold, fontSize: 17 }}>
             {name}
           </Text>
-          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 1 }}>
+          <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12, marginTop: 1 }}>
             {role === "agent" ? t("profile.roleAgent") : t("profile.roleUser")}
           </Text>
         </View>
@@ -359,11 +360,11 @@ function Bubble({ colors, message, mine }: { colors: Theme; message: Message; mi
           borderColor: colors.border,
         }}
       >
-        <Text style={{ color: mine ? "#FFFFFF" : colors.text, fontSize: 15, lineHeight: 20 }}>
+        <Text style={{ color: mine ? "#FFFFFF" : colors.text, fontFamily: font.regular, fontSize: 15, lineHeight: 20 }}>
           {message.body}
         </Text>
       </View>
-      <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 4, marginHorizontal: 4 }}>
+      <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 11, marginTop: 4, marginHorizontal: 4 }}>
         {formatTime(message.created_at)}
       </Text>
     </View>

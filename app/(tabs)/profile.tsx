@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
+import { font } from "../../lib/theme/typography";
 import { useLanguage } from "../../lib/i18n/languages";
 import { BottomSheet } from "../../components/BottomSheet";
 import { useAuth } from "../../lib/auth";
@@ -85,11 +86,11 @@ export default function ProfileScreen() {
             </LinearGradient>
           </Pressable>
           <View style={{ alignItems: "center", gap: 2 }}>
-            <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>
+            <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 20 }}>
               {displayName}
             </Text>
             {loggedIn && (
-              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{roleLabel}</Text>
+              <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>{roleLabel}</Text>
             )}
           </View>
         </View>
@@ -125,7 +126,7 @@ export default function ProfileScreen() {
             onPress={() => setLangOpen(true)}
             right={
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Text style={{ color: colors.textSecondary, fontSize: 14, fontWeight: "600" }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: font.semibold, fontSize: 14 }}>
                   {currentName}
                 </Text>
                 <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
@@ -179,7 +180,7 @@ export default function ProfileScreen() {
               })}
             >
               <Ionicons name="log-out-outline" size={22} color={colors.danger} />
-              <Text style={{ color: colors.danger, fontSize: 16, fontWeight: "600" }}>
+              <Text style={{ color: colors.danger, fontFamily: font.semibold, fontSize: 16 }}>
                 {t("profile.logout")}
               </Text>
             </Pressable>
@@ -195,7 +196,7 @@ export default function ProfileScreen() {
               })}
             >
               <Ionicons name="log-in-outline" size={22} color={brand.violet} />
-              <Text style={{ color: brand.violet, fontSize: 16, fontWeight: "600" }}>
+              <Text style={{ color: brand.violet, fontFamily: font.semibold, fontSize: 16 }}>
                 {t("profile.login")}
               </Text>
             </Pressable>
@@ -208,8 +209,8 @@ export default function ProfileScreen() {
         <Text
           style={{
             color: colors.text,
+            fontFamily: font.bold,
             fontSize: 17,
-            fontWeight: "700",
             textAlign: "center",
             paddingTop: 6,
             paddingBottom: 8,
@@ -241,8 +242,8 @@ export default function ProfileScreen() {
               <Text
                 style={{
                   color: active ? brand.violet : colors.text,
+                  fontFamily: active ? font.bold : font.medium,
                   fontSize: 16,
-                  fontWeight: active ? "700" : "500",
                 }}
               >
                 {l.name}
@@ -285,7 +286,7 @@ function Row({
       })}
     >
       <Ionicons name={icon} size={22} color={brand.violet} />
-      <Text style={{ flex: 1, color: colors.text, fontSize: 16, fontWeight: "500" }}>{label}</Text>
+      <Text style={{ flex: 1, color: colors.text, fontFamily: font.medium, fontSize: 16 }}>{label}</Text>
       {right ?? <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />}
     </Pressable>
   );

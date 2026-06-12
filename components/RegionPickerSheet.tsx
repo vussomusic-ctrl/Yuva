@@ -7,6 +7,7 @@ import { BottomSheet } from "./BottomSheet";
 import { PrimaryButton } from "./Button";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 import {
   REGIONS,
   METRO,
@@ -137,7 +138,7 @@ export function RegionPickerSheet({
           })}
         >
           <Ionicons name="chevron-back" size={20} color={brand.violet} />
-          <Text style={{ color: brand.violet, fontSize: 16, fontWeight: "700" }}>
+          <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 16 }}>
             {placeName(placeById("baku")!, lang)}
           </Text>
         </Pressable>
@@ -153,7 +154,7 @@ export function RegionPickerSheet({
           placeholderTextColor={colors.textSecondary}
           autoCorrect={false}
           autoCapitalize="none"
-          style={{ flex: 1, color: colors.text, fontSize: 15 }}
+          style={{ flex: 1, color: colors.text, fontFamily: font.regular, fontSize: 15 }}
         />
         {q.length > 0 && (
           <Pressable onPress={() => setQ("")} hitSlop={8}>
@@ -242,8 +243,8 @@ function SectionHeader({ label, colors }: { label: string; colors: { textSeconda
     <Text
       style={{
         color: colors.textSecondary,
+        fontFamily: font.bold,
         fontSize: 12,
-        fontWeight: "700",
         textTransform: "uppercase",
         letterSpacing: 0.5,
         paddingHorizontal: 20,
@@ -292,8 +293,8 @@ function Row({
         <Text
           style={{
             color: active ? brand.violet : muted ? colors.textSecondary : colors.text,
+            fontFamily: active ? font.bold : font.medium,
             fontSize: 16,
-            fontWeight: active ? "700" : "500",
           }}
         >
           {label}
@@ -312,7 +313,7 @@ function Row({
 
 const styles = {
   title: (color: string) =>
-    ({ color, fontSize: 17, fontWeight: "700", textAlign: "center", paddingTop: 6, paddingBottom: 10 } as const),
+    ({ color, fontFamily: font.bold, fontSize: 17, textAlign: "center", paddingTop: 6, paddingBottom: 10 } as const),
   search: (border: string, bg: string) =>
     ({
       flexDirection: "row",
