@@ -413,6 +413,12 @@ create policy "notifications_update_own"
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+-- Delete my own notifications (per-item swipe + clear-all in the app).
+drop policy if exists "notifications_delete_own" on public.notifications;
+create policy "notifications_delete_own"
+  on public.notifications for delete
+  using (user_id = auth.uid());
+
 -- Rows are inserted ONLY by these SECURITY DEFINER triggers (no client insert
 -- policy). Snapshots (peer name / prices) are denormalized into payload.
 

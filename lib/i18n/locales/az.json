@@ -10,7 +10,8 @@
     "appName": "Yuva",
     "retry": "Yenidən cəhd et",
     "loadError": "Yükləmə alınmadı",
-    "cancel": "Ləğv et"
+    "cancel": "Ləğv et",
+    "delete": "Sil"
   },
   "splash": {
     "subtitle": "Premium yuvanız sizi gözləyir.",
@@ -295,6 +296,9 @@
     "newMatch": "Yeni uyğun elan",
     "message": "Yeni mesaj",
     "markAllRead": "Hamısını oxu",
+    "clearAll": "Hamısını təmizlə",
+    "clearConfirmTitle": "Bildirişləri təmizlə?",
+    "clearConfirmDesc": "Bütün bildirişlər silinəcək. Bu əməliyyat geri qaytarıla bilməz.",
     "emptyTitle": "Bildiriş yoxdur",
     "emptyDesc": "Yeni bildirişlər burada görünəcək",
     "guestPrompt": "Bildirişləri görmək üçün daxil olun"

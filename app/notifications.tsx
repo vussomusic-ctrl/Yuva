@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
-import { View, Text, Image, Pressable, FlatList } from "react-native";
+import { View, Text, Image, Pressable, FlatList, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated from "react-native-reanimated";
+import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -19,6 +20,9 @@ import {
   fetchNotifications,
   markRead,
   markAllRead,
+  deleteNotification,
+  clearAllNotifications,
+  subscribeNotifications,
 } from "../lib/api/notifications";
 import { Listing, formatPrice } from "../lib/mock/listings";
 import { fetchListingsByIds } from "../lib/api/listings";
@@ -86,7 +90,26 @@ export default function NotificationsScreen() {
       })
       .catch(() => setError(true));
   }, [loggedIn]);
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  // Load on focus + live-prepend new notifications while the screen is open.
+  // Distinct channel name so this doesn't collide with the Home bell badge's
+  // subscription. Guests don't subscribe (loggedIn guard).
+  useFocusEffect(
+    useCallback(() => {
+      load();
+      const uid = session?.user?.id;
+      if (!uid) return;
+      const unsub = subscribeNotifications(
+        uid,
+        (n) =>
+          setItems((cur) => {
+            const arr = cur ?? [];
+            return arr.some((x) => x.id === n.id) ? arr : [n, ...arr]; // dedup + prepend
+          }),
+        `notifications-screen:${uid}`,
+      );
+      return unsub;
+    }, [load, session?.user?.id]),
+  );
 
   const loading = items === null && !error;
   const hasUnread = (items ?? []).some((n) => !n.read);
@@ -94,6 +117,26 @@ export default function NotificationsScreen() {
   const onMarkAll = () => {
     setItems((cur) => (cur ?? []).map((x) => ({ ...x, read: true })));
     markAllRead().catch(() => {});
+  };
+
+  const onClearAll = () => {
+    Alert.alert(t("notifications.clearConfirmTitle"), t("notifications.clearConfirmDesc"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("notifications.clearAll"),
+        style: "destructive",
+        onPress: () => {
+          const snapshot = items ?? [];
+          setItems([]);
+          clearAllNotifications().catch(() => setItems(snapshot)); // rollback
+        },
+      },
+    ]);
+  };
+
+  const onDelete = (id: string) => {
+    setItems((cur) => (cur ?? []).filter((x) => x.id !== id)); // optimistic
+    deleteNotification(id).catch(() => load()); // refetch restores on failure
   };
 
   const open = (n: AppNotification) => {
@@ -133,16 +176,29 @@ export default function NotificationsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
           ListHeaderComponent={
-            hasUnread ? (
-              <Pressable
-                onPress={onMarkAll}
-                hitSlop={8}
-                style={({ pressed }) => ({ alignSelf: "flex-end", paddingHorizontal: 16, paddingVertical: 10, opacity: pressed ? 0.6 : 1 })}
+            (items ?? []).length > 0 ? (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: hasUnread ? "space-between" : "flex-end",
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                }}
               >
-                <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 13 }}>
-                  {t("notifications.markAllRead")}
-                </Text>
-              </Pressable>
+                {hasUnread && (
+                  <Pressable onPress={onMarkAll} hitSlop={8} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
+                    <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 13 }}>
+                      {t("notifications.markAllRead")}
+                    </Text>
+                  </Pressable>
+                )}
+                <Pressable onPress={onClearAll} hitSlop={8} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
+                  <Text style={{ color: colors.danger, fontFamily: font.bold, fontSize: 13 }}>
+                    {t("notifications.clearAll")}
+                  </Text>
+                </Pressable>
+              </View>
             ) : null
           }
           ItemSeparatorComponent={() => (
@@ -155,7 +211,9 @@ export default function NotificationsScreen() {
               subtitle={t("notifications.emptyDesc")}
             />
           }
-          renderItem={({ item }) => <Row item={item} byId={byId} onPress={() => open(item)} />}
+          renderItem={({ item }) => (
+            <Row item={item} byId={byId} onPress={() => open(item)} onDelete={() => onDelete(item.id)} />
+          )}
         />
       )}
     </SafeAreaView>
@@ -184,10 +242,12 @@ function Row({
   item,
   byId,
   onPress,
+  onDelete,
 }: {
   item: AppNotification;
   byId: Record<string, Listing>;
   onPress: () => void;
+  onDelete: () => void;
 }) {
   const { t } = useTranslation();
   const { current: lang } = useLanguage();
@@ -206,6 +266,22 @@ function Row({
   const unreadBg = mode === "dark" ? "rgba(139,63,214,0.14)" : "rgba(139,63,214,0.06)";
 
   return (
+    <ReanimatedSwipeable
+      friction={2}
+      rightThreshold={40}
+      renderRightActions={(_progress, _translation, methods) => (
+        <Pressable
+          onPress={() => {
+            methods.close();
+            onDelete();
+          }}
+          style={{ width: 76, backgroundColor: brand.magenta, alignItems: "center", justifyContent: "center", gap: 4 }}
+        >
+          <Ionicons name="trash" size={20} color="#FFFFFF" />
+          <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 11 }}>{t("common.delete")}</Text>
+        </Pressable>
+      )}
+    >
     <Pressable
       onPress={onPress}
       style={({ pressed }) => ({
@@ -214,7 +290,7 @@ function Row({
         gap: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
-        backgroundColor: item.read ? "transparent" : unreadBg,
+        backgroundColor: item.read ? colors.bg : unreadBg,
         opacity: pressed ? 0.6 : 1,
       })}
     >
@@ -266,5 +342,6 @@ function Row({
         <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: brand.magenta, marginTop: 6 }} />
       )}
     </Pressable>
+    </ReanimatedSwipeable>
   );
 }

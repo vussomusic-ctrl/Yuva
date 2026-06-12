@@ -10,7 +10,8 @@
     "appName": "Yuva",
     "retry": "Retry",
     "loadError": "Couldn't load",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "delete": "Delete"
   },
   "splash": {
     "subtitle": "Your premium nest awaits.",
@@ -295,6 +296,9 @@
     "newMatch": "New matching listing",
     "message": "New message",
     "markAllRead": "Mark all read",
+    "clearAll": "Clear all",
+    "clearConfirmTitle": "Clear notifications?",
+    "clearConfirmDesc": "All notifications will be deleted. This cannot be undone.",
     "emptyTitle": "No notifications",
     "emptyDesc": "New notifications will appear here",
     "guestPrompt": "Log in to see notifications"

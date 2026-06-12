@@ -118,18 +118,38 @@ export async function markAllRead(): Promise<void> {
   if (error) throw error;
 }
 
+/** Delete one notification (RLS gates it to my own row). */
+export async function deleteNotification(id: string): Promise<void> {
+  const { error } = await supabase.from("notifications").delete().eq("id", id);
+  if (error) throw error;
+}
+
+/** Delete all my notifications. Explicit user_id filter (RLS also scopes). */
+export async function clearAllNotifications(): Promise<void> {
+  const { data } = await supabase.auth.getSession();
+  const uid = data.session?.user?.id;
+  if (!uid) throw new Error("not authenticated");
+  const { error } = await supabase.from("notifications").delete().eq("user_id", uid);
+  if (error) throw error;
+}
+
 /**
- * Live-subscribe to my new notifications (for the bell badge). RLS-filtered to
- * my rows; also filtered by user_id for good measure. Fires onInsert per row.
+ * Live-subscribe to my new notifications. Fires onInsert with the adapted row.
+ * `channelName` is parameterized so independent subscribers (Home bell badge +
+ * the notifications screen) don't collide on the same channel topic.
  * Returns an unsubscribe fn.
  */
-export function subscribeNotifications(uid: string, onInsert: () => void): () => void {
+export function subscribeNotifications(
+  uid: string,
+  onInsert: (n: AppNotification) => void,
+  channelName = `notifications:${uid}`,
+): () => void {
   const channel = supabase
-    .channel(`notifications:${uid}`)
+    .channel(channelName)
     .on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` },
-      () => onInsert(),
+      (payload) => onInsert(rowToNotification(payload.new as NotificationRow)),
     )
     .subscribe();
 
