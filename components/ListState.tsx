@@ -1,12 +1,11 @@
 // Shared async-state UI for list/detail screens: a centered spinner while
-// loading and an error message with a Retry button. Empty states stay per
-// screen (they reuse EmptyState from my-listings).
+// loading and an error illustration with a Retry button (via EmptyState).
 
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, ActivityIndicator } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { brand, Theme } from "../lib/theme/colors";
+import { EmptyState } from "./EmptyState";
 
 export function LoadingState({ colors }: { colors: Theme }) {
   return (
@@ -16,31 +15,15 @@ export function LoadingState({ colors }: { colors: Theme }) {
   );
 }
 
+// Signature unchanged (colors kept for the 13 call sites). colors now come from
+// the theme inside EmptyState, so the param is no longer read here.
 export function ErrorState({ colors, onRetry }: { colors: Theme; onRetry: () => void }) {
   const { t } = useTranslation();
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 12 }}>
-      <Ionicons name="cloud-offline-outline" size={48} color={colors.textSecondary} />
-      <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700", textAlign: "center" }}>
-        {t("common.loadError")}
-      </Text>
-      <Pressable
-        onPress={onRetry}
-        style={({ pressed }) => ({
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 8,
-          paddingHorizontal: 20,
-          paddingVertical: 12,
-          borderRadius: 14,
-          borderWidth: 1.5,
-          borderColor: brand.violet,
-          opacity: pressed ? 0.6 : 1,
-        })}
-      >
-        <Ionicons name="refresh" size={18} color={brand.violet} />
-        <Text style={{ color: brand.violet, fontSize: 15, fontWeight: "700" }}>{t("common.retry")}</Text>
-      </Pressable>
-    </View>
+    <EmptyState
+      image={require("../assets/icons/empty/error-state.png")}
+      title={t("common.loadError")}
+      cta={{ label: t("common.retry"), onPress: onRetry }}
+    />
   );
 }

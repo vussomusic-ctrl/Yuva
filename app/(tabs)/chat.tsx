@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { LoadingState, ErrorState } from "../../components/ListState";
+import { EmptyState } from "../../components/EmptyState";
 import { useAuth } from "../../lib/auth";
 import {
   getMyConversations,
@@ -122,15 +123,11 @@ export default function ChatListScreen() {
             <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 84 }} />
           )}
           ListEmptyComponent={
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 10 }}>
-              <Ionicons name="chatbubbles-outline" size={48} color={colors.textSecondary} />
-              <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>
-                {t("messages.emptyTitle")}
-              </Text>
-              <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: "center" }}>
-                {t("messages.emptyDesc")}
-              </Text>
-            </View>
+            <EmptyState
+              image={require("../../assets/icons/empty/empty-chats.png")}
+              title={t("messages.emptyTitle")}
+              subtitle={t("messages.emptyDesc")}
+            />
           }
           renderItem={({ item }) => (
             <ChatRow

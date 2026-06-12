@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { LoadingState, ErrorState } from "../../components/ListState";
+import { EmptyState } from "../../components/EmptyState";
 import { useAuth, UserRole } from "../../lib/auth";
 import { useLanguage } from "../../lib/i18n/languages";
 import { getMessages, getConversationMeta, sendMessage, subscribeMessages, markConversationRead, Message } from "../../lib/api/chats";
@@ -221,12 +222,11 @@ export default function ConversationScreen() {
             onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
             onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
             ListEmptyComponent={
-              <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 10 }}>
-                <Ionicons name="chatbubble-ellipses-outline" size={44} color={colors.textSecondary} />
-                <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: "center" }}>
-                  {t("messages.startConversation")}
-                </Text>
-              </View>
+              <EmptyState
+                image={require("../../assets/icons/empty/empty-dialog.png")}
+                title={t("messages.startConversationTitle")}
+                subtitle={t("messages.startConversation")}
+              />
             }
             renderItem={({ item }) => <Bubble colors={colors} message={item} mine={item.sender_id === user?.id} />}
           />

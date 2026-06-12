@@ -11,7 +11,8 @@ import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
 import { usePressScale } from "../lib/animations";
-import { Header, EmptyState } from "./my-listings";
+import { Header } from "./my-listings";
+import { EmptyState } from "../components/EmptyState";
 import { LoadingState, ErrorState } from "../components/ListState";
 import {
   AppNotification,
@@ -149,10 +150,9 @@ export default function NotificationsScreen() {
           )}
           ListEmptyComponent={
             <EmptyState
-              colors={colors}
-              icon="notifications-outline"
+              image={require("../assets/icons/empty/empty-notifications.png")}
               title={t("notifications.emptyTitle")}
-              desc={t("notifications.emptyDesc")}
+              subtitle={t("notifications.emptyDesc")}
             />
           }
           renderItem={({ item }) => <Row item={item} byId={byId} onPress={() => open(item)} />}

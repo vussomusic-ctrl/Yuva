@@ -9,6 +9,7 @@ import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { PropertyCard } from "../components/PropertyCard";
 import { LoadingState, ErrorState } from "../components/ListState";
+import { EmptyState } from "../components/EmptyState";
 import { useFavorites } from "../lib/favorites";
 import { useAuth } from "../lib/auth";
 import { Listing } from "../lib/mock/listings";
@@ -87,10 +88,9 @@ export default function MyListingsScreen() {
           ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
           ListEmptyComponent={
             <EmptyState
-              colors={colors}
-              icon="pricetags-outline"
+              image={require("../assets/icons/empty/house-keys-bonus.png")}
               title={t("myListings.emptyTitle")}
-              desc={t("myListings.emptyDesc")}
+              subtitle={t("myListings.emptyDesc")}
             />
           }
           renderItem={({ item }) => (
@@ -164,22 +164,3 @@ export function Header({ colors, title, onBack }: { colors: Theme; title: string
   );
 }
 
-export function EmptyState({
-  colors,
-  icon,
-  title,
-  desc,
-}: {
-  colors: Theme;
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 10 }}>
-      <Ionicons name={icon} size={48} color={colors.textSecondary} />
-      <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>{title}</Text>
-      <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: "center" }}>{desc}</Text>
-    </View>
-  );
-}

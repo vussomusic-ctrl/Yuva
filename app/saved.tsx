@@ -7,10 +7,11 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { PropertyCard } from "../components/PropertyCard";
 import { LoadingState, ErrorState } from "../components/ListState";
+import { EmptyState } from "../components/EmptyState";
 import { useFavorites } from "../lib/favorites";
 import { Listing } from "../lib/mock/listings";
 import { fetchListingsByIds } from "../lib/api/listings";
-import { Header, EmptyState } from "./my-listings";
+import { Header } from "./my-listings";
 
 export default function SavedScreen() {
   const { t } = useTranslation();
@@ -68,10 +69,9 @@ export default function SavedScreen() {
           ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
           ListEmptyComponent={
             <EmptyState
-              colors={colors}
-              icon="heart-outline"
+              image={require("../assets/icons/empty/empty-saved.png")}
               title={t("saved.emptyTitle")}
-              desc={t("saved.emptyDesc")}
+              subtitle={t("saved.emptyDesc")}
             />
           }
           renderItem={({ item }) => (

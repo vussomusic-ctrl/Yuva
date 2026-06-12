@@ -11,6 +11,7 @@ import { brand, Theme } from "../../lib/theme/colors";
 import { usePressScale } from "../../lib/animations";
 import { Header } from "../my-listings";
 import { LoadingState, ErrorState } from "../../components/ListState";
+import { EmptyState } from "../../components/EmptyState";
 import { fetchPartnerAgencies } from "../../lib/api/agencies";
 import { Agency } from "../../lib/adapters/agency";
 
@@ -54,12 +55,11 @@ export default function AgenciesScreen() {
           columnWrapperStyle={{ gap: 10, paddingHorizontal: 16 }}
           contentContainerStyle={{ paddingVertical: 16, gap: 10, flexGrow: 1 }}
           ListEmptyComponent={
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 10 }}>
-              <Ionicons name="business-outline" size={48} color={colors.textSecondary} />
-              <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: "center" }}>
-                {t("agencies.empty")}
-              </Text>
-            </View>
+            <EmptyState
+              image={require("../../assets/icons/empty/empty-agencies.png")}
+              title={t("agencies.emptyTitle")}
+              subtitle={t("agencies.empty")}
+            />
           }
           renderItem={({ item }) => (
             <AgencyCard colors={colors} agency={item} onPress={() => router.push(`/agencies/${item.id}`)} />

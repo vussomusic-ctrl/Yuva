@@ -17,6 +17,7 @@ import { brand, Theme } from "../../lib/theme/colors";
 import { font } from "../../lib/theme/typography";
 import { usePressScale } from "../../lib/animations";
 import { PropertyCard } from "../../components/PropertyCard";
+import { EmptyState } from "../../components/EmptyState";
 import { SearchBar } from "../../components/SearchBar";
 import { DealTypeChips, DealKey } from "../../components/DealTypeChips";
 import { LoadingState, ErrorState } from "../../components/ListState";
@@ -230,12 +231,11 @@ export default function HomeScreen() {
                 {t("home.newListings")}
               </Text>
               {(feed ?? []).length === 0 ? (
-                <View style={{ alignItems: "center", paddingVertical: 32, gap: 8 }}>
-                  <Ionicons name="home-outline" size={44} color={colors.textSecondary} />
-                  <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, textAlign: "center" }}>
-                    {t("myListings.emptyDesc")}
-                  </Text>
-                </View>
+                <EmptyState
+                  image={require("../../assets/icons/empty/empty-home.png")}
+                  title={t("home.emptyTitle")}
+                  subtitle={t("home.emptyDesc")}
+                />
               ) : (
                 (feed ?? []).map((l) => (
                   <PropertyCard

@@ -10,6 +10,7 @@ import { brand, Theme } from "../../../lib/theme/colors";
 import { font } from "../../../lib/theme/typography";
 import { Header } from "../../my-listings";
 import { LoadingState, ErrorState } from "../../../components/ListState";
+import { EmptyState } from "../../../components/EmptyState";
 import { fetchAllAgencies, createAgency } from "../../../lib/api/admin";
 import { Agency } from "../../../lib/adapters/agency";
 
@@ -87,12 +88,11 @@ export default function AdminAgenciesScreen() {
             </Pressable>
           }
           ListEmptyComponent={
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 10 }}>
-              <Ionicons name="business-outline" size={44} color={colors.textSecondary} />
-              <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, textAlign: "center" }}>
-                {t("admin.empty")}
-              </Text>
-            </View>
+            <EmptyState
+              image={require("../../../assets/icons/empty/empty-admin.png")}
+              title={t("admin.emptyTitle")}
+              subtitle={t("admin.empty")}
+            />
           }
           renderItem={({ item }) => (
             <AgencyRow colors={colors} agency={item} t={t} onPress={() => router.push(`/admin/agencies/${item.id}`)} />
