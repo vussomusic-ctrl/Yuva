@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View, Text, Image, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { BrandGlow } from "../components/BrandGlow";
+import { get, ONBOARDING_SEEN } from "../lib/storage";
 
 const LANGUAGES = [
   { code: "az", label: "Azərbaycan" },
@@ -24,11 +25,20 @@ export default function SplashScreen() {
 
   const active = pending ?? i18n.language;
 
+  // Preload the onboarding flag on mount so the tap handler routes instantly
+  // (defaults to "not seen" → first-run guests get onboarding).
+  const seen = useRef(false);
+  useEffect(() => {
+    get(ONBOARDING_SEEN).then((v) => {
+      seen.current = v === "1";
+    });
+  }, []);
+
   const onSelect = (code: string) => {
     setPending(code);
     i18n.changeLanguage(code);
-    // Let the highlight register before moving on to Welcome.
-    setTimeout(() => router.replace("/welcome"), 240);
+    // Let the highlight register, then go to onboarding (first run) or welcome.
+    setTimeout(() => router.replace(seen.current ? "/welcome" : "/onboarding"), 240);
   };
 
   return (

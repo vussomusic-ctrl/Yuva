@@ -33,6 +33,7 @@ function useAuthRedirect() {
     const top = segments[0]; // undefined on splash ("/")
     const inAuthFlow =
       top === undefined ||
+      top === "onboarding" ||
       top === "welcome" ||
       top === "login" ||
       top === "create-account";
@@ -53,6 +54,7 @@ function RootInner() {
         }}
       >
         <Stack.Screen name="index" />
+        <Stack.Screen name="onboarding" />
         <Stack.Screen name="welcome" />
         <Stack.Screen name="login" />
         <Stack.Screen name="create-account" />

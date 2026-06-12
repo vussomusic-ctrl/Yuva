@@ -17,6 +17,17 @@
     "subtitle": "Premium yuvanız sizi gözləyir.",
     "selectLanguage": "Dili seçin"
   },
+  "onboarding": {
+    "slide1Title": "Yuvanı tap",
+    "slide1Desc": "Bütün Azərbaycan üzrə minlərlə elan — mənzillər, evlər, torpaq sahələri",
+    "slide2Title": "Birbaşa yaz",
+    "slide2Desc": "Vasitəçisiz — satıcıya və ya agentə bir toxunuşla",
+    "slide3Title": "Bir dəqiqəyə yerləşdir",
+    "slide3Desc": "Foto, qiymət — və elanın lentdədir",
+    "skip": "Ötür",
+    "next": "İrəli",
+    "start": "Başla"
+  },
   "welcome": {
     "subtitle": "Tələbkar müştərilər üçün eksklüziv daşınmaz əmlak.",
     "createAccount": "Hesab yarat",

@@ -17,6 +17,17 @@
     "subtitle": "Your premium nest awaits.",
     "selectLanguage": "Select Language"
   },
+  "onboarding": {
+    "slide1Title": "Find your nest",
+    "slide1Desc": "Thousands of listings across Azerbaijan — apartments, houses, land",
+    "slide2Title": "Message directly",
+    "slide2Desc": "No middlemen — reach the seller or agent in one tap",
+    "slide3Title": "Publish in a minute",
+    "slide3Desc": "Photos, a price — and your listing is live",
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Get started"
+  },
   "welcome": {
     "subtitle": "Exclusive real estate for discerning clients.",
     "createAccount": "Create account",
