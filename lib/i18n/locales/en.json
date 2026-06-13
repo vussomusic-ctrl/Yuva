@@ -365,8 +365,10 @@
     "tierBoostDesc": "Lifts your listing to the top of search",
     "tierVipDesc": "Search priority + VIP block",
     "tierPremiumDesc": "VIP + featured on the home screen",
-    "packBumps": "{{count}} bumps",
-    "packDays": "{{count}} days",
+    "packBumps_one": "{{count}} bump",
+    "packBumps_other": "{{count}} bumps",
+    "packDays_one": "{{count}} day",
+    "packDays_other": "{{count}} days",
     "activate": "Activate for {{price}} ₼",
     "done": "Done! Promotion activated"
   },

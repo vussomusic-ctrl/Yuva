@@ -365,8 +365,10 @@
     "tierBoostDesc": "Elanı axtarışda yuxarı qaldırır",
     "tierVipDesc": "Axtarışda prioritet + VIP blok",
     "tierPremiumDesc": "VIP + ana səhifədə göstərim",
-    "packBumps": "{{count}} qaldırma",
-    "packDays": "{{count}} gün",
+    "packBumps_one": "{{count}} qaldırma",
+    "packBumps_other": "{{count}} qaldırma",
+    "packDays_one": "{{count}} gün",
+    "packDays_other": "{{count}} gün",
     "activate": "{{price}} ₼-ə aktivləşdir",
     "done": "Hazırdır! İrəli çəkmə aktivdir"
   },

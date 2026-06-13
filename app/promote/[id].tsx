@@ -17,6 +17,7 @@ import { ListingDetail, formatPrice } from "../../lib/mock/listings";
 import { fetchListingDetail } from "../../lib/api/listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { useLanguage } from "../../lib/i18n/languages";
+import { pluralSuffix } from "../../lib/i18n/plural";
 import { activatePromo, PromoChoice, PROMO_PRICING } from "../../lib/api/promo";
 
 type Tier = "boost" | "vip" | "premium";
@@ -68,10 +69,12 @@ export default function PromoteScreen() {
   const choice: PromoChoice =
     tier === "boost" ? { tier: "boost", bumps: (current as { n: number }).n } : { tier, days: (current as { days: number }).days };
 
-  const packLabel = (p: (typeof packs)[number]) =>
-    tier === "boost"
-      ? t("promote.packBumps", { count: (p as { n: number }).n })
-      : t("promote.packDays", { count: (p as { days: number }).days });
+  const packLabel = (p: (typeof packs)[number]) => {
+    const n = tier === "boost" ? (p as { n: number }).n : (p as { days: number }).days;
+    const base = tier === "boost" ? "promote.packBumps" : "promote.packDays";
+    // Select the form in JS, then request the exact suffixed key (no i18next plural).
+    return t(`${base}_${pluralSuffix(lang, n)}`, { count: n });
+  };
 
   const onActivate = async () => {
     if (!id || loading) return;

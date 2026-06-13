@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { View, Text, Pressable, FlatList, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -14,6 +15,15 @@ import { useFavorites } from "../lib/favorites";
 import { useAuth } from "../lib/auth";
 import { Listing } from "../lib/mock/listings";
 import { fetchMyListings, deleteListing } from "../lib/api/listings";
+
+// #RRGGBB → rgba with the given alpha (for soft icon-button tints).
+function tint(hex: string, a: number): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
 
 export default function MyListingsScreen() {
   const { t } = useTranslation();
@@ -102,67 +112,76 @@ export default function MyListingsScreen() {
                 onToggleFavorite={() => toggle(item.id)}
                 onPress={() => router.push(`/property/${item.id}`)}
               />
-              {/* Owner action strip */}
-              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
+              {/* Owner actions: wide Promote (headline) above a compact icon row */}
+              <View style={{ gap: 8, marginTop: 8 }}>
                 <Pressable
                   onPress={() => router.push(`/promote/${item.id}`)}
-                  hitSlop={6}
-                  style={({ pressed }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
-                    paddingVertical: 8,
-                    paddingHorizontal: 14,
-                    borderRadius: 10,
-                    backgroundColor: brand.violet,
-                    opacity: pressed ? 0.85 : 1,
-                  })}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
                 >
-                  <Ionicons name="trending-up" size={18} color="#FFFFFF" />
-                  <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600" }}>
-                    {t("myListings.promote")}
-                  </Text>
+                  <LinearGradient
+                    colors={brand.gradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      paddingVertical: 12,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <Ionicons name="trending-up" size={18} color="#FFFFFF" />
+                    <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
+                      {t("myListings.promote")}
+                    </Text>
+                  </LinearGradient>
                 </Pressable>
-                <Pressable
-                  onPress={() => router.push(`/add-listing?id=${item.id}`)}
-                  hitSlop={6}
-                  style={({ pressed }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
-                    paddingVertical: 8,
-                    paddingHorizontal: 14,
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    opacity: pressed ? 0.6 : 1,
-                  })}
-                >
-                  <Ionicons name="create-outline" size={18} color={brand.violet} />
-                  <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "600" }}>
-                    {t("myListings.edit")}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => confirmDelete(item)}
-                  hitSlop={6}
-                  style={({ pressed }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
-                    paddingVertical: 8,
-                    paddingHorizontal: 14,
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    opacity: pressed ? 0.6 : 1,
-                  })}
-                >
-                  <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                  <Text style={{ color: colors.danger, fontSize: 14, fontWeight: "600" }}>
-                    {t("myListings.delete")}
-                  </Text>
-                </Pressable>
+
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  <Pressable
+                    onPress={() => router.push(`/add-listing?id=${item.id}`)}
+                    hitSlop={6}
+                    accessibilityLabel={t("myListings.edit")}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      paddingVertical: 12,
+                      borderRadius: 12,
+                      backgroundColor: tint(brand.violet, 0.12),
+                      opacity: pressed ? 0.6 : 1,
+                    })}
+                  >
+                    <Ionicons name="create-outline" size={18} color={brand.violet} />
+                    <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "600" }}>
+                      {t("myListings.edit")}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => confirmDelete(item)}
+                    hitSlop={6}
+                    accessibilityLabel={t("myListings.delete")}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      paddingVertical: 12,
+                      borderRadius: 12,
+                      backgroundColor: tint(colors.danger, 0.12),
+                      opacity: pressed ? 0.6 : 1,
+                    })}
+                  >
+                    <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                    <Text style={{ color: colors.danger, fontSize: 14, fontWeight: "600" }}>
+                      {t("myListings.delete")}
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
             </View>
           )}
