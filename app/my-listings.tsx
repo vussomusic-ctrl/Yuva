@@ -105,6 +105,25 @@ export default function MyListingsScreen() {
               {/* Owner action strip */}
               <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
                 <Pressable
+                  onPress={() => router.push(`/promote/${item.id}`)}
+                  hitSlop={6}
+                  style={({ pressed }) => ({
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    paddingVertical: 8,
+                    paddingHorizontal: 14,
+                    borderRadius: 10,
+                    backgroundColor: brand.violet,
+                    opacity: pressed ? 0.85 : 1,
+                  })}
+                >
+                  <Ionicons name="trending-up" size={18} color="#FFFFFF" />
+                  <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600" }}>
+                    {t("myListings.promote")}
+                  </Text>
+                </Pressable>
+                <Pressable
                   onPress={() => router.push(`/add-listing?id=${item.id}`)}
                   hitSlop={6}
                   style={({ pressed }) => ({

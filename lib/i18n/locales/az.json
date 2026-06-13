@@ -280,7 +280,8 @@
     "deleteConfirmTitle": "Elanı silmək?",
     "deleteConfirmMsg": "Bu əməliyyat geri qaytarıla bilməz",
     "errDelete": "Silinmədi",
-    "edit": "Redaktə et"
+    "edit": "Redaktə et",
+    "promote": "İrəli çək"
   },
   "saved": {
     "title": "Yadda saxlanılanlar",
@@ -354,6 +355,20 @@
     "confirm": "Burada qoy",
     "hint": "Nöqtəni qoymaq üçün xəritəni hərəkət etdirin",
     "webOnly": "Xəritədə seçim tətbiqdə mövcuddur"
+  },
+  "promote": {
+    "title": "İrəli çəkmə",
+    "subtitle": "Daha çox baxış — daha tez satış",
+    "tierBoost": "Qaldır",
+    "tierVip": "VIP",
+    "tierPremium": "Premium",
+    "tierBoostDesc": "Elanı axtarışda yuxarı qaldırır",
+    "tierVipDesc": "Axtarışda prioritet + VIP blok",
+    "tierPremiumDesc": "VIP + ana səhifədə göstərim",
+    "packBumps": "{{count}} qaldırma",
+    "packDays": "{{count}} gün",
+    "activate": "{{price}} ₼-ə aktivləşdir",
+    "done": "Hazırdır! İrəli çəkmə aktivdir"
   },
   "listingTitle": {
     "rooms": "{{n}} otaqlı",

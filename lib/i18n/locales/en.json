@@ -280,7 +280,8 @@
     "deleteConfirmTitle": "Delete listing?",
     "deleteConfirmMsg": "This action cannot be undone",
     "errDelete": "Couldn't delete",
-    "edit": "Edit"
+    "edit": "Edit",
+    "promote": "Promote"
   },
   "saved": {
     "title": "Saved",
@@ -354,6 +355,20 @@
     "confirm": "Set here",
     "hint": "Move the map to place the pin",
     "webOnly": "Map selection is available in the app"
+  },
+  "promote": {
+    "title": "Promotion",
+    "subtitle": "More views — a faster deal",
+    "tierBoost": "Boost",
+    "tierVip": "VIP",
+    "tierPremium": "Premium",
+    "tierBoostDesc": "Lifts your listing to the top of search",
+    "tierVipDesc": "Search priority + VIP block",
+    "tierPremiumDesc": "VIP + featured on the home screen",
+    "packBumps": "{{count}} bumps",
+    "packDays": "{{count}} days",
+    "activate": "Activate for {{price}} ₼",
+    "done": "Done! Promotion activated"
   },
   "listingTitle": {
     "rooms": "{{n}}-room",
