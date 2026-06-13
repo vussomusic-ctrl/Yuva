@@ -18,7 +18,7 @@ import { fetchListingDetail } from "../../lib/api/listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { useLanguage } from "../../lib/i18n/languages";
 import { pluralSuffix } from "../../lib/i18n/plural";
-import { activatePromo, PromoChoice, PROMO_PRICING } from "../../lib/api/promo";
+import { activatePromo, bumpListing, PromoChoice, PROMO_PRICING } from "../../lib/api/promo";
 
 type Tier = "boost" | "vip" | "premium";
 
@@ -79,14 +79,22 @@ export default function PromoteScreen() {
   const onActivate = async () => {
     if (!id || loading) return;
     setLoading(true);
-    try {
-      await activatePromo(id, choice);
+    const res = await activatePromo(id, choice);
+    setLoading(false);
+    if (!res.ok) {
+      Alert.alert(t("common.loadError"));
+      return;
+    }
+    if (choice.tier === "boost") {
+      // Post-purchase: bumps were added to the balance — offer to spend one now.
+      const n = choice.bumps;
+      Alert.alert(t("promote.boostToppedTitle"), t(`promote.boostToppedMsg_${pluralSuffix(lang, n)}`, { n, count: n }), [
+        { text: t("promote.bumpNow"), onPress: async () => { await bumpListing(id); router.back(); } },
+        { text: t("common.later"), onPress: () => router.back() },
+      ]);
+    } else {
       router.back();
       Alert.alert(t("promote.done"));
-    } catch {
-      Alert.alert(t("common.loadError"));
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -11,7 +11,8 @@
     "retry": "Retry",
     "loadError": "Couldn't load",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "later": "Later"
   },
   "splash": {
     "subtitle": "Your premium nest awaits.",
@@ -370,7 +371,14 @@
     "packDays_one": "{{count}} day",
     "packDays_other": "{{count}} days",
     "activate": "Activate for {{price}} ₼",
-    "done": "Done! Promotion activated"
+    "done": "Done! Promotion activated",
+    "bumpNow": "Bump now",
+    "bumpShort": "Bump",
+    "bumpEmptyTitle": "No bumps left",
+    "bumpEmptyMsg": "Buy a bump pack to bump your listing.",
+    "boostToppedTitle": "Pack added",
+    "boostToppedMsg_one": "+{{n}} bump. Bump the listing now?",
+    "boostToppedMsg_other": "+{{n}} bumps. Bump the listing now?"
   },
   "listingTitle": {
     "rooms": "{{n}}-room",

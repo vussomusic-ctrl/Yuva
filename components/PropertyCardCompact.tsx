@@ -41,8 +41,7 @@ export function PropertyCardCompact({ listing, favorited, onToggleFavorite, onPr
   })();
   const tier = isPromoActive(listing) ? listing.promoTier : "none";
   const boosted =
-    listing.bumpsRemaining > 0 ||
-    (!!listing.lastBumpedAt && Date.now() - new Date(listing.lastBumpedAt).getTime() < BUMP_WINDOW_MS);
+    !!listing.lastBumpedAt && Date.now() - new Date(listing.lastBumpedAt).getTime() < BUMP_WINDOW_MS;
 
   return (
     <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>

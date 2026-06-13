@@ -11,7 +11,8 @@
     "retry": "Yenidən cəhd et",
     "loadError": "Yükləmə alınmadı",
     "cancel": "Ləğv et",
-    "delete": "Sil"
+    "delete": "Sil",
+    "later": "Sonra"
   },
   "splash": {
     "subtitle": "Premium yuvanız sizi gözləyir.",
@@ -370,7 +371,14 @@
     "packDays_one": "{{count}} gün",
     "packDays_other": "{{count}} gün",
     "activate": "{{price}} ₼-ə aktivləşdir",
-    "done": "Hazırdır! İrəli çəkmə aktivdir"
+    "done": "Hazırdır! İrəli çəkmə aktivdir",
+    "bumpNow": "İndi qaldır",
+    "bumpShort": "Qaldır",
+    "bumpEmptyTitle": "Qaldırma bitib",
+    "bumpEmptyMsg": "Elanı qaldırmaq üçün paket alın.",
+    "boostToppedTitle": "Paket əlavə edildi",
+    "boostToppedMsg_one": "+{{n}} qaldırma. Elanı indi qaldırmaq?",
+    "boostToppedMsg_other": "+{{n}} qaldırma. Elanı indi qaldırmaq?"
   },
   "listingTitle": {
     "rooms": "{{n}} otaqlı",

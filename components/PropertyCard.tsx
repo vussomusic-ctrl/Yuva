@@ -62,8 +62,7 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
   // orthogonal — shown when there's balance or a recent bump (can co-exist).
   const tier = isPromoActive(listing) ? listing.promoTier : "none";
   const boosted =
-    listing.bumpsRemaining > 0 ||
-    (!!listing.lastBumpedAt && Date.now() - new Date(listing.lastBumpedAt).getTime() < BUMP_WINDOW_MS);
+    !!listing.lastBumpedAt && Date.now() - new Date(listing.lastBumpedAt).getTime() < BUMP_WINDOW_MS;
 
   // Feed-only photo swiper: slide width = measured photo-block width; current
   // index drives the live counter. Carousel keeps a static first photo (nested

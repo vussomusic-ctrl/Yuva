@@ -13,8 +13,11 @@ import { LoadingState, ErrorState } from "../components/ListState";
 import { EmptyState } from "../components/EmptyState";
 import { useFavorites } from "../lib/favorites";
 import { useAuth } from "../lib/auth";
+import { useLanguage } from "../lib/i18n/languages";
+import { pluralSuffix } from "../lib/i18n/plural";
 import { Listing } from "../lib/mock/listings";
 import { fetchMyListings, deleteListing } from "../lib/api/listings";
+import { bumpListing } from "../lib/api/promo";
 
 // #RRGGBB → rgba with the given alpha (for soft icon-button tints).
 function tint(hex: string, a: number): string {
@@ -31,9 +34,11 @@ export default function MyListingsScreen() {
   const router = useRouter();
   const { isFavorite, toggle } = useFavorites();
   const { user } = useAuth();
+  const { current: lang } = useLanguage();
 
   const [items, setItems] = useState<Listing[] | null>(null);
   const [error, setError] = useState(false);
+  const [bumping, setBumping] = useState<Set<string>>(new Set()); // ids mid-bump
 
   // Refetch every time the screen gains focus — this is what makes a freshly
   // published listing appear (the DB doesn't unshift into an in-memory array).
@@ -66,6 +71,34 @@ export default function MyListingsScreen() {
         return arr;
       });
       Alert.alert(t("myListings.errDelete"));
+    }
+  };
+
+  // Patch a single listing in the local list (optimistic updates).
+  const patchItem = (id: string, patch: Partial<Listing>) =>
+    setItems((cur) => (cur ?? []).map((l) => (l.id === id ? { ...l, ...patch } : l)));
+
+  // Spend a bump (optimistic, favorites-style): decrement + light the "boosted"
+  // badge immediately, reconcile/rollback on the DB result. Per-card lock.
+  const onBumpNow = async (item: Listing) => {
+    if (bumping.has(item.id)) return;
+    const prev = item.bumpsRemaining;
+    const prevBumpedAt = item.lastBumpedAt;
+    setBumping((s) => new Set(s).add(item.id));
+    patchItem(item.id, { bumpsRemaining: prev - 1, lastBumpedAt: new Date().toISOString() });
+
+    const res = await bumpListing(item.id);
+    setBumping((s) => {
+      const n = new Set(s);
+      n.delete(item.id);
+      return n;
+    });
+    if (res.ok) {
+      patchItem(item.id, { bumpsRemaining: res.bumpsRemaining });
+    } else {
+      patchItem(item.id, { bumpsRemaining: prev, lastBumpedAt: prevBumpedAt });
+      if (res.reason === "empty") Alert.alert(t("promote.bumpEmptyTitle"), t("promote.bumpEmptyMsg"));
+      else Alert.alert(t("common.loadError"));
     }
   };
 
@@ -137,6 +170,30 @@ export default function MyListingsScreen() {
                     </Text>
                   </LinearGradient>
                 </Pressable>
+
+                {item.bumpsRemaining > 0 && (
+                  <Pressable
+                    onPress={() => onBumpNow(item)}
+                    disabled={bumping.has(item.id)}
+                    hitSlop={6}
+                    accessibilityLabel={t("promote.bumpShort")}
+                    style={({ pressed }) => ({
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      paddingVertical: 12,
+                      borderRadius: 12,
+                      backgroundColor: tint(brand.blue, 0.12),
+                      opacity: bumping.has(item.id) ? 0.5 : pressed ? 0.6 : 1,
+                    })}
+                  >
+                    <Ionicons name="arrow-up" size={18} color={brand.blue} />
+                    <Text numberOfLines={1} style={{ color: brand.blue, fontSize: 14, fontWeight: "600" }}>
+                      {`${t("promote.bumpShort")} · ${t(`promote.packBumps_${pluralSuffix(lang, item.bumpsRemaining)}`, { count: item.bumpsRemaining })}`}
+                    </Text>
+                  </Pressable>
+                )}
 
                 <View style={{ flexDirection: "row", gap: 10 }}>
                   <Pressable
