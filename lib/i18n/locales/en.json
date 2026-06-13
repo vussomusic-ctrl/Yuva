@@ -103,6 +103,7 @@
   },
   "propertyDetail": {
     "area": "Area",
+    "buildTypeLabel": "Type",
     "rooms": "Rooms",
     "floor": "Floor",
     "description": "Description",
@@ -113,6 +114,8 @@
     "translate": "Translate to English",
     "translating": "Translating…",
     "showOriginal": "Show original",
+    "showFull": "Show more",
+    "showLess": "Show less",
     "errTranslate": "Couldn't translate",
     "verifiedAgent": "Verified agent",
     "call": "Call",

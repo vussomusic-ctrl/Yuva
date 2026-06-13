@@ -103,6 +103,7 @@
   },
   "propertyDetail": {
     "area": "Площадь",
+    "buildTypeLabel": "Тип дома",
     "rooms": "Комнаты",
     "floor": "Этаж",
     "description": "Описание",
@@ -113,6 +114,8 @@
     "translate": "Перевести на русский",
     "translating": "Перевожу…",
     "showOriginal": "Показать оригинал",
+    "showFull": "Показать полностью",
+    "showLess": "Скрыть",
     "errTranslate": "Не удалось перевести",
     "verifiedAgent": "Проверенный агент",
     "call": "Позвонить",

@@ -12,6 +12,7 @@ import {
   useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  ImageSourcePropType,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -334,18 +335,44 @@ export default function PropertyDetailScreen() {
             <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>{listing.district}</Text>
           </View>
 
-          {/* Specs row */}
-          <View style={{ flexDirection: "row", gap: 12, marginTop: 20 }}>
-            <SpecCard colors={colors} icon="resize-outline" label={t("propertyDetail.area")} value={formatArea(listing, t)} />
+          {/* Specs row — clay icons in colored circles (up to 4 cells) */}
+          <View style={{ flexDirection: "row", gap: 8, marginTop: 20 }}>
+            <SpecCard
+              colors={colors}
+              icon={require("../../assets/icons/promo/clay-ruler.png")}
+              iconStyle={{ width: 30, height: 37 }}
+              tintBg="#FFEDD5"
+              label={t("propertyDetail.area")}
+              value={formatArea(listing, t)}
+            />
             {!isLandType(listing.propertyType) && (
-              <SpecCard colors={colors} icon="bed-outline" label={t("propertyDetail.rooms")} value={`${listing.rooms}`} />
+              <SpecCard
+                colors={colors}
+                icon={require("../../assets/icons/promo/clay-bed.png")}
+                iconStyle={{ width: 36, height: 32 }}
+                tintBg="#F3E8FF"
+                label={t("propertyDetail.rooms")}
+                value={`${listing.rooms}`}
+              />
             )}
             {listing.floor != null && listing.floorTotal != null && (
               <SpecCard
                 colors={colors}
-                icon="layers-outline"
+                icon={require("../../assets/icons/promo/clay-stairs.png")}
+                iconStyle={{ width: 32, height: 33 }}
+                tintBg="#DBEAFE"
                 label={t("propertyDetail.floor")}
                 value={`${listing.floor}/${listing.floorTotal}`}
+              />
+            )}
+            {!isLandType(listing.propertyType) && (
+              <SpecCard
+                colors={colors}
+                icon={require("../../assets/icons/promo/clay-compass.png")}
+                iconStyle={{ width: 28, height: 35 }}
+                tintBg="#FFE4E1"
+                label={t("propertyDetail.buildTypeLabel")}
+                value={listing.buildType === "new" ? t("filters.buildNew") : t("filters.buildSecondary")}
               />
             )}
           </View>
@@ -460,9 +487,12 @@ export default function PropertyDetailScreen() {
             </View>
           )}
 
-          {/* Description — only if the seller wrote one */}
+          {/* Description — full text, full width (no house, no collapse) */}
           {listing.description.trim() !== "" && (
-            <Section title={t("propertyDetail.description")} colors={colors}>
+            <View style={{ marginTop: 24 }}>
+              <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 17, marginBottom: 12 }}>
+                {t("propertyDetail.description")}
+              </Text>
               <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 15, lineHeight: 22 }}>
                 {showingTranslation ? translated : listing.description}
               </Text>
@@ -487,7 +517,7 @@ export default function PropertyDetailScreen() {
                   </Text>
                 </Pressable>
               ) : null}
-            </Section>
+            </View>
           )}
 
           {/* Amenities — hidden when none are set */}
@@ -701,11 +731,15 @@ export default function PropertyDetailScreen() {
 function SpecCard({
   colors,
   icon,
+  iconStyle,
+  tintBg,
   label,
   value,
 }: {
   colors: Theme;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: ImageSourcePropType;
+  iconStyle: { width: number; height: number };
+  tintBg: string;
   label: string;
   value: string;
 }) {
@@ -713,19 +747,30 @@ function SpecCard({
     <View
       style={{
         flex: 1,
+        alignItems: "center",
         backgroundColor: colors.card,
         borderWidth: 1,
         borderColor: colors.border,
         borderRadius: 14,
-        padding: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 12,
         gap: 6,
       }}
     >
-      <Ionicons name={icon} size={20} color={brand.violet} />
-      <Text style={{ color: colors.textSecondary, fontFamily: font.bold, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>
+      <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: tintBg, alignItems: "center", justifyContent: "center" }}>
+        <Image source={icon} resizeMode="contain" style={iconStyle} />
+      </View>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.8}
+        style={{ color: colors.text, fontFamily: font.bold, fontSize: 14, textAlign: "center" }}
+      >
+        {value}
+      </Text>
+      <Text numberOfLines={1} style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 12, textAlign: "center" }}>
         {label}
       </Text>
-      <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 15 }}>{value}</Text>
     </View>
   );
 }

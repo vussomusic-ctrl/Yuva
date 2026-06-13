@@ -103,6 +103,7 @@
   },
   "propertyDetail": {
     "area": "Sahə",
+    "buildTypeLabel": "Ev növü",
     "rooms": "Otaq",
     "floor": "Mərtəbə",
     "description": "Məlumat",
@@ -113,6 +114,8 @@
     "translate": "Azərbaycan dilinə tərcümə et",
     "translating": "Tərcümə olunur…",
     "showOriginal": "Orijinalı göstər",
+    "showFull": "Tam göstər",
+    "showLess": "Gizlət",
     "errTranslate": "Tərcümə alınmadı",
     "verifiedAgent": "Təsdiqlənmiş Agent",
     "call": "Zəng et",
