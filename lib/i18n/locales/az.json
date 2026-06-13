@@ -240,6 +240,19 @@
     "min": "Min",
     "max": "Maks"
   },
+  "location": {
+    "label": "Lokasiya",
+    "any": "İstənilən",
+    "title": "Harada axtarırıq",
+    "searchPlaceholder": "Rayon, zona, metro axtar…",
+    "popular": "Populyar",
+    "allRegions": "Bütün regionlar",
+    "wholeRayon": "bütün rayon",
+    "zones": "Zonalar",
+    "other": "Digər",
+    "reset": "Sıfırla",
+    "done": "Hazır"
+  },
   "messages": {
     "title": "Mesajlar",
     "emptyTitle": "Hələ mesaj yoxdur",

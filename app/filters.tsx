@@ -10,10 +10,11 @@ import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
 import { Segmented } from "../components/Segmented";
+import { LocationFilterSheet } from "../components/LocationFilterSheet";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
 import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
-import { AREAS, METRO, placeName } from "../lib/places";
+import { placeById, placeName } from "../lib/places";
 import { useLanguage } from "../lib/i18n/languages";
 import { useFilters, DEFAULT_FILTERS } from "../lib/filters-state";
 
@@ -47,6 +48,17 @@ export default function FiltersModal() {
   const [floorMax, setFloorMax] = useState(filters.floorMax);
   const [furnished, setFurnished] = useState(filters.furnished);
   const [mortgage, setMortgage] = useState(filters.mortgage);
+  const [locOpen, setLocOpen] = useState(false);
+
+  const locCount = regions.length + metro.length;
+  const locSummary =
+    locCount === 0
+      ? t("location.any")
+      : (() => {
+          const first = placeById(regions[0] ?? metro[0]);
+          const name = first ? placeName(first, lang) : "";
+          return locCount > 1 ? `${name} +${locCount - 1}` : name;
+        })();
 
   const close = () => (router.canGoBack() ? router.back() : router.replace("/search"));
 
@@ -219,34 +231,62 @@ export default function FiltersModal() {
           />
         </Section>
 
-        {/* Region / district (rayon + qəsəbə + microrayon) */}
-        <Section title={t("filters.region")} colors={colors}>
-          <ChipWrap>
-            {AREAS.map((p) => (
-              <FilterChip
-                key={p.id}
-                label={placeName(p, lang)}
-                active={regions.includes(p.id)}
-                onPress={() => setRegions((a) => toggleIn(a, p.id))}
-                colors={colors}
-              />
-            ))}
-          </ChipWrap>
-        </Section>
+        {/* Location — opener + summary chips (cascading sheet) */}
+        <Section title={t("location.label")} colors={colors}>
+          <Pressable
+            onPress={() => setLocOpen(true)}
+            style={({ pressed }) => ({
+              minHeight: 48,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.card,
+              paddingHorizontal: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Text
+              numberOfLines={1}
+              style={{ flex: 1, color: locCount ? colors.text : colors.textSecondary, fontFamily: font.regular, fontSize: 15 }}
+            >
+              {locSummary}
+            </Text>
+            <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
+          </Pressable>
 
-        {/* Metro */}
-        <Section title={t("filters.metro")} colors={colors}>
-          <ChipWrap>
-            {METRO.map((p) => (
-              <FilterChip
-                key={p.id}
-                label={placeName(p, lang)}
-                active={metro.includes(p.id)}
-                onPress={() => setMetro((a) => toggleIn(a, p.id))}
-                colors={colors}
-              />
-            ))}
-          </ChipWrap>
+          {locCount > 0 && (
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {regions.map((id) => {
+                const p = placeById(id);
+                const whole = p?.kind === "area" && p.type === "rayon";
+                return (
+                  <LocChip
+                    key={`r-${id}`}
+                    label={p ? placeName(p, lang) : id}
+                    note={whole ? t("location.wholeRayon") : undefined}
+                    colors={colors}
+                    onRemove={() => setRegions((a) => a.filter((x) => x !== id))}
+                  />
+                );
+              })}
+              {metro.map((id) => {
+                const p = placeById(id);
+                return (
+                  <LocChip
+                    key={`m-${id}`}
+                    label={p ? placeName(p, lang) : id}
+                    note={t("filters.metro")}
+                    colors={colors}
+                    onRemove={() => setMetro((a) => a.filter((x) => x !== id))}
+                  />
+                );
+              })}
+            </View>
+          )}
         </Section>
 
         {/* Floor */}
@@ -299,7 +339,54 @@ export default function FiltersModal() {
           </LinearGradient>
         </Pressable>
       </View>
+
+      <LocationFilterSheet
+        visible={locOpen}
+        onClose={() => setLocOpen(false)}
+        regions={regions}
+        metro={metro}
+        onApply={(r, m) => {
+          setRegions(r);
+          setMetro(m);
+        }}
+        lang={lang}
+      />
     </SafeAreaView>
+  );
+}
+
+function LocChip({
+  label,
+  note,
+  colors,
+  onRemove,
+}: {
+  label: string;
+  note?: string;
+  colors: Theme;
+  onRemove: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onRemove}
+      style={({ pressed }) => ({
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        paddingLeft: 12,
+        paddingRight: 8,
+        paddingVertical: 8,
+        borderRadius: 999,
+        backgroundColor: brand.violet,
+        opacity: pressed ? 0.6 : 1,
+      })}
+    >
+      <Text style={{ color: "#FFFFFF", fontFamily: font.semibold, fontSize: 13 }}>
+        {label}
+        {note ? ` · ${note}` : ""}
+      </Text>
+      <Ionicons name="close" size={14} color="#FFFFFF" />
+    </Pressable>
   );
 }
 

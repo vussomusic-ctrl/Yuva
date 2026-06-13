@@ -240,6 +240,19 @@
     "min": "Min",
     "max": "Max"
   },
+  "location": {
+    "label": "Location",
+    "any": "Any",
+    "title": "Where to search",
+    "searchPlaceholder": "Search district, area, metro…",
+    "popular": "Popular",
+    "allRegions": "All regions",
+    "wholeRayon": "whole district",
+    "zones": "Areas",
+    "other": "Other",
+    "reset": "Reset",
+    "done": "Done"
+  },
   "messages": {
     "title": "Messages",
     "emptyTitle": "No messages yet",

@@ -4,6 +4,31 @@ import { DealKey } from "./dealTypes";
 import { PropertyTypeKey } from "./propertyTypes";
 import { BuildKey } from "./buildTypes";
 import { Listing } from "./mock/listings";
+import { AREAS, areasOfRayon, placeById } from "./places";
+
+/**
+ * Expand selected region ids into the full set of place ids a listing may carry.
+ * Listings store a single leaf placeId, so a "whole area" selection must roll
+ * down to its descendants:
+ *   - "baku"        -> Baku + all its areas (rayons / qəsəbə / microrayon)
+ *   - a Baku rayon  -> the rayon + its child zones (areasOfRayon)
+ *   - anything else -> itself (country region, or a specific Baku zone)
+ */
+function expandRegions(ids: string[]): Set<string> {
+  const out = new Set<string>();
+  for (const id of ids) {
+    out.add(id);
+    if (id === "baku") {
+      for (const a of AREAS) out.add(a.id);
+    } else {
+      const p = placeById(id);
+      if (p?.kind === "area" && p.type === "rayon") {
+        for (const a of areasOfRayon(id)) out.add(a.id);
+      }
+    }
+  }
+  return out;
+}
 
 /**
  * App-wide active Search filters. ONE source of truth (like `useFavorites`) so
@@ -70,6 +95,8 @@ export function activeFilterCount(f: Filters): number {
 
 /** Pure predicate: apply the active filters to a list of mock listings. */
 export function filterListings(items: Listing[], f: Filters): Listing[] {
+  // Build the region membership set once (parents rolled down to descendants).
+  const regionSet = f.regions.length ? expandRegions(f.regions) : null;
   return items.filter((l) => {
     if (l.dealType !== f.dealType) return false;
     if (f.propertyTypes.length && !f.propertyTypes.includes(l.propertyType)) return false;
@@ -86,7 +113,7 @@ export function filterListings(items: Listing[], f: Filters): Listing[] {
     }
     if (f.areaMin && l.areaM2 < Number(f.areaMin)) return false;
     if (f.areaMax && l.areaM2 > Number(f.areaMax)) return false;
-    if (f.regions.length && !(l.placeId && f.regions.includes(l.placeId))) return false;
+    if (regionSet && !(l.placeId && regionSet.has(l.placeId))) return false;
     if (f.metro.length && !(l.metroId && f.metro.includes(l.metroId))) return false;
     if (f.floorMin && (l.floor == null || l.floor < Number(f.floorMin))) return false;
     if (f.floorMax && (l.floor == null || l.floor > Number(f.floorMax))) return false;

@@ -240,6 +240,19 @@
     "min": "От",
     "max": "До"
   },
+  "location": {
+    "label": "Локация",
+    "any": "Любая",
+    "title": "Где ищем",
+    "searchPlaceholder": "Поиск района, зоны, метро…",
+    "popular": "Популярные",
+    "allRegions": "Все регионы",
+    "wholeRayon": "весь район",
+    "zones": "Зоны",
+    "other": "Другое",
+    "reset": "Сбросить",
+    "done": "Готово"
+  },
   "messages": {
     "title": "Сообщения",
     "emptyTitle": "Сообщений пока нет",
