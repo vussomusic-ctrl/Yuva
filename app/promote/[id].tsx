@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, Image, Pressable, ScrollView, Alert } from "react-native";
+import { View, Text, Image, Pressable, ScrollView, Alert, ImageSourcePropType } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,10 +25,11 @@ type Tier = "boost" | "vip" | "premium";
 const VIP_RED = "#E5322D";
 const PREMIUM_GOLD = "#E0A526";
 
-const TIERS: { tier: Tier; icon: keyof typeof Ionicons.glyphMap; color: string }[] = [
-  { tier: "premium", icon: "star", color: PREMIUM_GOLD },
-  { tier: "vip", icon: "ribbon", color: VIP_RED },
-  { tier: "boost", icon: "arrow-up", color: brand.blue },
+// clay icons by tier — Premium=crown, VIP=star, Boost=arrow (must not swap).
+const TIERS: { tier: Tier; image: ImageSourcePropType; iconStyle: { width: number; height: number }; color: string }[] = [
+  { tier: "premium", image: require("../../assets/icons/promo/clay-crown.png"), iconStyle: { width: 32, height: 27 }, color: PREMIUM_GOLD },
+  { tier: "vip", image: require("../../assets/icons/promo/clay-star.png"), iconStyle: { width: 30, height: 30 }, color: VIP_RED },
+  { tier: "boost", image: require("../../assets/icons/promo/clay-arrow.png"), iconStyle: { width: 28, height: 32 }, color: brand.blue },
 ];
 
 // Mid-ish default pack for a tier.
@@ -157,7 +158,8 @@ export default function PromoteScreen() {
                 <TierCard
                   key={tc.tier}
                   tier={tc.tier}
-                  icon={tc.icon}
+                  image={tc.image}
+                  iconStyle={tc.iconStyle}
                   color={tc.color}
                   title={t(`promote.tier${cap(tc.tier)}`)}
                   desc={t(`promote.tier${cap(tc.tier)}Desc`)}
@@ -199,7 +201,8 @@ export default function PromoteScreen() {
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 function TierCard({
-  icon,
+  image,
+  iconStyle,
   color,
   title,
   desc,
@@ -208,7 +211,8 @@ function TierCard({
   onPress,
 }: {
   tier: Tier;
-  icon: keyof typeof Ionicons.glyphMap;
+  image: ImageSourcePropType;
+  iconStyle: { width: number; height: number };
   color: string;
   title: string;
   desc: string;
@@ -235,7 +239,7 @@ function TierCard({
         ]}
       >
         <View style={{ width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: color }}>
-          <Ionicons name={icon} size={20} color="#FFFFFF" />
+          <Image source={image} resizeMode="contain" style={iconStyle} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{title}</Text>

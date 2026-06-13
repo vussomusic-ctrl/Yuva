@@ -295,13 +295,14 @@ export default function PropertyDetailScreen() {
             <View pointerEvents="none" style={{ position: "absolute", top: insets.top + 56, left: 16, gap: 6, alignItems: "flex-start" }}>
               {tier === "premium" ? (
                 <View style={badgePill(PREMIUM_GOLD)}>
-                  <Ionicons name="star" size={11} color="#FFFFFF" />
+                  <Image source={require("../../assets/icons/promo/clay-crown.png")} resizeMode="contain" style={{ width: 16, height: 13 }} />
                   <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
                     {t("home.badgePremium")}
                   </Text>
                 </View>
               ) : tier === "vip" ? (
                 <View style={badgePill(VIP_RED)}>
+                  <Image source={require("../../assets/icons/promo/clay-star.png")} resizeMode="contain" style={{ width: 14, height: 14 }} />
                   <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
                     {t("home.badgeVip")}
                   </Text>
@@ -309,7 +310,7 @@ export default function PropertyDetailScreen() {
               ) : null}
               {boosted && (
                 <View style={{ ...badgePill(brand.blue), opacity: 0.9 }}>
-                  <Ionicons name="arrow-up" size={9} color="#FFFFFF" />
+                  <Image source={require("../../assets/icons/promo/clay-arrow.png")} resizeMode="contain" style={{ width: 13, height: 15 }} />
                   <Text style={{ color: "#FFFFFF", fontFamily: font.semibold, fontSize: 9, letterSpacing: 0.2 }}>
                     {t("home.badgeBoosted")}
                   </Text>
@@ -364,34 +365,52 @@ export default function PropertyDetailScreen() {
             >
               <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{t("promote.manageTitle")}</Text>
 
-              {/* Current status */}
-              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                {tier === "premium" ? (
-                  <View style={badgePill(PREMIUM_GOLD)}>
-                    <Ionicons name="star" size={12} color="#FFFFFF" />
-                    <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
-                      {t("home.badgePremium")}
+              {/* Current status — premium gradient plaque for VIP/Premium */}
+              {tier === "none" ? (
+                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
+                  {t("promote.statusNormal")}
+                </Text>
+              ) : (
+                <LinearGradient
+                  colors={tier === "premium" ? ["#FFF7E0", "#FFEFC2"] : ["#F3E8FF", "#FCE4F1"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 14,
+                    padding: 16,
+                    borderRadius: 18,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 10,
+                    elevation: 2,
+                  }}
+                >
+                  <Image
+                    source={
+                      tier === "premium"
+                        ? require("../../assets/icons/promo/clay-crown.png")
+                        : require("../../assets/icons/promo/clay-star.png")
+                    }
+                    resizeMode="contain"
+                    style={tier === "premium" ? { width: 48, height: 40 } : { width: 44, height: 44 }}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: "#2A2533", fontFamily: font.bold, fontSize: 21 }}>
+                      {tier === "premium" ? t("promote.tierPremium") : t("promote.tierVip")}
                     </Text>
+                    {listing.promotedUntil && (
+                      <Text style={{ color: "rgba(0,0,0,0.5)", fontFamily: font.regular, fontSize: 13, marginTop: 2 }}>
+                        {t("promote.activeUntil", {
+                          date: new Date(listing.promotedUntil).toLocaleDateString(lang, { day: "numeric", month: "long" }),
+                        })}
+                      </Text>
+                    )}
                   </View>
-                ) : tier === "vip" ? (
-                  <View style={badgePill(VIP_RED)}>
-                    <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
-                      {t("home.badgeVip")}
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
-                    {t("promote.statusNormal")}
-                  </Text>
-                )}
-                {tier !== "none" && listing.promotedUntil && (
-                  <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13 }}>
-                    {t("promote.activeUntil", {
-                      date: new Date(listing.promotedUntil).toLocaleDateString(lang, { day: "numeric", month: "long" }),
-                    })}
-                  </Text>
-                )}
-              </View>
+                </LinearGradient>
+              )}
 
               {/* Bump balance + bump now (only with balance) */}
               {listing.bumpsRemaining > 0 && (
@@ -413,7 +432,7 @@ export default function PropertyDetailScreen() {
                       end={{ x: 1, y: 0 }}
                       style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12 }}
                     >
-                      <Ionicons name="arrow-up" size={16} color="#FFFFFF" />
+                      <Image source={require("../../assets/icons/promo/clay-arrow.png")} resizeMode="contain" style={{ width: 20, height: 23 }} />
                       <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 14 }}>{t("promote.bumpNow")}</Text>
                     </LinearGradient>
                   </Pressable>
@@ -435,7 +454,7 @@ export default function PropertyDetailScreen() {
                   opacity: pressed ? 0.6 : 1,
                 })}
               >
-                <Ionicons name="rocket-outline" size={18} color={brand.violet} />
+                <Image source={require("../../assets/icons/promo/clay-rocket.png")} resizeMode="contain" style={{ width: 22, height: 27 }} />
                 <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 15 }}>{t("promote.promoteCta")}</Text>
               </Pressable>
             </View>

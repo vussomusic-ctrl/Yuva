@@ -143,13 +143,14 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
           <View pointerEvents="none" style={{ position: "absolute", top: 12, left: 12, gap: 6, alignItems: "flex-start" }}>
             {tier === "premium" ? (
               <View style={badgePill(PREMIUM_GOLD)}>
-                <Ionicons name="star" size={11} color="#FFFFFF" />
+                <Image source={require("../assets/icons/promo/clay-crown.png")} resizeMode="contain" style={{ width: 16, height: 13 }} />
                 <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
                   {t("home.badgePremium")}
                 </Text>
               </View>
             ) : tier === "vip" ? (
               <View style={badgePill(VIP_RED)}>
+                <Image source={require("../assets/icons/promo/clay-star.png")} resizeMode="contain" style={{ width: 14, height: 14 }} />
                 <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
                   {t("home.badgeVip")}
                 </Text>
@@ -174,7 +175,7 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
                   opacity: 0.9,
                 }}
               >
-                <Ionicons name="arrow-up" size={9} color="#FFFFFF" />
+                <Image source={require("../assets/icons/promo/clay-arrow.png")} resizeMode="contain" style={{ width: 11, height: 13 }} />
                 <Text style={{ color: "#FFFFFF", fontFamily: font.semibold, fontSize: 9, letterSpacing: 0.2 }}>
                   {t("home.badgeBoosted")}
                 </Text>

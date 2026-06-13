@@ -69,11 +69,12 @@ export function PropertyCardCompact({ listing, favorited, onToggleFavorite, onPr
           <View pointerEvents="none" style={{ position: "absolute", top: 8, left: 8, gap: 4, alignItems: "flex-start" }}>
             {tier === "premium" ? (
               <View style={badgePill(PREMIUM_GOLD)}>
-                <Ionicons name="star" size={9} color="#FFFFFF" />
+                <Image source={require("../assets/icons/promo/clay-crown.png")} resizeMode="contain" style={{ width: 14, height: 12 }} />
                 <Text style={badgeText}>{t("home.badgePremium")}</Text>
               </View>
             ) : tier === "vip" ? (
               <View style={badgePill(VIP_RED)}>
+                <Image source={require("../assets/icons/promo/clay-star.png")} resizeMode="contain" style={{ width: 12, height: 12 }} />
                 <Text style={badgeText}>{t("home.badgeVip")}</Text>
               </View>
             ) : isNew ? (
@@ -83,7 +84,7 @@ export function PropertyCardCompact({ listing, favorited, onToggleFavorite, onPr
             ) : null}
             {boosted && (
               <View style={{ ...badgePill(brand.blue), opacity: 0.9 }}>
-                <Ionicons name="arrow-up" size={8} color="#FFFFFF" />
+                <Image source={require("../assets/icons/promo/clay-arrow.png")} resizeMode="contain" style={{ width: 10, height: 12 }} />
               </View>
             )}
           </View>
