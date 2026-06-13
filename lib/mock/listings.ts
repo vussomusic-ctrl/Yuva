@@ -68,6 +68,13 @@ export const formatPrice = (azn: number) => `${azn.toLocaleString("en-US")} ₼`
 export const isPromoActive = (l: Pick<Listing, "promoTier" | "promotedUntil">): boolean =>
   l.promoTier !== "none" && l.promotedUntil != null && new Date(l.promotedUntil).getTime() > Date.now();
 
+/** A bump "boosted" badge shows for this long after the last manual bump. */
+export const BUMP_WINDOW_MS = 72 * 60 * 60 * 1000;
+
+/** Was the listing bumped within the boosted window? */
+export const isRecentlyBumped = (l: Pick<Listing, "lastBumpedAt">): boolean =>
+  !!l.lastBumpedAt && Date.now() - new Date(l.lastBumpedAt).getTime() < BUMP_WINDOW_MS;
+
 // Area string with the correct unit per property type: land → "sot", else m².
 // Used everywhere area is shown (cards, detail, map preview, title) so land
 // never renders a misleading "0 m²".

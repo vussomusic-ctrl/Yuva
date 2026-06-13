@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
-import { Listing, formatPrice, formatArea, isPromoActive } from "../lib/mock/listings";
+import { Listing, formatPrice, formatArea, isPromoActive, isRecentlyBumped } from "../lib/mock/listings";
 import { isLandType } from "../lib/propertyTypes";
 import { buildListingTitle } from "../lib/listingTitle";
 import { useLanguage } from "../lib/i18n/languages";
@@ -30,7 +30,6 @@ const SPEC_TINT = {
 };
 
 const NEW_WINDOW_MS = 72 * 60 * 60 * 1000;
-const BUMP_WINDOW_MS = 72 * 60 * 60 * 1000;
 const VIP_RED = "#E5322D";
 const PREMIUM_GOLD = "#E0A526";
 
@@ -61,8 +60,7 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
   // Promotion: tier badge only while active (promoted_until > now). Boost is
   // orthogonal — shown when there's balance or a recent bump (can co-exist).
   const tier = isPromoActive(listing) ? listing.promoTier : "none";
-  const boosted =
-    !!listing.lastBumpedAt && Date.now() - new Date(listing.lastBumpedAt).getTime() < BUMP_WINDOW_MS;
+  const boosted = isRecentlyBumped(listing);
 
   // Feed-only photo swiper: slide width = measured photo-block width; current
   // index drives the live counter. Carousel keeps a static first photo (nested

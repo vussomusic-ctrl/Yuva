@@ -22,9 +22,11 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { font } from "../../lib/theme/typography";
-import { ListingDetail, formatPrice, formatArea } from "../../lib/mock/listings";
+import { ListingDetail, formatPrice, formatArea, isPromoActive, isRecentlyBumped } from "../../lib/mock/listings";
 import { isLandType } from "../../lib/propertyTypes";
+import { pluralSuffix } from "../../lib/i18n/plural";
 import { fetchListingDetail } from "../../lib/api/listings";
+import { bumpListing } from "../../lib/api/promo";
 import { useFavorites } from "../../lib/favorites";
 import { useAuth } from "../../lib/auth";
 import { getOrCreateConversation } from "../../lib/api/chats";
@@ -37,6 +39,19 @@ import { detectLang } from "../../lib/langDetect";
 import { translateDescription } from "../../lib/api/ai";
 
 const WHATSAPP_GREEN = "#25D366";
+const VIP_RED = "#E5322D";
+const PREMIUM_GOLD = "#E0A526";
+
+const badgePill = (bg: string) =>
+  ({
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: bg,
+  }) as const;
 
 const AMENITY_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; labelKey: string }> = {
   parking: { icon: "car-outline", labelKey: "propertyDetail.amParking" },
@@ -70,6 +85,7 @@ export default function PropertyDetailScreen() {
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [status, setStatus] = useState<"loading" | "error" | "notfound" | "ok">("loading");
   const [page, setPage] = useState(0);
+  const [bumping, setBumping] = useState(false);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/home"));
 
@@ -140,6 +156,31 @@ export default function PropertyDetailScreen() {
   // Message the seller: guest → login; own listing → button hidden; else
   // get-or-create the conversation and open it.
   const isOwnListing = !!user && listing.ownerId === user.id;
+
+  // Promo signals (public — shown on the gallery for everyone).
+  const tier = isPromoActive(listing) ? listing.promoTier : "none";
+  const boosted = isRecentlyBumped(listing);
+
+  // Spend a bump (owner only). Optimistic: decrement + light "boosted" now,
+  // reconcile/rollback on the DB result. Busy flag blocks repeat taps.
+  const onBumpNow = async () => {
+    if (bumping) return;
+    const prev = listing.bumpsRemaining;
+    const prevBumpedAt = listing.lastBumpedAt;
+    setBumping(true);
+    setListing((l) => (l ? { ...l, bumpsRemaining: prev - 1, lastBumpedAt: new Date().toISOString() } : l));
+
+    const res = await bumpListing(listing.id);
+    setBumping(false);
+    if (res.ok) {
+      setListing((l) => (l ? { ...l, bumpsRemaining: res.bumpsRemaining } : l));
+    } else {
+      setListing((l) => (l ? { ...l, bumpsRemaining: prev, lastBumpedAt: prevBumpedAt } : l));
+      if (res.reason === "empty") Alert.alert(t("promote.bumpEmptyTitle"), t("promote.bumpEmptyMsg"));
+      else Alert.alert(t("common.loadError"));
+    }
+  };
+
   const onMessage = async () => {
     if (!user) {
       router.push("/login");
@@ -247,6 +288,35 @@ export default function PropertyDetailScreen() {
               />
             ))}
           </View>
+
+          {/* Promo badges — overlay INSIDE the gallery (scroll away with the photo,
+              below the fixed header controls). Public: VIP/Premium + recent Boost. */}
+          {(tier !== "none" || boosted) && (
+            <View pointerEvents="none" style={{ position: "absolute", top: insets.top + 56, left: 16, gap: 6, alignItems: "flex-start" }}>
+              {tier === "premium" ? (
+                <View style={badgePill(PREMIUM_GOLD)}>
+                  <Ionicons name="star" size={11} color="#FFFFFF" />
+                  <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
+                    {t("home.badgePremium")}
+                  </Text>
+                </View>
+              ) : tier === "vip" ? (
+                <View style={badgePill(VIP_RED)}>
+                  <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
+                    {t("home.badgeVip")}
+                  </Text>
+                </View>
+              ) : null}
+              {boosted && (
+                <View style={{ ...badgePill(brand.blue), opacity: 0.9 }}>
+                  <Ionicons name="arrow-up" size={9} color="#FFFFFF" />
+                  <Text style={{ color: "#FFFFFF", fontFamily: font.semibold, fontSize: 9, letterSpacing: 0.2 }}>
+                    {t("home.badgeBoosted")}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Body */}
@@ -278,6 +348,98 @@ export default function PropertyDetailScreen() {
               />
             )}
           </View>
+
+          {/* Owner-only promotion management (after the info header) */}
+          {isOwnListing && (
+            <View
+              style={{
+                marginTop: 24,
+                padding: 16,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.card,
+                gap: 14,
+              }}
+            >
+              <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{t("promote.manageTitle")}</Text>
+
+              {/* Current status */}
+              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                {tier === "premium" ? (
+                  <View style={badgePill(PREMIUM_GOLD)}>
+                    <Ionicons name="star" size={12} color="#FFFFFF" />
+                    <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
+                      {t("home.badgePremium")}
+                    </Text>
+                  </View>
+                ) : tier === "vip" ? (
+                  <View style={badgePill(VIP_RED)}>
+                    <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
+                      {t("home.badgeVip")}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
+                    {t("promote.statusNormal")}
+                  </Text>
+                )}
+                {tier !== "none" && listing.promotedUntil && (
+                  <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13 }}>
+                    {t("promote.activeUntil", {
+                      date: new Date(listing.promotedUntil).toLocaleDateString(lang, { day: "numeric", month: "long" }),
+                    })}
+                  </Text>
+                )}
+              </View>
+
+              {/* Bump balance + bump now (only with balance) */}
+              {listing.bumpsRemaining > 0 && (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <Text style={{ flex: 1, color: colors.text, fontFamily: font.medium, fontSize: 14 }}>
+                    {t(`promote.youHaveBumps_${pluralSuffix(lang, listing.bumpsRemaining)}`, {
+                      n: listing.bumpsRemaining,
+                      count: listing.bumpsRemaining,
+                    })}
+                  </Text>
+                  <Pressable
+                    onPress={onBumpNow}
+                    disabled={bumping}
+                    style={({ pressed }) => ({ opacity: bumping ? 0.5 : pressed ? 0.9 : 1 })}
+                  >
+                    <LinearGradient
+                      colors={brand.gradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12 }}
+                    >
+                      <Ionicons name="arrow-up" size={16} color="#FFFFFF" />
+                      <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 14 }}>{t("promote.bumpNow")}</Text>
+                    </LinearGradient>
+                  </Pressable>
+                </View>
+              )}
+
+              {/* Promote CTA — secondary (outline), opens the purchase screen */}
+              <Pressable
+                onPress={() => router.push(`/promote/${listing.id}`)}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  borderWidth: 1.5,
+                  borderColor: brand.violet,
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
+                <Ionicons name="rocket-outline" size={18} color={brand.violet} />
+                <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 15 }}>{t("promote.promoteCta")}</Text>
+              </Pressable>
+            </View>
+          )}
 
           {/* Description — only if the seller wrote one */}
           {listing.description.trim() !== "" && (

@@ -376,6 +376,12 @@
     "bumpShort": "Qaldır",
     "bumpEmptyTitle": "Qaldırma bitib",
     "bumpEmptyMsg": "Elanı qaldırmaq üçün paket alın.",
+    "manageTitle": "İrəliləmə idarəetməsi",
+    "statusNormal": "Adi elan",
+    "activeUntil": "{{date}} tarixinədək aktiv",
+    "promoteCta": "İrəli çək",
+    "youHaveBumps_one": "{{n}} qaldırmanız var",
+    "youHaveBumps_other": "{{n}} qaldırmanız var",
     "boostToppedTitle": "Paket əlavə edildi",
     "boostToppedMsg_one": "+{{n}} qaldırma. Elanı indi qaldırmaq?",
     "boostToppedMsg_other": "+{{n}} qaldırma. Elanı indi qaldırmaq?"

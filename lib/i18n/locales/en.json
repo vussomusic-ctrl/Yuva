@@ -376,6 +376,12 @@
     "bumpShort": "Bump",
     "bumpEmptyTitle": "No bumps left",
     "bumpEmptyMsg": "Buy a bump pack to bump your listing.",
+    "manageTitle": "Promotion",
+    "statusNormal": "Standard listing",
+    "activeUntil": "Active until {{date}}",
+    "promoteCta": "Promote",
+    "youHaveBumps_one": "You have {{n}} bump",
+    "youHaveBumps_other": "You have {{n}} bumps",
     "boostToppedTitle": "Pack added",
     "boostToppedMsg_one": "+{{n}} bump. Bump the listing now?",
     "boostToppedMsg_other": "+{{n}} bumps. Bump the listing now?"

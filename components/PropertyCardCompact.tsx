@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
-import { Listing, formatPrice, isPromoActive } from "../lib/mock/listings";
+import { Listing, formatPrice, isPromoActive, isRecentlyBumped } from "../lib/mock/listings";
 import { buildListingTitle } from "../lib/listingTitle";
 import { useLanguage } from "../lib/i18n/languages";
 import { usePressShrink } from "../lib/animations";
@@ -19,7 +19,6 @@ type Props = {
 };
 
 const NEW_WINDOW_MS = 72 * 60 * 60 * 1000;
-const BUMP_WINDOW_MS = 72 * 60 * 60 * 1000;
 const VIP_RED = "#E5322D";
 const PREMIUM_GOLD = "#E0A526";
 
@@ -40,8 +39,7 @@ export function PropertyCardCompact({ listing, favorited, onToggleFavorite, onPr
     return Number.isFinite(ts) && Date.now() - ts < NEW_WINDOW_MS;
   })();
   const tier = isPromoActive(listing) ? listing.promoTier : "none";
-  const boosted =
-    !!listing.lastBumpedAt && Date.now() - new Date(listing.lastBumpedAt).getTime() < BUMP_WINDOW_MS;
+  const boosted = isRecentlyBumped(listing);
 
   return (
     <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
