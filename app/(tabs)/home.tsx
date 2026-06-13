@@ -20,8 +20,6 @@ import { usePressScale } from "../../lib/animations";
 import { PropertyCard } from "../../components/PropertyCard";
 import { PropertyCardCompact } from "../../components/PropertyCardCompact";
 import { EmptyState } from "../../components/EmptyState";
-import { SearchBar } from "../../components/SearchBar";
-import { DealTypeChips, DealKey } from "../../components/DealTypeChips";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { useLanguage } from "../../lib/i18n/languages";
 import { useFavorites } from "../../lib/favorites";
@@ -56,9 +54,8 @@ export default function HomeScreen() {
   const { current, cycleLanguage } = useLanguage();
   const { session } = useAuth();
 
-  const [query, setQuery] = useState("");
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
-  const { filters, apply, setDealType } = useFilters();
+  const { filters, apply } = useFilters();
 
   // Feed from Supabase. Refetch whenever Home regains focus (e.g. after publish).
   const [feed, setFeed] = useState<Listing[] | null>(null);
@@ -98,12 +95,6 @@ export default function HomeScreen() {
   const colW = (winW - 32 - 10) / 2;
 
   const openListing = (id: string) => router.push(`/property/${id}`);
-
-  // Deal toggle → commit to the shared filter store and jump to Search.
-  const onChangeDeal = (d: DealKey) => {
-    setDealType(d);
-    router.navigate("/search");
-  };
 
   // Tap a category → carry the deal type (from the shared store) + chosen
   // property type into the filter state, then jump to the Search tab.
@@ -177,20 +168,8 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24, gap: 24 }}
       >
-        {/* Location + Search */}
-        <View style={{ paddingHorizontal: 16, gap: 8, marginTop: 4 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Ionicons name="location" size={16} color={colors.textSecondary} />
-            <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>{t("home.location")}</Text>
-          </View>
-          <SearchBar value={query} onChangeText={setQuery} onPressFilter={() => router.push("/filters")} />
-        </View>
-
-        {/* Deal-type chips */}
-        <DealTypeChips value={filters.dealType} onChange={onChangeDeal} />
-
-        {/* Categories */}
-        <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16 }}>
+        {/* Categories — first content under the header (clean showcase) */}
+        <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, marginTop: 4 }}>
           {CATEGORIES.map((c) => (
             <Category
               key={c.key}
