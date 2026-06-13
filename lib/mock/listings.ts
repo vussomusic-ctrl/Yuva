@@ -11,6 +11,9 @@ import { BuildKey } from "../buildTypes";
 import type { UserRole } from "../auth";
 import type { Agency } from "../adapters/agency";
 
+// Time-based promotion tiers (Boost is separate — see bumpsRemaining/lastBumpedAt).
+export type PromoTier = "none" | "vip" | "premium";
+
 export type Listing = {
   id: string;
   image: string; // cover (first listing_photos by sort); "" if none
@@ -24,6 +27,10 @@ export type Listing = {
   floorTotal?: number;
   district: string;
   premium: boolean;
+  promoTier: PromoTier;
+  promotedUntil?: string; // ISO; set while VIP/Premium is active
+  bumpsRemaining: number; // purchased boost balance
+  lastBumpedAt?: string; // ISO; last manual bump (search freshness)
   ownerId: string;
   ownerPhone: string;
   placeId: string;
@@ -56,6 +63,10 @@ export type ListingDetail = Listing & {
 };
 
 export const formatPrice = (azn: number) => `${azn.toLocaleString("en-US")} ₼`;
+
+/** A VIP/Premium promo counts only while it hasn't expired. */
+export const isPromoActive = (l: Pick<Listing, "promoTier" | "promotedUntil">): boolean =>
+  l.promoTier !== "none" && l.promotedUntil != null && new Date(l.promotedUntil).getTime() > Date.now();
 
 // Area string with the correct unit per property type: land → "sot", else m².
 // Used everywhere area is shown (cards, detail, map preview, title) so land

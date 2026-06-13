@@ -46,6 +46,10 @@ export type ListingRow = {
   amenities: string[] | null;
   contact_phone: string | null;
   premium: boolean;
+  promo_tier: "none" | "vip" | "premium";
+  promoted_until: string | null;
+  bumps_remaining: number;
+  last_bumped_at: string | null;
   created_at: string;
   // Embedded relations (optional depending on the query's select).
   listing_photos?: ListingPhotoRow[] | null;
@@ -93,7 +97,7 @@ function sortedPhotoUrls(photos?: ListingPhotoRow[] | null): string[] {
 
 export function rowToListing(row: ListingRow): Listing {
   const urls = sortedPhotoUrls(row.listing_photos);
-  return {
+  const l: Listing = {
     id: row.id,
     image: urls[0] ?? "",
     photos: urls,
@@ -106,6 +110,10 @@ export function rowToListing(row: ListingRow): Listing {
     floorTotal: row.floor_total ?? undefined,
     district: row.district ?? "",
     premium: row.premium,
+    promoTier: row.promo_tier ?? "none",
+    promotedUntil: row.promoted_until ?? undefined,
+    bumpsRemaining: row.bumps_remaining ?? 0,
+    lastBumpedAt: row.last_bumped_at ?? undefined,
     ownerId: row.owner_id,
     ownerPhone: row.contact_phone ?? "",
     placeId: row.place_id ?? "",
@@ -120,6 +128,7 @@ export function rowToListing(row: ListingRow): Listing {
     lat: row.lat ?? 0,
     lng: row.lng ?? 0,
   };
+  return l;
 }
 
 const FALLBACK_AGENT: Agent = { name: "Yuva", avatar: "", verified: false, phone: "", role: "user", agency: null };

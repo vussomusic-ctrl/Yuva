@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
-import { Listing, formatPrice, formatArea } from "../lib/mock/listings";
+import { Listing, formatPrice, formatArea, isPromoActive } from "../lib/mock/listings";
 import { isLandType } from "../lib/propertyTypes";
 import { buildListingTitle } from "../lib/listingTitle";
 import { useLanguage } from "../lib/i18n/languages";
@@ -30,6 +30,20 @@ const SPEC_TINT = {
 };
 
 const NEW_WINDOW_MS = 72 * 60 * 60 * 1000;
+const BUMP_WINDOW_MS = 72 * 60 * 60 * 1000;
+const VIP_RED = "#E5322D";
+const PREMIUM_GOLD = "#E0A526";
+
+const badgePill = (bg: string) =>
+  ({
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: bg,
+  }) as const;
 
 export function PropertyCard({ listing, variant = "feed", favorited, onToggleFavorite, onPress }: Props) {
   const { t } = useTranslation();
@@ -43,6 +57,13 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
     const ts = new Date(listing.createdAt).getTime();
     return Number.isFinite(ts) && Date.now() - ts < NEW_WINDOW_MS;
   })();
+
+  // Promotion: tier badge only while active (promoted_until > now). Boost is
+  // orthogonal — shown when there's balance or a recent bump (can co-exist).
+  const tier = isPromoActive(listing) ? listing.promoTier : "none";
+  const boosted =
+    listing.bumpsRemaining > 0 ||
+    (!!listing.lastBumpedAt && Date.now() - new Date(listing.lastBumpedAt).getTime() < BUMP_WINDOW_MS);
 
   // Feed-only photo swiper: slide width = measured photo-block width; current
   // index drives the live counter. Carousel keeps a static first photo (nested
@@ -120,25 +141,49 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
             style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "40%" }}
           />
 
-          {/* NEW badge — listings younger than 72h */}
-          {isNew && (
-            <View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                top: 12,
-                left: 12,
-                backgroundColor: brand.magenta,
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                borderRadius: 8,
-              }}
-            >
-              <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
-                {t("home.badgeNew")}
-              </Text>
-            </View>
-          )}
+          {/* Badges top-left: promo tier (or NEW), with optional Boost below.
+              Active VIP/Premium outrank NEW (promo hides NEW). */}
+          <View pointerEvents="none" style={{ position: "absolute", top: 12, left: 12, gap: 6, alignItems: "flex-start" }}>
+            {tier === "premium" ? (
+              <View style={badgePill(PREMIUM_GOLD)}>
+                <Ionicons name="star" size={11} color="#FFFFFF" />
+                <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
+                  {t("home.badgePremium")}
+                </Text>
+              </View>
+            ) : tier === "vip" ? (
+              <View style={badgePill(VIP_RED)}>
+                <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
+                  {t("home.badgeVip")}
+                </Text>
+              </View>
+            ) : isNew ? (
+              <View style={badgePill(brand.magenta)}>
+                <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
+                  {t("home.badgeNew")}
+                </Text>
+              </View>
+            ) : null}
+            {boosted && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 3,
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  borderRadius: 6,
+                  backgroundColor: brand.blue,
+                  opacity: 0.9,
+                }}
+              >
+                <Ionicons name="arrow-up" size={9} color="#FFFFFF" />
+                <Text style={{ color: "#FFFFFF", fontFamily: font.semibold, fontSize: 9, letterSpacing: 0.2 }}>
+                  {t("home.badgeBoosted")}
+                </Text>
+              </View>
+            )}
+          </View>
 
           {/* Favorite */}
           <Pressable

@@ -94,6 +94,9 @@
     "emptyDesc": "Скоро здесь появятся объявления",
     "premium": "Premium",
     "badgeNew": "Новое",
+    "badgeVip": "VIP",
+    "badgePremium": "ПРЕМИУМ",
+    "badgeBoosted": "Поднято",
     "roomsUnit": "комн.",
     "floorUnit": "этаж"
   },

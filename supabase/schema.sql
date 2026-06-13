@@ -182,6 +182,13 @@ create table if not exists public.listings (
   status         text not null default 'active'
                    check (status in ('active', 'sold', 'archived', 'moderation')),
   premium        boolean not null default false,
+  -- Promotion (monetization). VIP/Premium are time-based (promoted_until);
+  -- Boost ("поднять") is orthogonal: a pack of bumps spent manually.
+  promo_tier     text not null default 'none'
+                   check (promo_tier in ('none', 'vip', 'premium')),
+  promoted_until  timestamptz,                     -- vip/premium expiry; null = none
+  bumps_remaining int not null default 0,          -- purchased boost balance
+  last_bumped_at  timestamptz,                      -- last manual bump (search freshness)
   views_count    int not null default 0,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
@@ -196,6 +203,12 @@ create index if not exists listings_status_created_idx
   on public.listings (status, created_at desc);
 create index if not exists listings_deal_property_idx
   on public.listings (deal_type, property_type);
+-- Promotion ordering (forward-looking; MVP sorts client-side): promoted band
+-- by tier/expiry, and bump freshness.
+create index if not exists listings_promo_idx
+  on public.listings (promo_tier, promoted_until desc);
+create index if not exists listings_bump_idx
+  on public.listings (last_bumped_at desc);
 create index if not exists listings_owner_idx
   on public.listings (owner_id);
 

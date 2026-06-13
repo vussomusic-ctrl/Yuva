@@ -25,7 +25,7 @@ import { useLanguage } from "../../lib/i18n/languages";
 import { useFavorites } from "../../lib/favorites";
 import { useFilters } from "../../lib/filters-state";
 import { PropertyTypeKey } from "../../lib/propertyTypes";
-import { Listing } from "../../lib/mock/listings";
+import { Listing, isPromoActive } from "../../lib/mock/listings";
 import { fetchFeed } from "../../lib/api/listings";
 import { unreadCount, subscribeNotifications } from "../../lib/api/notifications";
 import { useAuth } from "../../lib/auth";
@@ -55,9 +55,8 @@ export default function HomeScreen() {
   const { session } = useAuth();
 
   const [query, setQuery] = useState("");
-  const [deal, setDeal] = useState<DealKey>("sale");
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
-  const { filters, apply } = useFilters();
+  const { filters, apply, setDealType } = useFilters();
 
   // Feed from Supabase. Refetch whenever Home regains focus (e.g. after publish).
   const [feed, setFeed] = useState<Listing[] | null>(null);
@@ -90,15 +89,21 @@ export default function HomeScreen() {
   }, [session?.user?.id]);
 
   const loading = feed === null && !error;
-  const recommended = (feed ?? []).filter((l) => l.premium);
+  const recommended = (feed ?? []).filter((l) => l.promoTier === "premium" && isPromoActive(l));
 
   const openListing = (id: string) => router.push(`/property/${id}`);
 
-  // Tap a category → carry the current deal type + chosen property type into the
-  // shared filter state, then jump to the Search tab (list + map both filter).
+  // Deal toggle → commit to the shared filter store and jump to Search.
+  const onChangeDeal = (d: DealKey) => {
+    setDealType(d);
+    router.navigate("/search");
+  };
+
+  // Tap a category → carry the deal type (from the shared store) + chosen
+  // property type into the filter state, then jump to the Search tab.
   const openCategory = (type: PropertyTypeKey) => {
-    apply({ ...filters, dealType: deal, propertyTypes: [type] });
-    router.push("/search");
+    apply({ ...filters, propertyTypes: [type] });
+    router.navigate("/search");
   };
 
   return (
@@ -176,7 +181,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Deal-type chips */}
-        <DealTypeChips value={deal} onChange={setDeal} />
+        <DealTypeChips value={filters.dealType} onChange={onChangeDeal} />
 
         {/* Categories */}
         <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16 }}>

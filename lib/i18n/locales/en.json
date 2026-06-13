@@ -94,6 +94,9 @@
     "emptyDesc": "Listings will appear here soon",
     "premium": "Premium",
     "badgeNew": "NEW",
+    "badgeVip": "VIP",
+    "badgePremium": "PREMIUM",
+    "badgeBoosted": "Boosted",
     "roomsUnit": "rooms",
     "floorUnit": "floor"
   },

@@ -395,6 +395,8 @@ export default function AddListingModal() {
     placeId: placeId ?? "",
     metroId: metroId ?? undefined,
     premium: false,
+    promoTier: "none",
+    bumpsRemaining: 0,
     ownerId: user?.id ?? "",
     dealType,
     propertyType: propertyType ?? "apartment",

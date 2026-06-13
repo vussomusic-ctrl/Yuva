@@ -16,7 +16,7 @@ import { BottomSheet } from "../../components/BottomSheet";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { useFavorites } from "../../lib/favorites";
 import { useFilters, filterListings } from "../../lib/filters-state";
-import { Listing } from "../../lib/mock/listings";
+import { Listing, isPromoActive } from "../../lib/mock/listings";
 import { fetchFeed } from "../../lib/api/listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { useLanguage } from "../../lib/i18n/languages";
@@ -55,6 +55,15 @@ export default function SearchScreen() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
   const loading = feed === null && !error;
 
+  // Stable per-load rotation for the Premium/VIP bands so paid listings share
+  // exposure (random order) without jumping on every re-render. Reshuffles only
+  // when the feed itself reloads.
+  const rotation = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const l of feed ?? []) m[l.id] = Math.random();
+    return m;
+  }, [feed]);
+
   const results = useMemo(() => {
     // Active filters first (incl. deal type), then the free-text query on top.
     const base = filterListings(feed ?? [], filters);
@@ -67,13 +76,27 @@ export default function SearchScreen() {
             l.district.toLowerCase().includes(q),
         );
 
-    // Sort is a view concern (local state), applied on top of the filtered set.
+    // Promotion bands first (Premium > VIP > normal) — paid listings stay on top
+    // even under price sort (bina.az behavior). Within a band, the user's sort
+    // applies; for default/newest the paid bands rotate and the normal band
+    // floats bumped listings up via max(createdAt, lastBumpedAt).
+    const band = (l: Listing) => (isPromoActive(l) ? (l.promoTier === "premium" ? 0 : 1) : 2);
+    const freshness = (l: Listing) =>
+      Math.max(new Date(l.createdAt).getTime(), l.lastBumpedAt ? new Date(l.lastBumpedAt).getTime() : 0);
+
     const arr = [...filtered];
-    if (sort === "priceAsc") arr.sort((a, b) => a.priceAzn - b.priceAzn);
-    else if (sort === "priceDesc") arr.sort((a, b) => b.priceAzn - a.priceAzn);
-    else if (sort === "newest") arr.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    arr.sort((a, b) => {
+      const ba = band(a);
+      const bb = band(b);
+      if (ba !== bb) return ba - bb; // band is the primary key, always
+      if (sort === "priceAsc") return a.priceAzn - b.priceAzn;
+      if (sort === "priceDesc") return b.priceAzn - a.priceAzn;
+      // default / newest:
+      if (ba < 2) return (rotation[a.id] ?? 0) - (rotation[b.id] ?? 0); // paid bands rotate
+      return freshness(b) - freshness(a); // normal band: newest, bumped floats up
+    });
     return arr;
-  }, [feed, query, filters, sort, t, lang]);
+  }, [feed, query, filters, sort, t, lang, rotation]);
 
   const sortLabel = t(SORTS.find((s) => s.key === sort)!.labelKey);
 
