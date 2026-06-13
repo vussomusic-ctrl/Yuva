@@ -5,6 +5,7 @@ import {
   Image,
   Pressable,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated from "react-native-reanimated";
@@ -17,6 +18,7 @@ import { brand, Theme } from "../../lib/theme/colors";
 import { font } from "../../lib/theme/typography";
 import { usePressScale } from "../../lib/animations";
 import { PropertyCard } from "../../components/PropertyCard";
+import { PropertyCardCompact } from "../../components/PropertyCardCompact";
 import { EmptyState } from "../../components/EmptyState";
 import { SearchBar } from "../../components/SearchBar";
 import { DealTypeChips, DealKey } from "../../components/DealTypeChips";
@@ -90,6 +92,10 @@ export default function HomeScreen() {
 
   const loading = feed === null && !error;
   const recommended = (feed ?? []).filter((l) => l.promoTier === "premium" && isPromoActive(l));
+
+  // 2-column grid width: screen − horizontal padding (16×2) − inter-column gap (10).
+  const { width: winW } = useWindowDimensions();
+  const colW = (winW - 32 - 10) / 2;
 
   const openListing = (id: string) => router.push(`/property/${id}`);
 
@@ -242,16 +248,20 @@ export default function HomeScreen() {
                   subtitle={t("home.emptyDesc")}
                 />
               ) : (
-                (feed ?? []).map((l) => (
-                  <PropertyCard
-                    key={l.id}
-                    listing={l}
-                    variant="feed"
-                    favorited={isFavorite(l.id)}
-                    onToggleFavorite={() => toggleFavorite(l.id)}
-                    onPress={() => openListing(l.id)}
-                  />
-                ))
+                // 2-column grid; fixed colW so a lone last card keeps its half
+                // (the other slot stays empty, not stretched).
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+                  {(feed ?? []).map((l) => (
+                    <View key={l.id} style={{ width: colW }}>
+                      <PropertyCardCompact
+                        listing={l}
+                        favorited={isFavorite(l.id)}
+                        onToggleFavorite={() => toggleFavorite(l.id)}
+                        onPress={() => openListing(l.id)}
+                      />
+                    </View>
+                  ))}
+                </View>
               )}
             </View>
           </>
