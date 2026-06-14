@@ -84,7 +84,8 @@ export default function AddListingModal() {
   const [floorTotal, setFloorTotal] = useState("");
   const [placeId, setPlaceId] = useState<string | null>(null);
   const [metroId, setMetroId] = useState<string | null>(null);
-  const [phone, setPhone] = useState("+994");
+  const [phoneLocal, setPhoneLocal] = useState(""); // local part; "+994" prefix is fixed in UI
+  const [telegram, setTelegram] = useState("");
   const [furnished, setFurnished] = useState(false);
   const [mortgage, setMortgage] = useState(false);
   const [description, setDescription] = useState("");
@@ -130,7 +131,9 @@ export default function AddListingModal() {
         setFloorTotal(f.floorTotal);
         setPlaceId(f.placeId);
         setMetroId(f.metroId);
-        setPhone(f.phone);
+        // Strip +994 / country code / leading zeros → local part for the input.
+        setPhoneLocal((f.phone ?? "").replace(/[^\d]/g, "").replace(/^994/, "").replace(/^0+/, ""));
+        setTelegram(f.telegram ?? "");
         setFurnished(f.furnished);
         setMortgage(f.mortgage);
         setDescription(f.description);
@@ -301,7 +304,7 @@ export default function AddListingModal() {
   };
 
   // --- Validation (gates the Next button per step) ---
-  const phoneOk = phone.replace(/[^\d]/g, "").length >= 9;
+  const phoneOk = phoneLocal.length === 9; // AZ mobile local part = exactly 9 digits
   const step1Valid = photos.length > 0;
   const step2Valid = propertyType != null;
   const step3Valid =
@@ -337,7 +340,8 @@ export default function AddListingModal() {
       placeId,
       metroId,
       district: placeId ? placeName(placeById(placeId)!, "az") : "",
-      phone,
+      phone: `+994${phoneLocal}`,
+      telegram,
       furnished,
       mortgage,
       description,
@@ -404,7 +408,7 @@ export default function AddListingModal() {
     baths: isLand ? 0 : Number(baths) || 1,
     furnished: isLand ? false : furnished,
     mortgage,
-    ownerPhone: phone.trim(),
+    ownerPhone: `+994${phoneLocal}`,
     createdAt: new Date().toISOString(),
     ...(picked ?? coordsForPlace(placeId)),
   };
@@ -644,12 +648,38 @@ export default function AddListingModal() {
               </Field>
 
               <Field label={t("addListing.phoneLabel")} colors={colors}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    height: 48,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                    paddingHorizontal: 14,
+                  }}
+                >
+                  <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 15, marginRight: 6 }}>+994</Text>
+                  <TextInput
+                    value={phoneLocal}
+                    onChangeText={(text) => setPhoneLocal(text.replace(/[^\d]/g, "").replace(/^0+/, "").slice(0, 9))}
+                    placeholder=""
+                    keyboardType="phone-pad"
+                    maxLength={9}
+                    style={{ flex: 1, color: colors.text, fontFamily: font.regular, fontSize: 15 }}
+                  />
+                </View>
+              </Field>
+
+              <Field label={t("addListing.telegramLabel")} colors={colors}>
                 <Input
                   colors={colors}
-                  value={phone}
-                  onChangeText={setPhone}
-                  placeholder={t("addListing.phonePlaceholder")}
-                  keyboardType="phone-pad"
+                  value={telegram}
+                  onChangeText={setTelegram}
+                  placeholder={t("addListing.telegramPlaceholder")}
+                  keyboardType="default"
+                  autoCapitalize="none"
                 />
               </Field>
 
@@ -769,7 +799,10 @@ export default function AddListingModal() {
                   label={t("addListing.mapPointLabel")}
                   value={picked ? `${picked.lat.toFixed(5)}, ${picked.lng.toFixed(5)}` : "—"}
                 />
-                <SummaryRow colors={colors} label={t("addListing.phoneLabel")} value={phone.trim()} />
+                <SummaryRow colors={colors} label={t("addListing.phoneLabel")} value={`+994 ${phoneLocal}`} />
+                {telegram.trim() !== "" && (
+                  <SummaryRow colors={colors} label={t("addListing.telegramLabel")} value={telegram.trim()} />
+                )}
                 {!isLand && (
                   <SummaryRow colors={colors} label={t("filters.furnished")} value={furnished ? "✓" : "—"} />
                 )}
@@ -1097,6 +1130,7 @@ function Input({
   onChangeText: (s: string) => void;
   placeholder?: string;
   keyboardType?: "numeric" | "default" | "phone-pad";
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
   multiline?: boolean;
 }) {
   return (

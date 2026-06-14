@@ -45,6 +45,7 @@ export type ListingRow = {
   description: string | null;
   amenities: string[] | null;
   contact_phone: string | null;
+  contact_telegram: string | null;
   premium: boolean;
   promo_tier: "none" | "vip" | "premium";
   promoted_until: string | null;
@@ -72,6 +73,7 @@ export type ListingFormInput = {
   metroId: string | null;
   district: string;
   phone: string;
+  telegram: string;
   furnished: boolean;
   mortgage: boolean;
   description: string;
@@ -116,6 +118,7 @@ export function rowToListing(row: ListingRow): Listing {
     lastBumpedAt: row.last_bumped_at ?? undefined,
     ownerId: row.owner_id,
     ownerPhone: row.contact_phone ?? "",
+    ownerTelegram: row.contact_telegram ?? "",
     placeId: row.place_id ?? "",
     metroId: row.metro_id ?? undefined,
     dealType: row.deal_type,
@@ -131,7 +134,7 @@ export function rowToListing(row: ListingRow): Listing {
   return l;
 }
 
-const FALLBACK_AGENT: Agent = { name: "Yuva", avatar: "", verified: false, phone: "", role: "user", agency: null };
+const FALLBACK_AGENT: Agent = { name: "Yuva", avatar: "", verified: false, phone: "", telegram: "", role: "user", agency: null };
 
 export function rowToDetail(row: ListingRow): ListingDetail {
   const base = rowToListing(row);
@@ -142,10 +145,11 @@ export function rowToDetail(row: ListingRow): ListingDetail {
         avatar: row.owner.avatar_url ?? "",
         verified: row.owner.verified,
         phone: row.contact_phone ?? "",
+        telegram: row.contact_telegram ?? "",
         role: row.owner.role ?? "user",
         agency: row.owner.agency ? rowToAgency(row.owner.agency) : null,
       }
-    : { ...FALLBACK_AGENT, phone: row.contact_phone ?? "" };
+    : { ...FALLBACK_AGENT, phone: row.contact_phone ?? "", telegram: row.contact_telegram ?? "" };
   return {
     ...base,
     gallery,
@@ -191,6 +195,7 @@ export function formToRow(form: ListingFormInput, ownerId: string) {
     mortgage: form.mortgage,
     description: form.description.trim() || null,
     contact_phone: form.phone.trim(),
+    contact_telegram: form.telegram.trim() || null,
     contact_type: "owner" as const,
   };
 }
@@ -216,6 +221,7 @@ export function rowToForm(row: ListingRow): ListingFormInput {
     metroId: row.metro_id ?? null,
     district: row.district ?? "",
     phone: row.contact_phone ?? "",
+    telegram: row.contact_telegram ?? "",
     furnished: row.furnished,
     mortgage: row.mortgage,
     description: row.description ?? "",

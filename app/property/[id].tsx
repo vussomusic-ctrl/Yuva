@@ -32,6 +32,7 @@ import { useFavorites } from "../../lib/favorites";
 import { useAuth } from "../../lib/auth";
 import { getOrCreateConversation } from "../../lib/api/chats";
 import { LoadingState, ErrorState } from "../../components/ListState";
+import { BottomSheet } from "../../components/BottomSheet";
 import ListingMiniMap from "../../components/ListingMiniMap";
 import { Header } from "../my-listings";
 import { buildListingTitle } from "../../lib/listingTitle";
@@ -39,7 +40,6 @@ import { useLanguage } from "../../lib/i18n/languages";
 import { detectLang } from "../../lib/langDetect";
 import { translateDescription } from "../../lib/api/ai";
 
-const WHATSAPP_GREEN = "#25D366";
 const VIP_RED = "#E5322D";
 const PREMIUM_GOLD = "#E0A526";
 
@@ -77,6 +77,7 @@ export default function PropertyDetailScreen() {
   const { isFavorite, toggle } = useFavorites();
   const { user } = useAuth();
   const [creatingChat, setCreatingChat] = useState(false);
+  const [contactSheet, setContactSheet] = useState(false);
   // Description translation (in-memory cache per target language; per screen).
   const [translating, setTranslating] = useState(false);
   const [translated, setTranslated] = useState<string | null>(null);
@@ -211,13 +212,29 @@ export default function PropertyDetailScreen() {
   // Seller phone drives Call + WhatsApp. On desktop web tel:/wa.me may be a no-op;
   // .catch keeps it from throwing. On a phone both open the native apps.
   const phoneDigits = listing.ownerPhone.replace(/[^\d]/g, "");
-  const call = () => Linking.openURL(`tel:${listing.ownerPhone}`).catch(() => {});
+  // Local part for display (drop the +994 country code).
+  const displayPhone = phoneDigits.replace(/^994/, "");
+  // Normalize to digits (handles any stored format). NOTE: tel: does nothing on
+  // the iOS simulator (no phone app) — test Call on a real device.
+  const call = () => {
+    if (!phoneDigits) return;
+    Linking.openURL(`tel:+${phoneDigits}`).catch(() => {});
+  };
   const openWhatsApp = () => {
     const text = encodeURIComponent(
       t("propertyDetail.waMessage", { title, price: formatPrice(listing.priceAzn) }),
     );
     Linking.openURL(`https://wa.me/${phoneDigits}?text=${text}`).catch(() => {});
   };
+  const hasPhone = phoneDigits.length > 0;
+  // Normalize the (free-form) telegram field to a bare username; hide if empty.
+  const tgUser = (listing.ownerTelegram ?? "")
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/^(t\.me|telegram\.me)\//i, "")
+    .replace(/^@/, "")
+    .replace(/\s/g, "");
+  const openTelegram = () => Linking.openURL(`https://t.me/${tgUser}`).catch(() => {});
 
   const onGalleryScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
     setPage(Math.round(e.nativeEvent.contentOffset.x / width));
@@ -597,152 +614,150 @@ export default function PropertyDetailScreen() {
         </View>
       </View>
 
-      {/* Fixed seller contact panel */}
+      {/* Fixed bottom bar: favorite + one big "Contact" button (opens sheet) */}
       <View
         style={{
           position: "absolute",
           bottom: 0,
           left: 0,
           right: 0,
+          flexDirection: "row",
+          gap: 12,
           backgroundColor: colors.card,
           borderTopWidth: 1,
           borderTopColor: colors.border,
           paddingHorizontal: 20,
           paddingTop: 14,
           paddingBottom: insets.bottom + 14,
-          gap: 14,
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <Pressable
+          onPress={() => toggle(listing.id)}
+          accessibilityLabel="favorite"
+          style={({ pressed }) => ({
+            width: 56,
+            height: 56,
+            borderRadius: 16,
+            borderWidth: 1.5,
+            borderColor: isFavorite(listing.id) ? brand.magenta : colors.border,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed ? 0.6 : 1,
+          })}
+        >
+          <Ionicons
+            name={isFavorite(listing.id) ? "heart" : "heart-outline"}
+            size={24}
+            color={isFavorite(listing.id) ? brand.magenta : colors.text}
+          />
+        </Pressable>
+
+        <Pressable onPress={() => setContactSheet(true)} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.9 : 1 })}>
+          <LinearGradient
+            colors={brand.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ height: 56, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
+          >
+            <Ionicons name="chatbubble-ellipses-outline" size={20} color="#FFFFFF" />
+            <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 16 }}>{t("propertyDetail.contactButton")}</Text>
+          </LinearGradient>
+        </Pressable>
+      </View>
+
+      {/* Contact sheet — owner card + Linking options */}
+      <BottomSheet visible={contactSheet} onClose={() => setContactSheet(false)}>
+        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingTop: 8 }}>
+          <Pressable onPress={() => setContactSheet(false)} hitSlop={8} style={({ pressed }) => ({ padding: 4, opacity: pressed ? 0.6 : 1 })}>
+            <Ionicons name="close" size={26} color={colors.text} />
+          </Pressable>
+          <Text style={{ flex: 1, textAlign: "center", marginRight: 34, color: colors.text, fontFamily: font.bold, fontSize: 17 }}>
+            {t("propertyDetail.contactSheetTitle")}
+          </Text>
+        </View>
+
+        {/* Owner card */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 20, paddingVertical: 14 }}>
           {listing.agent.avatar ? (
-            <Image
-              source={{ uri: listing.agent.avatar }}
-              style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.bg }}
-            />
+            <Image source={{ uri: listing.agent.avatar }} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.bg }} />
           ) : (
-            <View
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                backgroundColor: brand.violet,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons name="person" size={24} color="#FFFFFF" />
+            <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: brand.violet, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="person" size={26} color="#FFFFFF" />
             </View>
           )}
           <View style={{ flex: 1 }}>
-            {/* Agency line — only for agents who belong to one. Logo optional.
-                Taps through to the agency page. */}
-            {listing.agent.role === "agent" && listing.agent.agency && (
-              <Pressable
-                onPress={() => router.push(`/agencies/${listing.agent.agency!.id}`)}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 6,
-                  marginBottom: 2,
-                  opacity: pressed ? 0.6 : 1,
-                })}
-              >
-                {listing.agent.agency.logoUrl ? (
-                  <Image
-                    source={{ uri: listing.agent.agency.logoUrl }}
-                    style={{ width: 26, height: 26, borderRadius: 6, backgroundColor: colors.bg }}
-                  />
-                ) : null}
-                <Text numberOfLines={1} style={{ flex: 1, color: colors.textSecondary, fontFamily: font.semibold, fontSize: 13 }}>
-                  {listing.agent.agency.name}
-                </Text>
-              </Pressable>
-            )}
-            <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{listing.agent.name}</Text>
+            <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{listing.agent.name}</Text>
             <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13, marginTop: 2 }}>
-              {listing.agent.role === "agent" ? t("profile.roleAgent") : t("profile.roleUser")}
+              {listing.agent.agency ? listing.agent.agency.name : listing.agent.role === "agent" ? t("profile.roleAgent") : t("profile.roleUser")}
             </Text>
-            {listing.agent.verified && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <Ionicons name="shield-checkmark" size={13} color={brand.blue} />
-                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13 }}>{t("propertyDetail.verifiedAgent")}</Text>
-              </View>
-            )}
           </View>
+          {listing.agent.verified && <Ionicons name="shield-checkmark" size={18} color={brand.blue} />}
         </View>
 
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          {/* SECONDARY — call (outline) */}
-          <Pressable
-            onPress={call}
-            style={({ pressed }) => ({
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              paddingVertical: 14,
-              borderRadius: 14,
-              borderWidth: 1.5,
-              borderColor: brand.violet,
-              opacity: pressed ? 0.6 : 1,
-            })}
-          >
-            <Ionicons name="call-outline" size={18} color={brand.violet} />
-            <Text numberOfLines={1} style={{ color: brand.violet, fontFamily: font.bold, fontSize: 14 }}>
-              {t("propertyDetail.call")}
-            </Text>
-          </Pressable>
+        {/* Options */}
+        {hasPhone && (
+          <ContactRow icon="logo-whatsapp" tint="#25D366" label={t("propertyDetail.contactWhatsapp")} colors={colors}
+            onPress={() => { setContactSheet(false); openWhatsApp(); }} />
+        )}
+        {hasPhone && (
+          <ContactRow icon="call" tint={brand.violet} label={t("propertyDetail.contactCall")} sub={displayPhone} colors={colors}
+            onPress={() => { setContactSheet(false); call(); }} />
+        )}
+        {tgUser !== "" && (
+          <ContactRow icon="paper-plane" tint="#2AABEE" label={t("propertyDetail.contactTelegram")} colors={colors}
+            onPress={() => { setContactSheet(false); openTelegram(); }} />
+        )}
+        {!isOwnListing && (
+          <ContactRow icon="chatbubble-ellipses" tint={brand.magenta} label={t("propertyDetail.contactMessage")} colors={colors}
+            onPress={() => { setContactSheet(false); onMessage(); }} />
+        )}
 
-          {/* WhatsApp — primary sales channel */}
-          <Pressable
-            onPress={openWhatsApp}
-            style={({ pressed }) => ({
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              paddingVertical: 14,
-              borderRadius: 14,
-              backgroundColor: WHATSAPP_GREEN,
-              opacity: pressed ? 0.9 : 1,
-            })}
-          >
-            <Ionicons name="logo-whatsapp" size={19} color="#FFFFFF" />
-            <Text numberOfLines={1} style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 14 }}>WhatsApp</Text>
-          </Pressable>
-
-          {/* PRIMARY — message the seller (gradient). Hidden on your own listing. */}
-          {!isOwnListing && (
-            <Pressable onPress={onMessage} disabled={creatingChat} style={({ pressed }) => ({ flex: 1, opacity: pressed || creatingChat ? 0.9 : 1 })}>
-              <LinearGradient
-                colors={brand.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  paddingVertical: 14,
-                  borderRadius: 14,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                }}
-              >
-                {creatingChat ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Ionicons name="chatbubble-ellipses" size={18} color="#FFFFFF" />
-                )}
-                <Text numberOfLines={1} style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 14 }}>
-                  {t("propertyDetail.write")}
-                </Text>
-              </LinearGradient>
-            </Pressable>
-          )}
-        </View>
-      </View>
+        <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12, textAlign: "center", paddingHorizontal: 24, paddingTop: 14, paddingBottom: 4 }}>
+          {t("propertyDetail.contactPrivacy")}
+        </Text>
+      </BottomSheet>
     </View>
+  );
+}
+
+function ContactRow({
+  icon,
+  tint,
+  label,
+  sub,
+  colors,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  tint: string;
+  label: string;
+  sub?: string;
+  colors: Theme;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 14,
+        paddingHorizontal: 20,
+        paddingVertical: 14,
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+        opacity: pressed ? 0.6 : 1,
+      })}
+    >
+      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: tint, alignItems: "center", justifyContent: "center" }}>
+        <Ionicons name={icon} size={20} color="#FFFFFF" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 15 }}>{label}</Text>
+        {sub ? <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13, marginTop: 1 }}>{sub}</Text> : null}
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+    </Pressable>
   );
 }
 

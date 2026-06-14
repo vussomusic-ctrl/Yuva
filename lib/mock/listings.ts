@@ -33,6 +33,7 @@ export type Listing = {
   lastBumpedAt?: string; // ISO; last manual bump (search freshness)
   ownerId: string;
   ownerPhone: string;
+  ownerTelegram?: string; // optional contact handle
   placeId: string;
   metroId?: string;
   dealType: DealKey;
@@ -51,6 +52,7 @@ export type Agent = {
   avatar: string;
   verified: boolean;
   phone: string;
+  telegram?: string;
   role: UserRole;
   agency: Agency | null;
 };
