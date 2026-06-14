@@ -71,7 +71,7 @@ export default function PropertyDetailScreen() {
   const { colors, mode } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const { isFavorite, toggle } = useFavorites();
@@ -253,110 +253,107 @@ export default function PropertyDetailScreen() {
     elevation: 4,
   };
 
-  const galleryHeight = 360;
+  const photoHeight = Math.round(height * 0.58);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 200 }}
-      >
-        {/* Gallery */}
-        <View style={{ width, height: galleryHeight }}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={onGalleryScroll}
-            scrollEventThrottle={16}
-          >
-            {listing.gallery.map((uri, i) => (
-              <Image key={i} source={{ uri }} style={{ width, height: galleryHeight }} resizeMode="cover" />
-            ))}
-          </ScrollView>
+      {/* Photo hero — fixed background layer */}
+      <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: photoHeight }}>
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={onGalleryScroll}
+          scrollEventThrottle={16}
+        >
+          {listing.gallery.map((uri, i) => (
+            <Image key={i} source={{ uri }} style={{ width, height: photoHeight }} resizeMode="cover" />
+          ))}
+        </ScrollView>
 
-          {/* Bottom fade into the page — balanced: top ~40% stays clear (photo
-              untouched), then a soft graduated haze dissolves into the bg at the
-              bottom (translucent mid-stop keeps it gentle, not a hard step). */}
-          <LinearGradient
-            colors={[
-              "transparent",
-              "transparent",
-              mode === "dark" ? "rgba(18,18,18,0.25)" : "rgba(247,247,249,0.25)",
-              colors.bg,
-            ]}
-            locations={[0, 0.4, 0.72, 1]}
-            style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 75 }}
-            pointerEvents="none"
-          />
+        {/* Dark fade at the bottom so the white info overlay stays legible */}
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0)", "rgba(0,0,0,0.6)"]}
+          locations={[0, 0.5, 1]}
+          style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: photoHeight * 0.5 }}
+          pointerEvents="none"
+        />
 
-          {/* Pagination dots */}
-          <View
-            style={{
-              position: "absolute",
-              bottom: 28,
-              alignSelf: "center",
-              flexDirection: "row",
-              gap: 6,
-            }}
-          >
-            {listing.gallery.map((_, i) => (
-              <View
-                key={i}
-                style={{
-                  width: i === page ? 18 : 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: i === page ? "#FFFFFF" : "rgba(255,255,255,0.55)",
-                }}
-              />
-            ))}
+        {/* Promo badges — top-left over the photo */}
+        {(tier !== "none" || boosted) && (
+          <View pointerEvents="none" style={{ position: "absolute", top: insets.top + 56, left: 16, gap: 6, alignItems: "flex-start" }}>
+            {tier === "premium" ? (
+              <View style={badgePill(PREMIUM_GOLD)}>
+                <Image source={require("../../assets/icons/promo/clay-crown.png")} resizeMode="contain" style={{ width: 16, height: 13 }} />
+                <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
+                  {t("home.badgePremium")}
+                </Text>
+              </View>
+            ) : tier === "vip" ? (
+              <View style={badgePill(VIP_RED)}>
+                <Image source={require("../../assets/icons/promo/clay-star.png")} resizeMode="contain" style={{ width: 14, height: 14 }} />
+                <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
+                  {t("home.badgeVip")}
+                </Text>
+              </View>
+            ) : null}
+            {boosted && (
+              <View style={{ ...badgePill(brand.blue), opacity: 0.9 }}>
+                <Image source={require("../../assets/icons/promo/clay-arrow.png")} resizeMode="contain" style={{ width: 13, height: 15 }} />
+                <Text style={{ color: "#FFFFFF", fontFamily: font.semibold, fontSize: 9, letterSpacing: 0.2 }}>
+                  {t("home.badgeBoosted")}
+                </Text>
+              </View>
+            )}
           </View>
+        )}
 
-          {/* Promo badges — overlay INSIDE the gallery (scroll away with the photo,
-              below the fixed header controls). Public: VIP/Premium + recent Boost. */}
-          {(tier !== "none" || boosted) && (
-            <View pointerEvents="none" style={{ position: "absolute", top: insets.top + 56, left: 16, gap: 6, alignItems: "flex-start" }}>
-              {tier === "premium" ? (
-                <View style={badgePill(PREMIUM_GOLD)}>
-                  <Image source={require("../../assets/icons/promo/clay-crown.png")} resizeMode="contain" style={{ width: 16, height: 13 }} />
-                  <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
-                    {t("home.badgePremium")}
-                  </Text>
-                </View>
-              ) : tier === "vip" ? (
-                <View style={badgePill(VIP_RED)}>
-                  <Image source={require("../../assets/icons/promo/clay-star.png")} resizeMode="contain" style={{ width: 14, height: 14 }} />
-                  <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.5 }}>
-                    {t("home.badgeVip")}
-                  </Text>
-                </View>
-              ) : null}
-              {boosted && (
-                <View style={{ ...badgePill(brand.blue), opacity: 0.9 }}>
-                  <Image source={require("../../assets/icons/promo/clay-arrow.png")} resizeMode="contain" style={{ width: 13, height: 15 }} />
-                  <Text style={{ color: "#FFFFFF", fontFamily: font.semibold, fontSize: 9, letterSpacing: 0.2 }}>
-                    {t("home.badgeBoosted")}
-                  </Text>
-                </View>
-              )}
+        {/* Info overlay — price / specs / district in white, above the card edge */}
+        <View pointerEvents="none" style={{ position: "absolute", left: 20, right: 20, bottom: 42, gap: 6 }}>
+          {listing.gallery.length > 1 && (
+            <View style={{ flexDirection: "row", gap: 6, marginBottom: 4 }}>
+              {listing.gallery.map((_, i) => (
+                <View
+                  key={i}
+                  style={{
+                    width: i === page ? 18 : 6,
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: i === page ? "#FFFFFF" : "rgba(255,255,255,0.55)",
+                  }}
+                />
+              ))}
             </View>
           )}
-        </View>
-
-        {/* Body */}
-        <View style={{ paddingHorizontal: 20, marginTop: -4, paddingTop: 24 }}>
-          {/* Price + title + location */}
-          <Text style={{ color: brand.violet, fontFamily: font.extrabold, fontSize: 26 }}>
-            {formatPrice(listing.priceAzn)}
+          <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 28 }}>{formatPrice(listing.priceAzn)}</Text>
+          <Text style={{ color: "rgba(255,255,255,0.92)", fontFamily: font.semibold, fontSize: 15 }}>
+            {[!isLandType(listing.propertyType) ? `${listing.rooms} ${t("propertyDetail.rooms")}` : null, formatArea(listing, t)]
+              .filter(Boolean)
+              .join("  •  ")}
           </Text>
-          <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 20, marginTop: 4 }}>
-            {title}
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 8 }}>
-            <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
-            <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>{listing.district}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Ionicons name="location-outline" size={15} color="#FFFFFF" />
+            <Text style={{ color: "rgba(255,255,255,0.92)", fontFamily: font.regular, fontSize: 14 }}>{listing.district}</Text>
           </View>
+        </View>
+      </View>
+
+      {/* Content card — overlaps the photo, rounded top. Scrolls internally. */}
+      <View
+        style={{
+          position: "absolute",
+          top: photoHeight - 24,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: colors.bg,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+        }}
+      >
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 120 }}>
+          {/* Drag handle — static for now (gestures land in 5c) */}
+          <View style={{ alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: 16 }} />
 
           {/* Specs row — clay icons in colored circles (up to 4 cells) */}
           <View style={{ flexDirection: "row", gap: 8, marginTop: 20 }}>
@@ -583,8 +580,8 @@ export default function PropertyDetailScreen() {
               <ListingMiniMap lat={listing.lat} lng={listing.lng} district={listing.district} />
             </Section>
           )}
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
 
       {/* Gallery overlay controls (back / share / favorite) */}
       <View
