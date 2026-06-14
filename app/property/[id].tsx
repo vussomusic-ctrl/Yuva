@@ -36,7 +36,7 @@ import { LoadingState, ErrorState } from "../../components/ListState";
 import { BottomSheet } from "../../components/BottomSheet";
 import { PhotoGallery } from "../../components/PhotoGallery";
 import ListingMiniMap from "../../components/ListingMiniMap";
-import Animated, { useAnimatedScrollHandler, useSharedValue, useAnimatedRef, useAnimatedReaction, runOnJS } from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler, useSharedValue, useAnimatedRef, useAnimatedReaction, runOnJS, useAnimatedStyle, interpolate } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import { useDraggableSheet, useSheetScrollGesture } from "../../lib/animations";
 import { Header } from "../my-listings";
@@ -125,6 +125,24 @@ export default function PropertyDetailScreen() {
     },
     [expandedSheetY],
   );
+
+  const photoParallaxStyle = useAnimatedStyle(() => {
+    // Photo canvas drifts up as the sheet expands (collapsedSheetY -> expandedSheetY).
+    // Parallax: photo moves slower than the sheet for depth.
+    const ty = interpolate(
+      sheetTranslateY.value,
+      [expandedSheetY, collapsedSheetY],
+      [-(collapsedSheetY - expandedSheetY) * 0.35, 0],
+      "clamp",
+    );
+    const scale = interpolate(
+      sheetTranslateY.value,
+      [expandedSheetY, collapsedSheetY],
+      [1.04, 1],
+      "clamp",
+    );
+    return { transform: [{ translateY: ty }, { scale }] };
+  });
   const [bumping, setBumping] = useState(false);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/home"));
@@ -297,7 +315,7 @@ export default function PropertyDetailScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Photo hero — full-screen background layer (card rides over it) */}
-      <View style={{ position: "absolute", top: 0, left: 0, right: 0, height }}>
+      <Animated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, height, overflow: "hidden" }, photoParallaxStyle]}>
         <ScrollView
           horizontal
           pagingEnabled
@@ -377,7 +395,7 @@ export default function PropertyDetailScreen() {
             <Text style={{ color: "rgba(255,255,255,0.92)", fontFamily: font.regular, fontSize: 14 }}>{listing.district}</Text>
           </View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Content card — draggable sheet (translateY) between collapsed/expanded */}
       <Animated.View
