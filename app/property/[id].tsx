@@ -34,6 +34,9 @@ import { getOrCreateConversation } from "../../lib/api/chats";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { BottomSheet } from "../../components/BottomSheet";
 import ListingMiniMap from "../../components/ListingMiniMap";
+import Animated from "react-native-reanimated";
+import { GestureDetector } from "react-native-gesture-handler";
+import { useDraggableSheet } from "../../lib/animations";
 import { Header } from "../my-listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { useLanguage } from "../../lib/i18n/languages";
@@ -73,6 +76,15 @@ export default function PropertyDetailScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
+
+  // Draggable content card: collapsed (lower) ↔ expanded (under the header).
+  // Collapsed: card peeks ~240px — handle + the full first specs row, then clean
+  // card padding (the promo block's pink stays hidden). Expanded: under header.
+  const collapsedSheetY = Math.round(height - insets.bottom - 240);
+  // Expanded: card top sits just below the header buttons (~insets.top+8..48),
+  // covering the top-left promo badge (insets.top+56) — nothing peeks above.
+  const expandedSheetY = insets.top + 50;
+  const { pan: sheetPan, sheetStyle } = useDraggableSheet(collapsedSheetY, expandedSheetY);
 
   const { isFavorite, toggle } = useFavorites();
   const { user } = useAuth();
@@ -253,12 +265,14 @@ export default function PropertyDetailScreen() {
     elevation: 4,
   };
 
-  const photoHeight = Math.round(height * 0.58);
+  // Distance from screen bottom to the collapsed card's top edge — used to sit
+  // the photo info/gradient just above the card so there's never a white gap.
+  const collapsedGap = height - collapsedSheetY;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      {/* Photo hero — fixed background layer */}
-      <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: photoHeight }}>
+      {/* Photo hero — full-screen background layer (card rides over it) */}
+      <View style={{ position: "absolute", top: 0, left: 0, right: 0, height }}>
         <ScrollView
           horizontal
           pagingEnabled
@@ -267,15 +281,14 @@ export default function PropertyDetailScreen() {
           scrollEventThrottle={16}
         >
           {listing.gallery.map((uri, i) => (
-            <Image key={i} source={{ uri }} style={{ width, height: photoHeight }} resizeMode="cover" />
+            <Image key={i} source={{ uri }} style={{ width, height }} resizeMode="cover" />
           ))}
         </ScrollView>
 
-        {/* Dark fade at the bottom so the white info overlay stays legible */}
+        {/* Dark fade just above the collapsed card so the white info stays legible */}
         <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0)", "rgba(0,0,0,0.6)"]}
-          locations={[0, 0.5, 1]}
-          style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: photoHeight * 0.5 }}
+          colors={["transparent", "rgba(0,0,0,0.6)"]}
+          style={{ position: "absolute", left: 0, right: 0, bottom: collapsedGap, height: 220 }}
           pointerEvents="none"
         />
 
@@ -308,8 +321,8 @@ export default function PropertyDetailScreen() {
           </View>
         )}
 
-        {/* Info overlay — price / specs / district in white, above the card edge */}
-        <View pointerEvents="none" style={{ position: "absolute", left: 20, right: 20, bottom: 42, gap: 6 }}>
+        {/* Info overlay — price / specs / district in white, just above the card edge */}
+        <View pointerEvents="none" style={{ position: "absolute", left: 20, right: 20, bottom: collapsedGap + 16, gap: 6 }}>
           {listing.gallery.length > 1 && (
             <View style={{ flexDirection: "row", gap: 6, marginBottom: 4 }}>
               {listing.gallery.map((_, i) => (
@@ -338,23 +351,38 @@ export default function PropertyDetailScreen() {
         </View>
       </View>
 
-      {/* Content card — overlaps the photo, rounded top. Scrolls internally. */}
-      <View
-        style={{
-          position: "absolute",
-          top: photoHeight - 24,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: colors.bg,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-        }}
+      {/* Content card — draggable sheet (translateY) between collapsed/expanded */}
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            // Extra-tall so the bottom edge stays below the screen at any
+            // translateY (expanded → collapsed) — nothing peeks out underneath.
+            height: height + collapsedSheetY,
+            backgroundColor: colors.bg,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: -4 },
+            shadowOpacity: 0.12,
+            shadowRadius: 12,
+            elevation: 8,
+          },
+          sheetStyle,
+        ]}
       >
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 120 }}>
-          {/* Drag handle — static for now (gestures land in 5c) */}
-          <View style={{ alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: 16 }} />
+        {/* Drag handle — pan here to move the sheet (5c-1: two snap positions) */}
+        <GestureDetector gesture={sheetPan}>
+          <View style={{ paddingTop: 10, paddingBottom: 8 }}>
+            <View style={{ alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+          </View>
+        </GestureDetector>
 
+        {/* Content — static (overflow clipped) until 5c-2 adds internal scroll */}
+        <View style={{ overflow: "hidden", paddingHorizontal: 20, paddingBottom: 120 }}>
           {/* Specs row — clay icons in colored circles (up to 4 cells) */}
           <View style={{ flexDirection: "row", gap: 8, marginTop: 20 }}>
             <SpecCard
@@ -580,8 +608,8 @@ export default function PropertyDetailScreen() {
               <ListingMiniMap lat={listing.lat} lng={listing.lng} district={listing.district} />
             </Section>
           )}
-        </ScrollView>
-      </View>
+        </View>
+      </Animated.View>
 
       {/* Gallery overlay controls (back / share / favorite) */}
       <View

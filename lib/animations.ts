@@ -11,6 +11,7 @@ import {
   withTiming,
   Easing,
 } from "react-native-reanimated";
+import { Gesture } from "react-native-gesture-handler";
 
 /**
  * Mount entrance: fade in + gentle scale-up, runs once when the component
@@ -109,4 +110,40 @@ export function usePressScale(pressedScale = 0.96) {
     scale.value = withSpring(1, { damping: 15 });
   }, [scale]);
   return { style, onPressIn, onPressOut };
+}
+
+/**
+ * Draggable bottom-sheet card between two snap positions (translateY offsets
+ * from the top of the screen). `collapsedY` (larger = lower) is the resting
+ * position; `expandedY` (smaller = higher) is fully open. Attach `pan` to a
+ * GestureDetector on the sheet's drag handle and `sheetStyle` to the
+ * Animated.View. Snaps on release by position + fling velocity.
+ */
+export function useDraggableSheet(collapsedY: number, expandedY: number) {
+  const translateY = useSharedValue(collapsedY);
+  const start = useSharedValue(collapsedY);
+
+  const pan = Gesture.Pan()
+    .onStart(() => {
+      start.value = translateY.value;
+    })
+    .onUpdate((e) => {
+      const next = start.value + e.translationY;
+      // clamp between expanded (top) and collapsed (bottom)
+      translateY.value = Math.min(collapsedY, Math.max(expandedY, next));
+    })
+    .onEnd((e) => {
+      const mid = (collapsedY + expandedY) / 2;
+      const goExpanded = translateY.value < mid || e.velocityY < -500;
+      // Calm settle: higher damping + clamp overshoot so the sheet doesn't wobble.
+      translateY.value = withSpring(goExpanded ? expandedY : collapsedY, {
+        damping: 24,
+        stiffness: 220,
+        overshootClamping: true,
+      });
+    });
+
+  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
+
+  return { pan, sheetStyle, translateY };
 }
