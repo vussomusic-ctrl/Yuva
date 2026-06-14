@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
@@ -82,6 +82,7 @@ export default function PropertyDetailScreen() {
   const [translated, setTranslated] = useState<string | null>(null);
   const [showOriginal, setShowOriginal] = useState(false);
   const transCache = useRef<Map<string, string>>(new Map());
+  const hasDataRef = useRef(false); // true once the listing is loaded (silent refetch after)
 
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [status, setStatus] = useState<"loading" | "error" | "notfound" | "ok">("loading");
@@ -90,24 +91,29 @@ export default function PropertyDetailScreen() {
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/home"));
 
+  // Focus-refetch with a SILENT mode: spinner only on the first load; on returns
+  // (e.g. after a promo purchase) refresh quietly and keep the old data on error.
   const load = useCallback(() => {
     if (!id) {
       setStatus("notfound");
       return;
     }
-    setStatus("loading");
+    if (!hasDataRef.current) setStatus("loading");
     fetchListingDetail(id)
       .then((d) => {
         if (d) {
           setListing(d);
+          hasDataRef.current = true;
           setStatus("ok");
-        } else {
+        } else if (!hasDataRef.current) {
           setStatus("notfound");
         }
       })
-      .catch(() => setStatus("error"));
+      .catch(() => {
+        if (!hasDataRef.current) setStatus("error"); // silent refetch keeps shown data
+      });
   }, [id]);
-  useEffect(() => { load(); }, [load]);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   if (status !== "ok" || !listing) {
     return (
@@ -377,114 +383,126 @@ export default function PropertyDetailScreen() {
             )}
           </View>
 
-          {/* Owner-only promotion management (after the info header) */}
+          {/* Owner-only promotion management — soft lilac→pink gradient block */}
           {isOwnListing && (
-            <View
-              style={{
-                marginTop: 24,
-                padding: 16,
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: colors.border,
-                backgroundColor: colors.card,
-                gap: 14,
-              }}
+            <LinearGradient
+              colors={["#F3EAFF", "#FCE9F2"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ marginTop: 24, padding: 16, borderRadius: 20 }}
             >
-              <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{t("promote.manageTitle")}</Text>
+              <Text style={{ color: "#2A2533", fontFamily: font.bold, fontSize: 17, marginBottom: 14 }}>
+                {t("promote.manageTitle")}
+              </Text>
 
-              {/* Current status — premium gradient plaque for VIP/Premium */}
-              {tier === "none" ? (
-                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
-                  {t("promote.statusNormal")}
-                </Text>
-              ) : (
-                <LinearGradient
-                  colors={tier === "premium" ? ["#FFF7E0", "#FFEFC2"] : ["#F3E8FF", "#FCE4F1"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{
+              {/* Status card (full width) */}
+              <View style={{ backgroundColor: "#FFFFFF", borderRadius: 14, padding: 12, flexDirection: "row", alignItems: "center", gap: 12 }}>
+                {tier !== "none" && (
+                  <Image
+                    source={tier === "premium" ? require("../../assets/icons/promo/clay-crown.png") : require("../../assets/icons/promo/clay-star.png")}
+                    resizeMode="contain"
+                    style={tier === "premium" ? { width: 54, height: 44 } : { width: 50, height: 50 }}
+                  />
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: "#8E8896", fontFamily: font.regular, fontSize: 12 }}>{t("promote.statusLabel")}</Text>
+                  <Text style={{ color: "#2A2533", fontFamily: font.bold, fontSize: 18, marginTop: 2 }}>
+                    {tier === "premium" ? t("promote.tierPremium") : tier === "vip" ? t("promote.tierVip") : t("promote.statusNormal")}
+                  </Text>
+                  {tier !== "none" && listing.promotedUntil && (
+                    <Text style={{ marginTop: 4, fontSize: 12 }}>
+                      <Text style={{ color: "#8E8896", fontFamily: font.regular }}>{t("promote.activeUntilPrefix")} </Text>
+                      <Text style={{ color: brand.magenta, fontFamily: font.bold }}>
+                        {new Date(listing.promotedUntil).toLocaleDateString(lang, { day: "numeric", month: "long" })}
+                      </Text>
+                    </Text>
+                  )}
+                </View>
+                <Pressable
+                  onPress={() => router.push(`/promote/${listing.id}`)}
+                  style={({ pressed }) => ({
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 14,
-                    padding: 16,
-                    borderRadius: 18,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 10,
-                    elevation: 2,
-                  }}
+                    gap: 4,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: "#EAD9F7",
+                    opacity: pressed ? 0.6 : 1,
+                  })}
                 >
-                  <Image
-                    source={
-                      tier === "premium"
-                        ? require("../../assets/icons/promo/clay-crown.png")
-                        : require("../../assets/icons/promo/clay-star.png")
-                    }
-                    resizeMode="contain"
-                    style={tier === "premium" ? { width: 48, height: 40 } : { width: 44, height: 44 }}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: "#2A2533", fontFamily: font.bold, fontSize: 21 }}>
-                      {tier === "premium" ? t("promote.tierPremium") : t("promote.tierVip")}
-                    </Text>
-                    {listing.promotedUntil && (
-                      <Text style={{ color: "rgba(0,0,0,0.5)", fontFamily: font.regular, fontSize: 13, marginTop: 2 }}>
-                        {t("promote.activeUntil", {
-                          date: new Date(listing.promotedUntil).toLocaleDateString(lang, { day: "numeric", month: "long" }),
-                        })}
-                      </Text>
-                    )}
-                  </View>
-                </LinearGradient>
-              )}
+                  <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 12 }}>{t("promote.details")}</Text>
+                  <Ionicons name="chevron-forward" size={14} color={brand.violet} />
+                </Pressable>
+              </View>
 
-              {/* Bump balance + bump now (only with balance) */}
-              {listing.bumpsRemaining > 0 && (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Text style={{ flex: 1, color: colors.text, fontFamily: font.medium, fontSize: 14 }}>
-                    {t(`promote.youHaveBumps_${pluralSuffix(lang, listing.bumpsRemaining)}`, {
-                      n: listing.bumpsRemaining,
-                      count: listing.bumpsRemaining,
-                    })}
-                  </Text>
+              {/* Two cards: bumps (left) + promotion (right), each with its own CTA */}
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
+                {/* Bumps */}
+                <View style={{ flex: 1, backgroundColor: "#FFFFFF", borderRadius: 14, padding: 12, justifyContent: "space-between" }}>
+                  <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14 }}>
+                        <Text style={{ color: brand.violet, fontFamily: font.extrabold, fontSize: 18 }}>{listing.bumpsRemaining}</Text>
+                        <Text style={{ color: "#2A2533", fontFamily: font.medium }}>
+                          {" "}
+                          {t(`promote.bumpsWord_${pluralSuffix(lang, listing.bumpsRemaining)}`, { count: listing.bumpsRemaining })}
+                        </Text>
+                      </Text>
+                      <Text style={{ marginTop: 4, color: "#8E8896", fontFamily: font.regular, fontSize: 11 }}>
+                        {t("promote.boostHint")}
+                      </Text>
+                    </View>
+                    <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: brand.violet, alignItems: "center", justifyContent: "center" }}>
+                      <Image source={require("../../assets/icons/promo/clay-arrow.png")} resizeMode="contain" style={{ width: 20, height: 23 }} />
+                    </View>
+                  </View>
                   <Pressable
-                    onPress={onBumpNow}
-                    disabled={bumping}
-                    style={({ pressed }) => ({ opacity: bumping ? 0.5 : pressed ? 0.9 : 1 })}
+                    onPress={listing.bumpsRemaining > 0 ? onBumpNow : undefined}
+                    disabled={listing.bumpsRemaining === 0 || bumping}
+                    style={({ pressed }) => ({ marginTop: 12, opacity: listing.bumpsRemaining === 0 ? 0.45 : bumping ? 0.6 : pressed ? 0.9 : 1 })}
                   >
                     <LinearGradient
                       colors={brand.gradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
-                      style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12 }}
+                      style={{ alignItems: "center", justifyContent: "center", paddingVertical: 11, borderRadius: 12 }}
                     >
-                      <Image source={require("../../assets/icons/promo/clay-arrow.png")} resizeMode="contain" style={{ width: 20, height: 23 }} />
                       <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 14 }}>{t("promote.bumpNow")}</Text>
                     </LinearGradient>
                   </Pressable>
                 </View>
-              )}
 
-              {/* Promote CTA — secondary (outline), opens the purchase screen */}
-              <Pressable
-                onPress={() => router.push(`/promote/${listing.id}`)}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  borderWidth: 1.5,
-                  borderColor: brand.violet,
-                  opacity: pressed ? 0.6 : 1,
-                })}
-              >
-                <Image source={require("../../assets/icons/promo/clay-rocket.png")} resizeMode="contain" style={{ width: 22, height: 27 }} />
-                <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 15 }}>{t("promote.promoteCta")}</Text>
-              </Pressable>
-            </View>
+                {/* Promotion */}
+                <View style={{ flex: 1, backgroundColor: "#FFFFFF", borderRadius: 14, padding: 12, justifyContent: "space-between" }}>
+                  <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text numberOfLines={1} adjustsFontSizeToFit style={{ color: "#2A2533", fontFamily: font.bold, fontSize: 14 }}>
+                        {t("promote.title")}
+                      </Text>
+                      <Text style={{ marginTop: 4, color: "#8E8896", fontFamily: font.regular, fontSize: 11 }}>
+                        {t("promote.promoteSub")}
+                      </Text>
+                    </View>
+                    <Image source={require("../../assets/icons/promo/clay-rocket.png")} resizeMode="contain" style={{ width: 34, height: 41 }} />
+                  </View>
+                  <Pressable
+                    onPress={() => router.push(`/promote/${listing.id}`)}
+                    style={({ pressed }) => ({ marginTop: 12, opacity: pressed ? 0.9 : 1 })}
+                  >
+                    <LinearGradient
+                      colors={brand.gradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{ alignItems: "center", justifyContent: "center", paddingVertical: 11, borderRadius: 12 }}
+                    >
+                      <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 14 }}>{t("promote.promoteCta")}</Text>
+                    </LinearGradient>
+                  </Pressable>
+                </View>
+              </View>
+            </LinearGradient>
           )}
 
           {/* Description — full text, full width (no house, no collapse) */}
