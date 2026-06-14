@@ -143,6 +143,40 @@ export default function PropertyDetailScreen() {
     );
     return { transform: [{ translateY: ty }, { scale }] };
   });
+
+  // Migrating favorite heart: flies from header (collapsed) to bottom panel (expanded).
+  const heartFlyStyle = useAnimatedStyle(() => {
+    // Start: header, left of share (base left = width-106, top = insets.top+8).
+    // Finish: panel left slot (left ~20, vertically centered on the Связаться button).
+    const startLeft = width - 106;
+    const startTop = insets.top + 8;
+    const finishLeft = 20;
+    const finishTop = height - insets.bottom - 42 - 20; // button center Y minus half heart (40/2)
+    const tx = interpolate(
+      sheetTranslateY.value,
+      [collapsedSheetY, expandedSheetY],
+      [0, finishLeft - startLeft],
+      "clamp",
+    );
+    const ty = interpolate(
+      sheetTranslateY.value,
+      [collapsedSheetY, expandedSheetY],
+      [0, finishTop - startTop],
+      "clamp",
+    );
+    return { transform: [{ translateX: tx }, { translateY: ty }] };
+  });
+
+  const contactBtnStyle = useAnimatedStyle(() => {
+    // Button shrinks to free the heart slot as the sheet expands (heart lands).
+    const ml = interpolate(
+      sheetTranslateY.value,
+      [collapsedSheetY, expandedSheetY],
+      [0, 64],
+      "clamp",
+    );
+    return { marginLeft: ml };
+  });
   const [bumping, setBumping] = useState(false);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/home"));
@@ -685,15 +719,39 @@ export default function PropertyDetailScreen() {
           <Pressable onPress={onShare} hitSlop={6} style={overlayBtn}>
             <Ionicons name="share-outline" size={20} color={colors.text} />
           </Pressable>
-          <Pressable onPress={() => toggle(listing.id)} hitSlop={6} style={overlayBtn}>
-            <Ionicons
-              name={isFavorite(listing.id) ? "heart" : "heart-outline"}
-              size={20}
-              color={isFavorite(listing.id) ? brand.magenta : colors.text}
-            />
-          </Pressable>
         </View>
       </View>
+
+      {/* Migrating favorite heart: flies header (collapsed) -> panel (expanded) */}
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: insets.top + 8,
+            left: width - 106,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: mode === "dark" ? "rgba(20,18,24,0.7)" : "rgba(255,255,255,0.9)",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 50,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+          },
+          heartFlyStyle,
+        ]}
+      >
+        <Pressable onPress={() => toggle(listing.id)} hitSlop={10}>
+          <Ionicons
+            name={isFavorite(listing.id) ? "heart" : "heart-outline"}
+            size={20}
+            color={isFavorite(listing.id) ? brand.magenta : colors.text}
+          />
+        </Pressable>
+      </Animated.View>
 
       {/* Fixed bottom bar: favorite + one big "Contact" button (opens sheet) */}
       <View
@@ -712,38 +770,19 @@ export default function PropertyDetailScreen() {
           paddingBottom: insets.bottom + 14,
         }}
       >
-        <Pressable
-          onPress={() => toggle(listing.id)}
-          accessibilityLabel="favorite"
-          style={({ pressed }) => ({
-            width: 56,
-            height: 56,
-            borderRadius: 16,
-            borderWidth: 1.5,
-            borderColor: isFavorite(listing.id) ? brand.magenta : colors.border,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: pressed ? 0.6 : 1,
-          })}
-        >
-          <Ionicons
-            name={isFavorite(listing.id) ? "heart" : "heart-outline"}
-            size={24}
-            color={isFavorite(listing.id) ? brand.magenta : colors.text}
-          />
-        </Pressable>
-
-        <Pressable onPress={() => setContactSheet(true)} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.9 : 1 })}>
-          <LinearGradient
-            colors={brand.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{ height: 56, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
-          >
-            <Ionicons name="chatbubble-ellipses-outline" size={20} color="#FFFFFF" />
-            <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 16 }}>{t("propertyDetail.contactButton")}</Text>
-          </LinearGradient>
-        </Pressable>
+        <Animated.View style={[{ flex: 1 }, contactBtnStyle]}>
+          <Pressable onPress={() => setContactSheet(true)} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.9 : 1 })}>
+            <LinearGradient
+              colors={brand.gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ height: 56, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={20} color="#FFFFFF" />
+              <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 16 }}>{t("propertyDetail.contactButton")}</Text>
+            </LinearGradient>
+          </Pressable>
+        </Animated.View>
       </View>
 
       {/* Contact sheet — owner card + Linking options */}
