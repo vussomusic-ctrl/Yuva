@@ -10,6 +10,7 @@ import {
   withSequence,
   withTiming,
   Easing,
+  type SharedValue,
 } from "react-native-reanimated";
 import { Gesture } from "react-native-gesture-handler";
 
@@ -146,4 +147,59 @@ export function useDraggableSheet(collapsedY: number, expandedY: number) {
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
 
   return { pan, sheetStyle, translateY };
+}
+
+// 5c-2 B1: pan over the scrollable content that hands off to the sheet.
+// When content is scrolled to top and pulled DOWN, this pan collapses the
+// sheet; otherwise it yields to the ScrollView. Used together with
+// simultaneousWithExternalGesture(scrollRef) so pan and scroll coexist.
+export function useSheetScrollGesture(
+  translateY: SharedValue<number>,
+  collapsedY: number,
+  expandedY: number,
+  scrollY: SharedValue<number>,
+  scrollRef: React.RefObject<any>,
+) {
+  const start = useSharedValue(collapsedY);
+  const driving = useSharedValue(false);
+
+  const pan = Gesture.Pan()
+    .simultaneousWithExternalGesture(scrollRef)
+    .onStart(() => {
+      start.value = translateY.value;
+      driving.value = false;
+    })
+    .onUpdate((e) => {
+      const expanded = translateY.value <= expandedY + 1;
+      // Drive the sheet only when: not fully expanded (so upward drag expands),
+      // OR content is at the very top and the user pulls down (collapse).
+      const atTop = scrollY.value <= 0;
+      const pullingDown = e.translationY > 0;
+
+      if (!driving.value) {
+        if (!expanded) {
+          driving.value = true; // sheet partially open: drag controls it
+        } else if (atTop && pullingDown) {
+          driving.value = true; // expanded + at top + pull down => collapse
+        }
+      }
+
+      if (driving.value) {
+        const next = start.value + e.translationY;
+        translateY.value = Math.min(collapsedY, Math.max(expandedY, next));
+      }
+    })
+    .onEnd((e) => {
+      if (!driving.value) return;
+      const mid = (collapsedY + expandedY) / 2;
+      const goExpanded = translateY.value < mid || e.velocityY < -500;
+      translateY.value = withSpring(goExpanded ? expandedY : collapsedY, {
+        damping: 24,
+        stiffness: 220,
+        overshootClamping: true,
+      });
+      driving.value = false;
+    });
+
+  return { pan };
 }

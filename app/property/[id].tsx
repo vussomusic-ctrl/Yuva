@@ -36,9 +36,9 @@ import { LoadingState, ErrorState } from "../../components/ListState";
 import { BottomSheet } from "../../components/BottomSheet";
 import { PhotoGallery } from "../../components/PhotoGallery";
 import ListingMiniMap from "../../components/ListingMiniMap";
-import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler, useSharedValue, useAnimatedRef, useAnimatedReaction, runOnJS } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
-import { useDraggableSheet } from "../../lib/animations";
+import { useDraggableSheet, useSheetScrollGesture } from "../../lib/animations";
 import { Header } from "../my-listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { useLanguage } from "../../lib/i18n/languages";
@@ -86,7 +86,7 @@ export default function PropertyDetailScreen() {
   // Expanded: card top sits just below the header buttons (~insets.top+8..48),
   // covering the top-left promo badge (insets.top+56) — nothing peeks above.
   const expandedSheetY = insets.top + 50;
-  const { pan: sheetPan, sheetStyle } = useDraggableSheet(collapsedSheetY, expandedSheetY);
+  const { pan: sheetPan, sheetStyle, translateY: sheetTranslateY } = useDraggableSheet(collapsedSheetY, expandedSheetY);
 
   const { isFavorite, toggle } = useFavorites();
   const { user } = useAuth();
@@ -107,6 +107,24 @@ export default function PropertyDetailScreen() {
   const onContentScroll = useAnimatedScrollHandler((e) => {
     scrollY.value = e.contentOffset.y;
   });
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const { pan: contentPan } = useSheetScrollGesture(
+    sheetTranslateY,
+    collapsedSheetY,
+    expandedSheetY,
+    scrollY,
+    scrollRef,
+  );
+  const [scrollEnabled, setScrollEnabled] = useState(false);
+  useAnimatedReaction(
+    () => sheetTranslateY.value,
+    (ty) => {
+      // Enable content scroll only when the sheet is (near) fully expanded.
+      const expanded = ty <= expandedSheetY + 8;
+      runOnJS(setScrollEnabled)(expanded);
+    },
+    [expandedSheetY],
+  );
   const [bumping, setBumping] = useState(false);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/home"));
@@ -392,13 +410,16 @@ export default function PropertyDetailScreen() {
         </GestureDetector>
 
         {/* Content — internal scroll (viewport capped at expanded visible height) */}
-        <Animated.ScrollView
-          onScroll={onContentScroll}
-          scrollEventThrottle={16}
-          showsVerticalScrollIndicator={false}
-          style={{ maxHeight: height - expandedSheetY }}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 124 }}
-        >
+        <GestureDetector gesture={contentPan}>
+          <Animated.ScrollView
+            ref={scrollRef}
+            scrollEnabled={scrollEnabled}
+            onScroll={onContentScroll}
+            scrollEventThrottle={16}
+            showsVerticalScrollIndicator={false}
+            style={{ maxHeight: height - expandedSheetY }}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 124 }}
+          >
           {/* Specs row — clay icons in colored circles (up to 4 cells) */}
           <View style={{ flexDirection: "row", gap: 8, marginTop: 20 }}>
             <SpecCard
@@ -624,7 +645,8 @@ export default function PropertyDetailScreen() {
               <ListingMiniMap lat={listing.lat} lng={listing.lng} district={listing.district} />
             </Section>
           )}
-        </Animated.ScrollView>
+          </Animated.ScrollView>
+        </GestureDetector>
       </Animated.View>
 
       {/* Gallery overlay controls (back / share / favorite) */}
