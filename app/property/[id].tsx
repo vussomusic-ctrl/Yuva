@@ -36,7 +36,7 @@ import { LoadingState, ErrorState } from "../../components/ListState";
 import { BottomSheet } from "../../components/BottomSheet";
 import { PhotoGallery } from "../../components/PhotoGallery";
 import ListingMiniMap from "../../components/ListingMiniMap";
-import Animated from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import { useDraggableSheet } from "../../lib/animations";
 import { Header } from "../my-listings";
@@ -103,6 +103,10 @@ export default function PropertyDetailScreen() {
   const [status, setStatus] = useState<"loading" | "error" | "notfound" | "ok">("loading");
   const [page, setPage] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const scrollY = useSharedValue(0);
+  const onContentScroll = useAnimatedScrollHandler((e) => {
+    scrollY.value = e.contentOffset.y;
+  });
   const [bumping, setBumping] = useState(false);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/home"));
@@ -387,8 +391,14 @@ export default function PropertyDetailScreen() {
           </View>
         </GestureDetector>
 
-        {/* Content — static (overflow clipped) until 5c-2 adds internal scroll */}
-        <View style={{ overflow: "hidden", paddingHorizontal: 20, paddingBottom: 120 }}>
+        {/* Content — internal scroll (viewport capped at expanded visible height) */}
+        <Animated.ScrollView
+          onScroll={onContentScroll}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+          style={{ maxHeight: height - expandedSheetY }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 124 }}
+        >
           {/* Specs row — clay icons in colored circles (up to 4 cells) */}
           <View style={{ flexDirection: "row", gap: 8, marginTop: 20 }}>
             <SpecCard
@@ -614,7 +624,7 @@ export default function PropertyDetailScreen() {
               <ListingMiniMap lat={listing.lat} lng={listing.lng} district={listing.district} />
             </Section>
           )}
-        </View>
+        </Animated.ScrollView>
       </Animated.View>
 
       {/* Gallery overlay controls (back / share / favorite) */}
