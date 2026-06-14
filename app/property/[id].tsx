@@ -13,6 +13,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   ImageSourcePropType,
+  Modal,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -33,6 +34,7 @@ import { useAuth } from "../../lib/auth";
 import { getOrCreateConversation } from "../../lib/api/chats";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { BottomSheet } from "../../components/BottomSheet";
+import { PhotoGallery } from "../../components/PhotoGallery";
 import ListingMiniMap from "../../components/ListingMiniMap";
 import Animated from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
@@ -100,6 +102,7 @@ export default function PropertyDetailScreen() {
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [status, setStatus] = useState<"loading" | "error" | "notfound" | "ok">("loading");
   const [page, setPage] = useState(0);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const [bumping, setBumping] = useState(false);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/home"));
@@ -281,7 +284,9 @@ export default function PropertyDetailScreen() {
           scrollEventThrottle={16}
         >
           {listing.gallery.map((uri, i) => (
-            <Image key={i} source={{ uri }} style={{ width, height }} resizeMode="cover" />
+            <Pressable key={i} onPress={() => setGalleryOpen(true)}>
+              <Image source={{ uri }} style={{ width, height }} resizeMode="cover" />
+            </Pressable>
           ))}
         </ScrollView>
 
@@ -692,6 +697,13 @@ export default function PropertyDetailScreen() {
       </View>
 
       {/* Contact sheet — owner card + Linking options */}
+      <PhotoGallery
+        visible={galleryOpen}
+        photos={listing.gallery}
+        initialIndex={page}
+        onClose={() => setGalleryOpen(false)}
+      />
+
       <BottomSheet visible={contactSheet} onClose={() => setContactSheet(false)}>
         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingTop: 8 }}>
           <Pressable onPress={() => setContactSheet(false)} hitSlop={8} style={({ pressed }) => ({ padding: 4, opacity: pressed ? 0.6 : 1 })}>
