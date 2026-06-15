@@ -81,6 +81,9 @@
   },
   "home": {
     "location": "Baku, Azerbaijan",
+    "heroTitle": "Where will you live?",
+    "heroSubtitle": "We'll find the perfect place for you",
+    "heroSearchPlaceholder": "City, area, metro or address",
     "searchPlaceholder": "City, district or metro...",
     "dealSale": "For sale",
     "dealRent": "For rent",

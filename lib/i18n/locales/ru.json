@@ -81,6 +81,9 @@
   },
   "home": {
     "location": "Баку, Азербайджан",
+    "heroTitle": "Где будем жить?",
+    "heroSubtitle": "Найдём идеальное место для вас",
+    "heroSearchPlaceholder": "Город, район, метро или адрес",
     "searchPlaceholder": "Город, район или метро...",
     "dealSale": "Продажа",
     "dealRent": "Аренда",

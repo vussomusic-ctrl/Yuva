@@ -81,6 +81,9 @@
   },
   "home": {
     "location": "Bakı, Azərbaycan",
+    "heroTitle": "Harada yaşayacağıq?",
+    "heroSubtitle": "Sizin üçün ideal yeri tapacağıq",
+    "heroSearchPlaceholder": "Şəhər, rayon, metro və ya ünvan",
     "searchPlaceholder": "Şəhər, rayon, və ya metro axtar...",
     "dealSale": "Satılır",
     "dealRent": "Kirayə",

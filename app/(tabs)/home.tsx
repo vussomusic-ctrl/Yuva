@@ -177,8 +177,59 @@ export default function HomeScreen() {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
+        {/* Hero — greeting + mascot + search entry (static, no animation) */}
+        <View style={{ paddingHorizontal: 16 }}>
+          <View
+            style={{
+              backgroundColor: mode === "dark" ? "#1E1830" : "#F3EDFB",
+              borderRadius: 24,
+              padding: 18,
+              overflow: "hidden",
+              gap: 16,
+              shadowColor: brand.violet,
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.12,
+              shadowRadius: 16,
+              elevation: 4,
+            }}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <View style={{ flex: 1, gap: 4 }}>
+                <Text style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 22 }}>
+                  {t("home.heroTitle")}
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13 }}>
+                  {t("home.heroSubtitle")}
+                </Text>
+              </View>
+              <Image source={require("../../assets/mascot/bird-nest.png")} style={{ width: 96, height: 96 }} resizeMode="contain" />
+            </View>
+
+            <Pressable
+              onPress={() => router.navigate("/search")}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                height: 50,
+                borderRadius: 25,
+                backgroundColor: mode === "dark" ? "rgba(255,255,255,0.08)" : "#FFFFFF",
+                paddingHorizontal: 14,
+                gap: 10,
+              }}
+            >
+              <Ionicons name="search" size={20} color={colors.textSecondary} />
+              <Text style={{ flex: 1, color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
+                {t("home.heroSearchPlaceholder")}
+              </Text>
+              <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: brand.violet, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="options-outline" size={18} color="#FFFFFF" />
+              </View>
+            </Pressable>
+          </View>
+        </View>
+
         {/* Categories — first content under the header (clean showcase) */}
-        <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, marginTop: 4 }}>
+        <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16 }}>
           {CATEGORIES.map((c) => (
             <Category
               key={c.key}
