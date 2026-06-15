@@ -422,7 +422,7 @@ export default function PropertyDetailScreen() {
           )}
           <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 28 }}>{formatPrice(listing.priceAzn)}</Text>
           <Text style={{ color: "rgba(255,255,255,0.92)", fontFamily: font.semibold, fontSize: 15 }}>
-            {[!isLandType(listing.propertyType) ? `${listing.rooms} ${t("propertyDetail.rooms")}` : null, formatArea(listing, t)]
+            {[!isLandType(listing.propertyType) ? `${listing.rooms} ${t("home.roomsUnit")}` : null, formatArea(listing, t)]
               .filter(Boolean)
               .join("  •  ")}
           </Text>
