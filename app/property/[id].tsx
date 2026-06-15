@@ -420,15 +420,15 @@ export default function PropertyDetailScreen() {
               ))}
             </View>
           )}
-          <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 28 }}>{formatPrice(listing.priceAzn)}</Text>
-          <Text style={{ color: "rgba(255,255,255,0.92)", fontFamily: font.semibold, fontSize: 15 }}>
+          <Text style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.extrabold, fontSize: 28, textShadowColor: "rgba(0,0,0,0.5)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 }}>{formatPrice(listing.priceAzn)}</Text>
+          <Text style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.semibold, fontSize: 15, textShadowColor: "rgba(0,0,0,0.45)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }}>
             {[!isLandType(listing.propertyType) ? `${listing.rooms} ${t("home.roomsUnit")}` : null, formatArea(listing, t)]
               .filter(Boolean)
               .join("  •  ")}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Ionicons name="location-outline" size={15} color="#FFFFFF" />
-            <Text style={{ color: "rgba(255,255,255,0.92)", fontFamily: font.regular, fontSize: 14 }}>{listing.district}</Text>
+            <Text style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 14, textShadowColor: "rgba(0,0,0,0.45)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }}>{listing.district}</Text>
           </View>
         </View>
       </Animated.View>
