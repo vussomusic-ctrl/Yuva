@@ -368,9 +368,9 @@ export default function PropertyDetailScreen() {
 
         {/* Dark fade just above the collapsed card so the white info stays legible */}
         <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.55)", "rgba(0,0,0,0.9)"]}
-          locations={[0, 0.8, 1]}
-          style={{ position: "absolute", left: 0, right: 0, bottom: collapsedGap - 28, height: 248 }}
+          colors={["transparent", "rgba(0,0,0,0.55)", "rgba(0,0,0,0.92)"]}
+          locations={[0, 0.78, 1]}
+          style={{ position: "absolute", left: 0, right: 0, bottom: collapsedGap - 40, height: 260 }}
           pointerEvents="none"
         />
 
