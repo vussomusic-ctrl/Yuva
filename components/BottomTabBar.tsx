@@ -1,8 +1,6 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, Image } from "react-native";
 import Animated, { useDerivedValue, useAnimatedStyle, interpolate, Extrapolation, type SharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { useRouter, Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -15,23 +13,23 @@ import { useScrollCtx } from "../lib/scrollContext";
 // Derive the prop type from expo-router's Tabs (v56 vendors its own bottom-tabs).
 type BottomTabBarProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>["tabBar"]>>[0];
 
-const TAB_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; active: keyof typeof Ionicons.glyphMap; labelKey: string }> = {
-  home: { icon: "home-outline", active: "home", labelKey: "tabs.home" },
-  search: { icon: "search-outline", active: "search", labelKey: "tabs.search" },
-  chat: { icon: "chatbubble-outline", active: "chatbubble", labelKey: "tabs.chat" },
-  profile: { icon: "person-outline", active: "person", labelKey: "tabs.profile" },
+const TAB_META: Record<string, { image: number; labelKey: string }> = {
+  home: { image: require("../assets/icons/tab-icons/home.png"), labelKey: "tabs.home" },
+  search: { image: require("../assets/icons/tab-icons/search.png"), labelKey: "tabs.search" },
+  chat: { image: require("../assets/icons/tab-icons/chat.png"), labelKey: "tabs.chat" },
+  profile: { image: require("../assets/icons/tab-icons/profile.png"), labelKey: "tabs.profile" },
 };
 
 function TabItem({ meta, isFocused, tint, label, onPress, collapseProgress }: { meta: typeof TAB_META[string]; isFocused: boolean; tint: string; label: string; onPress: () => void; collapseProgress: SharedValue<number> }) {
   const press = usePressScale(0.9);
   const labelStyle = useAnimatedStyle(() => ({
     opacity: interpolate(collapseProgress.value, [0, 0.5], [1, 0], Extrapolation.CLAMP),
-    height: interpolate(collapseProgress.value, [0, 1], [15, 0], Extrapolation.CLAMP),
+    height: interpolate(collapseProgress.value, [0, 1], [13, 0], Extrapolation.CLAMP),
   }));
   return (
     <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 2 }}>
-      <Animated.View style={[{ alignItems: "center", gap: 2 }, press.style]}>
-        <Ionicons name={isFocused ? meta.active : meta.icon} size={24} color={tint} />
+      <Animated.View style={[{ alignItems: "center", gap: 2, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: isFocused ? "rgba(139,63,214,0.12)" : "transparent" }, press.style]}>
+        <Image source={meta.image} style={{ width: 26, height: 26 }} resizeMode="contain" />
         <Animated.View style={labelStyle}>
           <Text style={{ fontSize: 11, fontFamily: font.semibold, color: tint }}>{label}</Text>
         </Animated.View>
@@ -64,7 +62,7 @@ export default function BottomTabBar({ state, navigation }: BottomTabBarProps) {
   return (
     <Animated.View style={[{ position: "absolute", bottom: insets.bottom + 8, borderRadius: 30, shadowColor: brand.violet, shadowOffset: { width: 0, height: 6 }, shadowOpacity: mode === "dark" ? 0.3 : 0.18, shadowRadius: 20, elevation: 12 }, containerStyle]}>
       <View style={{ borderRadius: 30, overflow: "hidden", borderWidth: 1, borderColor: topBorder }}>
-        <BlurView intensity={mode === "dark" ? 40 : 50} tint={mode === "dark" ? "dark" : "light"} style={{ flexDirection: "row", backgroundColor: glassBg, paddingTop: 8, paddingBottom: 8, paddingHorizontal: 8 }}>
+        <BlurView intensity={mode === "dark" ? 40 : 50} tint={mode === "dark" ? "dark" : "light"} style={{ flexDirection: "row", backgroundColor: glassBg, paddingTop: 5, paddingBottom: 5, paddingHorizontal: 8 }}>
           {state.routes.map((route, index) => {
             const isFocused = state.index === index;
 
@@ -91,9 +89,7 @@ export default function BottomTabBar({ state, navigation }: BottomTabBarProps) {
       <View pointerEvents="box-none" style={{ position: "absolute", left: 0, right: 0, top: -22, alignItems: "center" }}>
         <Pressable onPress={() => router.push("/add-listing")} onPressIn={addPress.onPressIn} onPressOut={addPress.onPressOut}>
           <Animated.View style={addPress.style}>
-            <LinearGradient colors={brand.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", shadowColor: brand.violet, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 8 }}>
-              <Ionicons name="add" size={30} color="#FFFFFF" />
-            </LinearGradient>
+            <Image source={require("../assets/icons/tab-icons/plus.png")} style={{ width: 54, height: 54 }} resizeMode="contain" />
           </Animated.View>
         </Pressable>
       </View>
