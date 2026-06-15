@@ -120,7 +120,7 @@ export function usePressScale(pressedScale = 0.96) {
  * GestureDetector on the sheet's drag handle and `sheetStyle` to the
  * Animated.View. Snaps on release by position + fling velocity.
  */
-export function useDraggableSheet(collapsedY: number, expandedY: number) {
+export function useDraggableSheet(collapsedY: number, expandedY: number, midY: number) {
   const translateY = useSharedValue(collapsedY);
   const start = useSharedValue(collapsedY);
 
@@ -134,10 +134,23 @@ export function useDraggableSheet(collapsedY: number, expandedY: number) {
       translateY.value = Math.min(collapsedY, Math.max(expandedY, next));
     })
     .onEnd((e) => {
-      const mid = (collapsedY + expandedY) / 2;
-      const goExpanded = translateY.value < mid || e.velocityY < -500;
-      // Calm settle: higher damping + clamp overshoot so the sheet doesn't wobble.
-      translateY.value = withSpring(goExpanded ? expandedY : collapsedY, {
+      const v = e.velocityY;
+      const pos = translateY.value;
+      // Snap points ordered top(expanded) -> mid -> bottom(collapsed).
+      const points = [expandedY, midY, collapsedY];
+      let target: number;
+      if (v < -500) {
+        // Fast flick up: go to next point above current.
+        target = pos > midY + 1 ? midY : expandedY;
+      } else if (v > 500) {
+        // Fast flick down: go to next point below current.
+        target = pos < midY - 1 ? midY : collapsedY;
+      } else {
+        // Slow release: nearest of the three.
+        target = points.reduce((best, p) =>
+          Math.abs(p - pos) < Math.abs(best - pos) ? p : best, points[0]);
+      }
+      translateY.value = withSpring(target, {
         damping: 24,
         stiffness: 220,
         overshootClamping: true,
@@ -157,6 +170,7 @@ export function useSheetScrollGesture(
   translateY: SharedValue<number>,
   collapsedY: number,
   expandedY: number,
+  midY: number,
   scrollY: SharedValue<number>,
   scrollRef: React.RefObject<any>,
 ) {
@@ -191,9 +205,19 @@ export function useSheetScrollGesture(
     })
     .onEnd((e) => {
       if (!driving.value) return;
-      const mid = (collapsedY + expandedY) / 2;
-      const goExpanded = translateY.value < mid || e.velocityY < -500;
-      translateY.value = withSpring(goExpanded ? expandedY : collapsedY, {
+      const v = e.velocityY;
+      const pos = translateY.value;
+      const points = [expandedY, midY, collapsedY];
+      let target: number;
+      if (v < -500) {
+        target = pos > midY + 1 ? midY : expandedY;
+      } else if (v > 500) {
+        target = pos < midY - 1 ? midY : collapsedY;
+      } else {
+        target = points.reduce((best, p) =>
+          Math.abs(p - pos) < Math.abs(best - pos) ? p : best, points[0]);
+      }
+      translateY.value = withSpring(target, {
         damping: 24,
         stiffness: 220,
         overshootClamping: true,

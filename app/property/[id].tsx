@@ -86,7 +86,8 @@ export default function PropertyDetailScreen() {
   // Expanded: card top sits just below the header buttons (~insets.top+8..48),
   // covering the top-left promo badge (insets.top+56) — nothing peeks above.
   const expandedSheetY = insets.top + 50;
-  const { pan: sheetPan, sheetStyle, translateY: sheetTranslateY } = useDraggableSheet(collapsedSheetY, expandedSheetY);
+  const midSheetY = Math.round(collapsedSheetY - (collapsedSheetY - expandedSheetY) * 0.45);
+  const { pan: sheetPan, sheetStyle, translateY: sheetTranslateY } = useDraggableSheet(collapsedSheetY, expandedSheetY, midSheetY);
 
   const { isFavorite, toggle } = useFavorites();
   const { user } = useAuth();
@@ -112,6 +113,7 @@ export default function PropertyDetailScreen() {
     sheetTranslateY,
     collapsedSheetY,
     expandedSheetY,
+    midSheetY,
     scrollY,
     scrollRef,
   );
@@ -154,13 +156,13 @@ export default function PropertyDetailScreen() {
     const finishTop = height - insets.bottom - 42 - 20; // button center Y minus half heart (40/2)
     const tx = interpolate(
       sheetTranslateY.value,
-      [collapsedSheetY, expandedSheetY],
+      [midSheetY, expandedSheetY],
       [0, finishLeft - startLeft],
       "clamp",
     );
     const ty = interpolate(
       sheetTranslateY.value,
-      [collapsedSheetY, expandedSheetY],
+      [midSheetY, expandedSheetY],
       [0, finishTop - startTop],
       "clamp",
     );
@@ -171,7 +173,7 @@ export default function PropertyDetailScreen() {
     // Button shrinks to free the heart slot as the sheet expands (heart lands).
     const ml = interpolate(
       sheetTranslateY.value,
-      [collapsedSheetY, expandedSheetY],
+      [midSheetY, expandedSheetY],
       [0, 64],
       "clamp",
     );
