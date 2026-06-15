@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, Image, Pressable, Alert } from "react-native";
-import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler, withSpring } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -97,7 +97,7 @@ export default function ChatListScreen() {
   // neither (no conversations).
   useFocusEffect(
     useCallback(() => {
-      scrollY.value = 0; // reset bar to expanded on focus
+      scrollY.value = withSpring(0, { damping: 18, stiffness: 120 }); // expand bar on focus
       load();
       if (!user) return;
       const unsub = subscribeMyConversations(onListInsert);

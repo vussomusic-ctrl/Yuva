@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { View, Text, Image, Pressable, Switch } from "react-native";
-import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler, withSpring } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,7 +25,7 @@ export default function ProfileScreen() {
   const { session, profile, signOut } = useAuth();
   const { scrollY } = useScrollCtx();
   const scrollHandler = useAnimatedScrollHandler((e) => { scrollY.value = e.contentOffset.y; });
-  useFocusEffect(useCallback(() => { scrollY.value = 0; return () => {}; }, [scrollY]));
+  useFocusEffect(useCallback(() => { scrollY.value = withSpring(0, { damping: 18, stiffness: 120 }); return () => {}; }, [scrollY]));
 
   const loggedIn = !!session;
   const displayName = profile?.full_name || session?.user?.email || t("profile.guest");

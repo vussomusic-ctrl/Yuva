@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { View, Text, Pressable } from "react-native";
-import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler, withSpring } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -57,7 +57,7 @@ export default function SearchScreen() {
   }, []);
   const { scrollY } = useScrollCtx();
   const scrollHandler = useAnimatedScrollHandler((e) => { scrollY.value = e.contentOffset.y; });
-  useFocusEffect(useCallback(() => { scrollY.value = 0; load(); }, [load, scrollY]));
+  useFocusEffect(useCallback(() => { scrollY.value = withSpring(0, { damping: 18, stiffness: 120 }); load(); }, [load, scrollY]));
   const loading = feed === null && !error;
 
   // Stable per-load rotation for the Premium/VIP bands so paid listings share

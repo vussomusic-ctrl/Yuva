@@ -8,7 +8,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler, withSpring } from "react-native-reanimated";
 import { useScrollCtx } from "../../lib/scrollContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -75,7 +75,7 @@ export default function HomeScreen() {
   }, []);
   useFocusEffect(
     useCallback(() => {
-      scrollY.value = 0; // reset bar to expanded on focus
+      scrollY.value = withSpring(0, { damping: 18, stiffness: 120 }); // expand bar on focus
       load();
       // Live unread count for the bell — guests have none.
       if (session) unreadCount().then(setUnread).catch(() => setUnread(0));
