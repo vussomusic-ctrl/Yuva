@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, Image, Pressable, FlatList, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -34,6 +34,7 @@ const formatListTime = (iso: string) => {
 };
 
 export default function ChatListScreen() {
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
@@ -119,7 +120,7 @@ export default function ChatListScreen() {
           data={list ?? []}
           keyExtractor={(c) => c.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 16, flexGrow: 1 }}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 96, flexGrow: 1 }}
           ItemSeparatorComponent={() => (
             <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 84 }} />
           )}

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { View, Text, FlatList, Pressable } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -31,6 +31,7 @@ const SORTS: { key: SortKey; labelKey: string }[] = [
 ];
 
 export default function SearchScreen() {
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { current: lang } = useLanguage();
   const { colors } = useTheme();
@@ -148,7 +149,7 @@ export default function SearchScreen() {
           data={results}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, flexGrow: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 96, flexGrow: 1 }}
           ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
           ListHeaderComponent={
             results.length > 0 ? (

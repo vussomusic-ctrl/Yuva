@@ -7,7 +7,7 @@ import {
   ScrollView,
   useWindowDimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -48,6 +48,7 @@ const CATEGORY_TINT: Record<string, { light: string; dark: string }> = {
 };
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { colors, mode } = useTheme();
   const router = useRouter();
@@ -166,7 +167,7 @@ export default function HomeScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24, gap: 24 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 96, gap: 24 }}
       >
         {/* Categories — first content under the header (clean showcase) */}
         <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, marginTop: 4 }}>

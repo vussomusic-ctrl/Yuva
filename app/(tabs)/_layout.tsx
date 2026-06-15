@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { BottomTabBar } from "../../components/BottomTabBar";
+import BottomTabBar from "../../components/BottomTabBar";
 
 // Order here defines the tab order: Home · Search · Add · Chat · Profile.
 // All visuals (icons, labels, active tint, raised Add button) live in BottomTabBar.

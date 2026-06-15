@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Text, Image, Pressable, ScrollView, Switch } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -14,6 +14,7 @@ import { BottomSheet } from "../../components/BottomSheet";
 import { useAuth } from "../../lib/auth";
 
 export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { colors, mode, toggleTheme } = useTheme();
   const router = useRouter();
@@ -33,7 +34,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}>
         {/* Contextual header: avatar (with upload affordance) + name + role. No logo. */}
         <View style={{ alignItems: "center", paddingTop: 16, paddingBottom: 8, gap: 10 }}>
           <Pressable onPress={() => router.push("/edit-profile")}>

@@ -1,115 +1,85 @@
 import { View, Text, Pressable } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import { useRouter, Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
-
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
+import { usePressScale } from "../lib/animations";
 
 // Derive the prop type from expo-router's Tabs (v56 vendors its own bottom-tabs).
-type TabBarProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>["tabBar"]>>[0];
+type BottomTabBarProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>["tabBar"]>>[0];
 
-type TabMeta = {
-  icon: keyof typeof Ionicons.glyphMap;
-  activeIcon: keyof typeof Ionicons.glyphMap;
-  labelKey: string;
+const TAB_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; active: keyof typeof Ionicons.glyphMap; labelKey: string }> = {
+  home: { icon: "home-outline", active: "home", labelKey: "tabs.home" },
+  search: { icon: "search-outline", active: "search", labelKey: "tabs.search" },
+  chat: { icon: "chatbubble-outline", active: "chatbubble", labelKey: "tabs.chat" },
+  profile: { icon: "person-outline", active: "person", labelKey: "tabs.profile" },
 };
 
-const TAB_META: Record<string, TabMeta> = {
-  home: { icon: "home-outline", activeIcon: "home", labelKey: "tabs.home" },
-  search: { icon: "search-outline", activeIcon: "search", labelKey: "tabs.search" },
-  chat: { icon: "chatbubble-outline", activeIcon: "chatbubble", labelKey: "tabs.chat" },
-  profile: { icon: "person-outline", activeIcon: "person", labelKey: "tabs.profile" },
-};
+function TabItem({ meta, isFocused, tint, label, onPress }: { meta: typeof TAB_META[string]; isFocused: boolean; tint: string; label: string; onPress: () => void }) {
+  const press = usePressScale(0.9);
+  return (
+    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 2 }}>
+      <Animated.View style={[{ alignItems: "center", gap: 2 }, press.style]}>
+        <Ionicons name={isFocused ? meta.active : meta.icon} size={24} color={tint} />
+        <Text style={{ fontSize: 11, fontFamily: font.semibold, color: tint }}>{label}</Text>
+        <View style={{ width: 16, height: 3, borderRadius: 2, marginTop: 0, backgroundColor: isFocused ? brand.violet : "transparent" }} />
+      </Animated.View>
+    </Pressable>
+  );
+}
 
-export function BottomTabBar({ state, navigation }: TabBarProps) {
-  const { t } = useTranslation();
-  const { colors } = useTheme();
+export default function BottomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { t } = useTranslation();
+  const { colors, mode } = useTheme();
+  const addPress = usePressScale(0.92);
+
+  const glassBg = mode === "dark" ? "rgba(30,22,45,0.72)" : "rgba(250,245,255,0.82)";
+  const topBorder = mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.5)";
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: colors.tabBar,
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
-        paddingTop: 10,
-        paddingBottom: insets.bottom + 8,
-        paddingHorizontal: 8,
-      }}
-    >
-      {state.routes.map((route, index) => {
-        const isFocused = state.index === index;
+    <View style={{ position: "absolute", left: 16, right: 16, bottom: insets.bottom + 8, borderRadius: 30, shadowColor: brand.violet, shadowOffset: { width: 0, height: 6 }, shadowOpacity: mode === "dark" ? 0.3 : 0.18, shadowRadius: 20, elevation: 12 }}>
+      <View style={{ borderRadius: 30, overflow: "hidden", borderWidth: 1, borderColor: topBorder }}>
+        <BlurView intensity={mode === "dark" ? 40 : 50} tint={mode === "dark" ? "dark" : "light"} style={{ flexDirection: "row", backgroundColor: glassBg, paddingTop: 8, paddingBottom: 8, paddingHorizontal: 8 }}>
+          {state.routes.map((route, index) => {
+            const isFocused = state.index === index;
 
-        // Center Add — a raised gradient action that opens Add Listing as a modal.
-        if (route.name === "add") {
-          return (
-            <Pressable
-              key={route.key}
-              accessibilityRole="button"
-              accessibilityLabel={t("tabs.add")}
-              onPress={() => router.push("/add-listing")}
-              style={{ flex: 1, alignItems: "center" }}
-            >
-              <LinearGradient
-                colors={brand.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 28,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginTop: -26,
-                  shadowColor: brand.violet,
-                  shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: 0.4,
-                  shadowRadius: 12,
-                  elevation: 6,
-                }}
-              >
-                <Ionicons name="add" size={30} color="#FFFFFF" />
-              </LinearGradient>
-            </Pressable>
-          );
-        }
+            // Center slot is a spacer — the raised + is rendered outside the clip layer.
+            if (route.name === "add") {
+              return <View key={route.key} style={{ flex: 1 }} />;
+            }
 
-        const meta = TAB_META[route.name];
-        if (!meta) return null;
+            const meta = TAB_META[route.name];
+            if (!meta) return <View key={route.key} style={{ flex: 1 }} />;
 
-        const onPress = () => {
-          const event = navigation.emit({
-            type: "tabPress",
-            target: route.key,
-            canPreventDefault: true,
-          });
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
-          }
-        };
+            const tint = isFocused ? brand.violet : colors.tabInactive;
+            const onPress = () => {
+              const event = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true });
+              if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
+            };
 
-        const tint = isFocused ? brand.violet : colors.tabInactive;
+            return <TabItem key={route.key} meta={meta} isFocused={isFocused} tint={tint} label={t(meta.labelKey)} onPress={onPress} />;
+          })}
+        </BlurView>
+      </View>
 
-        return (
-          <Pressable
-            key={route.key}
-            accessibilityRole="button"
-            accessibilityState={isFocused ? { selected: true } : {}}
-            accessibilityLabel={t(meta.labelKey)}
-            onPress={onPress}
-            style={{ flex: 1, alignItems: "center", gap: 4, paddingVertical: 4 }}
-          >
-            <Ionicons name={isFocused ? meta.activeIcon : meta.icon} size={24} color={tint} />
-            <Text style={{ fontSize: 11, fontWeight: "600", color: tint }}>{t(meta.labelKey)}</Text>
-          </Pressable>
-        );
-      })}
+      {/* Raised + — absolute sibling OUTSIDE the overflow:hidden layer (not clipped) */}
+      <View pointerEvents="box-none" style={{ position: "absolute", left: 0, right: 0, top: -22, alignItems: "center" }}>
+        <Pressable onPress={() => router.push("/add-listing")} onPressIn={addPress.onPressIn} onPressOut={addPress.onPressOut}>
+          <Animated.View style={addPress.style}>
+            <LinearGradient colors={brand.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", shadowColor: brand.violet, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 8 }}>
+              <Ionicons name="add" size={30} color="#FFFFFF" />
+            </LinearGradient>
+          </Animated.View>
+        </Pressable>
+      </View>
     </View>
   );
 }
