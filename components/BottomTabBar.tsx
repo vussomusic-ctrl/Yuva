@@ -1,5 +1,5 @@
 import { View, Text, Pressable } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, { useDerivedValue, useAnimatedStyle, interpolate, Extrapolation, type SharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -10,6 +10,7 @@ import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
 import { usePressScale } from "../lib/animations";
+import { useScrollCtx } from "../lib/scrollContext";
 
 // Derive the prop type from expo-router's Tabs (v56 vendors its own bottom-tabs).
 type BottomTabBarProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>["tabBar"]>>[0];
@@ -21,13 +22,19 @@ const TAB_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; active: k
   profile: { icon: "person-outline", active: "person", labelKey: "tabs.profile" },
 };
 
-function TabItem({ meta, isFocused, tint, label, onPress }: { meta: typeof TAB_META[string]; isFocused: boolean; tint: string; label: string; onPress: () => void }) {
+function TabItem({ meta, isFocused, tint, label, onPress, collapseProgress }: { meta: typeof TAB_META[string]; isFocused: boolean; tint: string; label: string; onPress: () => void; collapseProgress: SharedValue<number> }) {
   const press = usePressScale(0.9);
+  const labelStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(collapseProgress.value, [0, 0.5], [1, 0], Extrapolation.CLAMP),
+    height: interpolate(collapseProgress.value, [0, 1], [15, 0], Extrapolation.CLAMP),
+  }));
   return (
     <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 2 }}>
       <Animated.View style={[{ alignItems: "center", gap: 2 }, press.style]}>
         <Ionicons name={isFocused ? meta.active : meta.icon} size={24} color={tint} />
-        <Text style={{ fontSize: 11, fontFamily: font.semibold, color: tint }}>{label}</Text>
+        <Animated.View style={labelStyle}>
+          <Text style={{ fontSize: 11, fontFamily: font.semibold, color: tint }}>{label}</Text>
+        </Animated.View>
         <View style={{ width: 16, height: 3, borderRadius: 2, marginTop: 0, backgroundColor: isFocused ? brand.violet : "transparent" }} />
       </Animated.View>
     </Pressable>
@@ -40,12 +47,22 @@ export default function BottomTabBar({ state, navigation }: BottomTabBarProps) {
   const { t } = useTranslation();
   const { colors, mode } = useTheme();
   const addPress = usePressScale(0.92);
+  const { scrollY } = useScrollCtx();
+
+  // Collapse on scroll: 0 = expanded, 1 = collapsed (over the first 80px of scroll).
+  const collapseProgress = useDerivedValue(() => interpolate(scrollY.value, [0, 80], [0, 1], Extrapolation.CLAMP));
+
+  // Side margins grow as the bar collapses → panel narrows toward the center (+ stays anchored).
+  const containerStyle = useAnimatedStyle(() => {
+    const sideMargin = interpolate(collapseProgress.value, [0, 1], [16, 70]);
+    return { left: sideMargin, right: sideMargin };
+  });
 
   const glassBg = mode === "dark" ? "rgba(30,22,45,0.72)" : "rgba(250,245,255,0.82)";
   const topBorder = mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.5)";
 
   return (
-    <View style={{ position: "absolute", left: 16, right: 16, bottom: insets.bottom + 8, borderRadius: 30, shadowColor: brand.violet, shadowOffset: { width: 0, height: 6 }, shadowOpacity: mode === "dark" ? 0.3 : 0.18, shadowRadius: 20, elevation: 12 }}>
+    <Animated.View style={[{ position: "absolute", bottom: insets.bottom + 8, borderRadius: 30, shadowColor: brand.violet, shadowOffset: { width: 0, height: 6 }, shadowOpacity: mode === "dark" ? 0.3 : 0.18, shadowRadius: 20, elevation: 12 }, containerStyle]}>
       <View style={{ borderRadius: 30, overflow: "hidden", borderWidth: 1, borderColor: topBorder }}>
         <BlurView intensity={mode === "dark" ? 40 : 50} tint={mode === "dark" ? "dark" : "light"} style={{ flexDirection: "row", backgroundColor: glassBg, paddingTop: 8, paddingBottom: 8, paddingHorizontal: 8 }}>
           {state.routes.map((route, index) => {
@@ -65,7 +82,7 @@ export default function BottomTabBar({ state, navigation }: BottomTabBarProps) {
               if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
             };
 
-            return <TabItem key={route.key} meta={meta} isFocused={isFocused} tint={tint} label={t(meta.labelKey)} onPress={onPress} />;
+            return <TabItem key={route.key} meta={meta} isFocused={isFocused} tint={tint} label={t(meta.labelKey)} onPress={onPress} collapseProgress={collapseProgress} />;
           })}
         </BlurView>
       </View>
@@ -80,6 +97,6 @@ export default function BottomTabBar({ state, navigation }: BottomTabBarProps) {
           </Animated.View>
         </Pressable>
       </View>
-    </View>
+    </Animated.View>
   );
 }

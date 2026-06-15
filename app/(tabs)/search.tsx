@@ -1,8 +1,10 @@
 import { useCallback, useMemo, useState } from "react";
-import { View, Text, FlatList, Pressable } from "react-native";
+import { View, Text, Pressable } from "react-native";
+import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
+import { useScrollCtx } from "../../lib/scrollContext";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
@@ -53,7 +55,9 @@ export default function SearchScreen() {
       .then(setFeed)
       .catch(() => setError(true));
   }, []);
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  const { scrollY } = useScrollCtx();
+  const scrollHandler = useAnimatedScrollHandler((e) => { scrollY.value = e.contentOffset.y; });
+  useFocusEffect(useCallback(() => { scrollY.value = 0; load(); }, [load, scrollY]));
   const loading = feed === null && !error;
 
   // Stable per-load rotation for the Premium/VIP bands so paid listings share
@@ -144,11 +148,13 @@ export default function SearchScreen() {
       ) : view === "map" ? (
         <SearchMap listings={results} onOpen={(id) => router.push(`/property/${id}`)} />
       ) : (
-        <FlatList
+        <Animated.FlatList
           style={{ flex: 1, marginTop: 12 }}
           data={results}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 96, flexGrow: 1 }}
           ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
           ListHeaderComponent={

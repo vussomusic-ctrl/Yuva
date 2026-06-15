@@ -8,7 +8,8 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
+import { useScrollCtx } from "../../lib/scrollContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -49,6 +50,10 @@ const CATEGORY_TINT: Record<string, { light: string; dark: string }> = {
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const { scrollY } = useScrollCtx();
+  const scrollHandler = useAnimatedScrollHandler((e) => {
+    scrollY.value = e.contentOffset.y;
+  });
   const { t } = useTranslation();
   const { colors, mode } = useTheme();
   const router = useRouter();
@@ -70,11 +75,12 @@ export default function HomeScreen() {
   }, []);
   useFocusEffect(
     useCallback(() => {
+      scrollY.value = 0; // reset bar to expanded on focus
       load();
       // Live unread count for the bell — guests have none.
       if (session) unreadCount().then(setUnread).catch(() => setUnread(0));
       else setUnread(0);
-    }, [load, session]),
+    }, [load, session, scrollY]),
   );
 
   // Realtime: a new notification → instant dot (refetch the exact count so it
@@ -165,9 +171,11 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <ScrollView
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 96, gap: 24 }}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
       >
         {/* Categories — first content under the header (clean showcase) */}
         <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, marginTop: 4 }}>
@@ -246,7 +254,7 @@ export default function HomeScreen() {
             </View>
           </>
         )}
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }

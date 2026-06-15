@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text, Image, Pressable, FlatList, Alert } from "react-native";
+import { View, Text, Image, Pressable, Alert } from "react-native";
+import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useFocusEffect, useRouter } from "expo-router";
+import { useScrollCtx } from "../../lib/scrollContext";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
@@ -39,6 +41,8 @@ export default function ChatListScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
+  const { scrollY } = useScrollCtx();
+  const scrollHandler = useAnimatedScrollHandler((e) => { scrollY.value = e.contentOffset.y; });
 
   const [list, setList] = useState<ConversationListItem[] | null>(null);
   const [error, setError] = useState(false);
@@ -93,11 +97,12 @@ export default function ChatListScreen() {
   // neither (no conversations).
   useFocusEffect(
     useCallback(() => {
+      scrollY.value = 0; // reset bar to expanded on focus
       load();
       if (!user) return;
       const unsub = subscribeMyConversations(onListInsert);
       return unsub;
-    }, [load, user, onListInsert]),
+    }, [load, user, onListInsert, scrollY]),
   );
 
   const loading = list === null && !error;
@@ -116,10 +121,12 @@ export default function ChatListScreen() {
       ) : error ? (
         <ErrorState colors={colors} onRetry={load} />
       ) : (
-        <FlatList
+        <Animated.FlatList
           data={list ?? []}
           keyExtractor={(c) => c.id}
           showsVerticalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
           contentContainerStyle={{ paddingBottom: insets.bottom + 96, flexGrow: 1 }}
           ItemSeparatorComponent={() => (
             <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 84 }} />

@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { View, Text, Image, Pressable, ScrollView, Switch } from "react-native";
+import { useCallback, useState } from "react";
+import { View, Text, Image, Pressable, Switch } from "react-native";
+import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useScrollCtx } from "../../lib/scrollContext";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
@@ -21,6 +23,9 @@ export default function ProfileScreen() {
   const { current, currentName, languages, setLanguage } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
   const { session, profile, signOut } = useAuth();
+  const { scrollY } = useScrollCtx();
+  const scrollHandler = useAnimatedScrollHandler((e) => { scrollY.value = e.contentOffset.y; });
+  useFocusEffect(useCallback(() => { scrollY.value = 0; return () => {}; }, [scrollY]));
 
   const loggedIn = !!session;
   const displayName = profile?.full_name || session?.user?.email || t("profile.guest");
@@ -34,7 +39,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}>
+      <Animated.ScrollView showsVerticalScrollIndicator={false} onScroll={scrollHandler} scrollEventThrottle={16} contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}>
         {/* Contextual header: avatar (with upload affordance) + name + role. No logo. */}
         <View style={{ alignItems: "center", paddingTop: 16, paddingBottom: 8, gap: 10 }}>
           <Pressable onPress={() => router.push("/edit-profile")}>
@@ -203,7 +208,7 @@ export default function ProfileScreen() {
             </Pressable>
           )}
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Language picker */}
       <BottomSheet visible={langOpen} onClose={() => setLangOpen(false)}>
