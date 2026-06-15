@@ -38,7 +38,7 @@ import { PhotoGallery } from "../../components/PhotoGallery";
 import ListingMiniMap from "../../components/ListingMiniMap";
 import Animated, { useAnimatedScrollHandler, useSharedValue, useAnimatedRef, useAnimatedReaction, runOnJS, useAnimatedStyle, interpolate } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
-import { useDraggableSheet, useSheetScrollGesture } from "../../lib/animations";
+import { useDraggableSheet, useSheetScrollGesture, usePressScale } from "../../lib/animations";
 import { Header } from "../my-listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { useLanguage } from "../../lib/i18n/languages";
@@ -88,6 +88,7 @@ export default function PropertyDetailScreen() {
   const expandedSheetY = insets.top + 50;
   const midSheetY = Math.round(collapsedSheetY - (collapsedSheetY - expandedSheetY) * 0.45);
   const { pan: sheetPan, sheetStyle, translateY: sheetTranslateY } = useDraggableSheet(collapsedSheetY, expandedSheetY, midSheetY);
+  const contactPress = usePressScale(0.96);
 
   const { isFavorite, toggle } = useFavorites();
   const { user } = useAuth();
@@ -773,16 +774,23 @@ export default function PropertyDetailScreen() {
         }}
       >
         <Animated.View style={[{ flex: 1 }, contactBtnStyle]}>
-          <Pressable onPress={() => setContactSheet(true)} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.9 : 1 })}>
-            <LinearGradient
-              colors={brand.gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{ height: 56, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
-            >
-              <Ionicons name="chatbubble-ellipses-outline" size={20} color="#FFFFFF" />
-              <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 16 }}>{t("propertyDetail.contactButton")}</Text>
-            </LinearGradient>
+          <Pressable
+            onPress={() => setContactSheet(true)}
+            onPressIn={contactPress.onPressIn}
+            onPressOut={contactPress.onPressOut}
+            style={{ flex: 1 }}
+          >
+            <Animated.View style={contactPress.style}>
+              <LinearGradient
+                colors={brand.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ height: 56, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
+              >
+                <Ionicons name="chatbubble-ellipses-outline" size={20} color="#FFFFFF" />
+                <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 16 }}>{t("propertyDetail.contactButton")}</Text>
+              </LinearGradient>
+            </Animated.View>
           </Pressable>
         </Animated.View>
       </View>
