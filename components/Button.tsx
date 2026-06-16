@@ -23,7 +23,17 @@ export function PrimaryButton({ label, onPress, disabled, style }: Props) {
         colors={brand.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={{ paddingVertical: 16, borderRadius: 16, alignItems: "center", opacity: disabled ? 0.45 : 1 }}
+        style={{
+          paddingVertical: 16,
+          borderRadius: 16,
+          alignItems: "center",
+          opacity: disabled ? 0.45 : 1,
+          shadowColor: brand.magenta,
+          shadowOpacity: 0.35,
+          shadowRadius: 16,
+          shadowOffset: { width: 0, height: 8 },
+          elevation: 6,
+        }}
       >
         <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 17 }}>{label}</Text>
       </LinearGradient>

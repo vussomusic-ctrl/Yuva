@@ -6,6 +6,18 @@ export const brand = {
   gradient: ["#8B3FD6", "#EC2D8E"] as const,
 };
 
+// Pastel surface tints + matching shadow colors for raised "clay/3D" cards.
+// Light-mode values; dark currently mirrors them (revisit per-theme later).
+export const tints = {
+  violet: { bg: "#F3EDFB", shadow: "#8B3FD6" },
+  blue: { bg: "#EAF1FC", shadow: "#2E7FE8" },
+  green: { bg: "#ECF7EE", shadow: "#3DB06B" },
+  peach: { bg: "#FCF1E8", shadow: "#F5921E" },
+  magenta: { bg: "#FCEAF3", shadow: "#EC2D8E" },
+} as const;
+
+export type TintKey = keyof typeof tints;
+
 export type Theme = {
   bg: string;
   card: string;

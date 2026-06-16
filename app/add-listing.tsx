@@ -566,12 +566,19 @@ export default function AddListingModal() {
 
       {/* Progress bar */}
       <View style={{ flexDirection: "row", gap: 6, paddingHorizontal: 16, paddingBottom: 12 }}>
-        {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-          <View
-            key={i}
-            style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: i < step ? brand.violet : colors.border }}
-          />
-        ))}
+        {Array.from({ length: TOTAL_STEPS }, (_, i) =>
+          i < step ? (
+            <LinearGradient
+              key={i}
+              colors={brand.gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ flex: 1, height: 4, borderRadius: 2 }}
+            />
+          ) : (
+            <View key={i} style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+          ),
+        )}
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
