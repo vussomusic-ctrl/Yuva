@@ -23,6 +23,7 @@ import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
 import { Segmented } from "../components/Segmented";
+import EnumField from "../components/EnumPickerSheet";
 import { RegionPickerSheet } from "../components/RegionPickerSheet";
 import { BottomSheet } from "../components/BottomSheet";
 import { PropertyCard } from "../components/PropertyCard";
@@ -86,6 +87,13 @@ export default function AddListingModal() {
   const [metroId, setMetroId] = useState<string | null>(null);
   const [phoneLocal, setPhoneLocal] = useState(""); // local part; "+994" prefix is fixed in UI
   const [telegram, setTelegram] = useState("");
+  // Characteristics (step 5)
+  const [buildingSeries, setBuildingSeries] = useState<string | null>(null);
+  const [complexName, setComplexName] = useState("");
+  const [builtYear, setBuiltYear] = useState("");
+  const [material, setMaterial] = useState<string | null>(null);
+  const [renovation, setRenovation] = useState<string | null>(null);
+  const [heating, setHeating] = useState<string | null>(null);
   const [furnished, setFurnished] = useState(false);
   const [mortgage, setMortgage] = useState(false);
   const [description, setDescription] = useState("");
@@ -134,6 +142,12 @@ export default function AddListingModal() {
         // Strip +994 / country code / leading zeros → local part for the input.
         setPhoneLocal((f.phone ?? "").replace(/[^\d]/g, "").replace(/^994/, "").replace(/^0+/, ""));
         setTelegram(f.telegram ?? "");
+        setBuildingSeries(f.buildingSeries ?? null);
+        setComplexName(f.complexName ?? "");
+        setBuiltYear(f.builtYear ?? "");
+        setMaterial(f.material ?? null);
+        setRenovation(f.renovation ?? null);
+        setHeating(f.heating ?? null);
         setFurnished(f.furnished);
         setMortgage(f.mortgage);
         setDescription(f.description);
@@ -160,6 +174,14 @@ export default function AddListingModal() {
   }, [editStatus]);
 
   const isLand = propertyType === "land";
+  const isResidential = propertyType === "apartment" || propertyType === "house";
+
+  // Enum options for the characteristics dropdowns (labels via i18n).
+  const opts = (group: string, keys: string[]) => keys.map((k) => ({ key: k, label: t(`addListing.${group}.${k}`) }));
+  const SERIES_OPTS = opts("seriesOpts", ["kiev", "leningrad", "stalinka", "khrushchevka", "other"]);
+  const MATERIAL_OPTS = opts("materialOpts", ["monolith", "brick", "panel", "block", "other"]);
+  const RENOVATION_OPTS = opts("renovationOpts", ["euro", "designer", "cosmetic", "rough", "none"]);
+  const HEATING_OPTS = opts("heatingOpts", ["kombi", "central", "gas", "none"]);
 
   // Location field label: region name, or "Bakı › Area" when inside Baku.
   const locationLabel = (() => {
@@ -344,6 +366,12 @@ export default function AddListingModal() {
       district: placeId ? placeName(placeById(placeId)!, "az") : "",
       phone: `+994${phoneLocal}`,
       telegram,
+      buildingSeries: propertyType === "apartment" && buildType === "secondary" ? buildingSeries : null,
+      complexName: propertyType === "apartment" ? complexName.trim() || undefined : undefined,
+      builtYear: propertyType === "house" ? builtYear || undefined : undefined,
+      material: propertyType === "house" ? material : null,
+      renovation: isResidential ? renovation : null,
+      heating: isResidential ? heating : null,
       furnished,
       mortgage,
       description,
@@ -666,11 +694,75 @@ export default function AddListingModal() {
 
           {step === 5 && (
             <View style={{ gap: 18, paddingTop: 4 }}>
-              <Section title={t("addListing.step5Title")} colors={colors}>
-                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
-                  {t("addListing.comingSoon")}
-                </Text>
-              </Section>
+              {isResidential ? (
+                <Section title={t("addListing.characteristics")} colors={colors}>
+                  {propertyType === "apartment" && (
+                    <>
+                      {buildType === "secondary" && (
+                        <Field label={t("addListing.seriesLabel")} colors={colors}>
+                          <EnumField
+                            label={t("addListing.seriesLabel")}
+                            value={buildingSeries}
+                            options={SERIES_OPTS}
+                            onChange={setBuildingSeries}
+                            placeholder={t("addListing.notSelected")}
+                          />
+                        </Field>
+                      )}
+                      <Field label={t("addListing.complexName")} colors={colors}>
+                        <Input
+                          colors={colors}
+                          value={complexName}
+                          onChangeText={setComplexName}
+                          placeholder={t("addListing.complexNamePlaceholder")}
+                        />
+                      </Field>
+                    </>
+                  )}
+
+                  {propertyType === "house" && (
+                    <>
+                      <Field label={t("addListing.materialLabel")} colors={colors}>
+                        <EnumField
+                          label={t("addListing.materialLabel")}
+                          value={material}
+                          options={MATERIAL_OPTS}
+                          onChange={setMaterial}
+                          placeholder={t("addListing.notSelected")}
+                        />
+                      </Field>
+                      <Field label={t("addListing.builtYear")} colors={colors}>
+                        <Input colors={colors} value={builtYear} onChangeText={setBuiltYear} placeholder="2020" keyboardType="numeric" />
+                      </Field>
+                    </>
+                  )}
+
+                  <Field label={t("addListing.renovationLabel")} colors={colors}>
+                    <EnumField
+                      label={t("addListing.renovationLabel")}
+                      value={renovation}
+                      options={RENOVATION_OPTS}
+                      onChange={setRenovation}
+                      placeholder={t("addListing.notSelected")}
+                    />
+                  </Field>
+                  <Field label={t("addListing.heatingLabel")} colors={colors}>
+                    <EnumField
+                      label={t("addListing.heatingLabel")}
+                      value={heating}
+                      options={HEATING_OPTS}
+                      onChange={setHeating}
+                      placeholder={t("addListing.notSelected")}
+                    />
+                  </Field>
+                </Section>
+              ) : (
+                <Section title={t("addListing.step5Title")} colors={colors}>
+                  <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
+                    {t("addListing.comingSoon")}
+                  </Text>
+                </Section>
+              )}
             </View>
           )}
 

@@ -109,6 +109,13 @@ export type ListingFormInput = {
   description: string;
   lat: number | null;
   lng: number | null;
+  // Characteristics (step 5) — numeric kept as strings; enums string | null.
+  buildingSeries?: string | null;
+  complexName?: string;
+  builtYear?: string;
+  material?: string | null;
+  renovation?: string | null;
+  heating?: string | null;
 };
 
 // Form photo item. `existing` = already in DB (rowId + storagePath); `new` =
@@ -250,6 +257,13 @@ export function formToRow(form: ListingFormInput, ownerId: string) {
     furnished: isLand ? false : form.furnished,
     mortgage: form.mortgage,
     description: form.description.trim() || null,
+    // Characteristics (gated per property type in the form; written as-is).
+    building_series: form.buildingSeries ?? null,
+    complex_name: form.complexName ?? null,
+    built_year: form.builtYear ? Number(form.builtYear) : null,
+    material: form.material ?? null,
+    renovation: form.renovation ?? null,
+    heating: form.heating ?? null,
     contact_phone: form.phone.trim(),
     contact_telegram: form.telegram.trim() || null,
     contact_type: "owner" as const,
@@ -283,6 +297,12 @@ export function rowToForm(row: ListingRow): ListingFormInput {
     description: row.description ?? "",
     lat: row.lat,
     lng: row.lng,
+    buildingSeries: row.building_series,
+    complexName: row.complex_name ?? "",
+    builtYear: row.built_year != null ? String(row.built_year) : "",
+    material: row.material,
+    renovation: row.renovation,
+    heating: row.heating,
   };
 }
 

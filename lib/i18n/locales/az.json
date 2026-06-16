@@ -224,7 +224,42 @@
     "step6Title": "Şərait",
     "step7Title": "Əlaqə",
     "step8Title": "Önizləmə",
-    "comingSoon": "Tezliklə"
+    "comingSoon": "Tezliklə",
+    "characteristics": "Xüsusiyyətlər",
+    "seriesLabel": "Bina seriyası",
+    "complexName": "Yaşayış kompleksinin adı",
+    "complexNamePlaceholder": "məs. Port Baku",
+    "materialLabel": "Material",
+    "builtYear": "Tikilmə ili",
+    "renovationLabel": "Təmir",
+    "heatingLabel": "İstilik",
+    "seriesOpts": {
+      "kiev": "Kiyev",
+      "leningrad": "Leninqrad",
+      "stalinka": "Stalinka",
+      "khrushchevka": "Xruşşovka",
+      "other": "Digər"
+    },
+    "materialOpts": {
+      "monolith": "Monolit",
+      "brick": "Kərpic",
+      "panel": "Panel",
+      "block": "Blok",
+      "other": "Digər"
+    },
+    "renovationOpts": {
+      "euro": "Avroremont",
+      "designer": "Dizayner",
+      "cosmetic": "Kosmetik",
+      "rough": "Kobud",
+      "none": "Təmirsiz"
+    },
+    "heatingOpts": {
+      "kombi": "Kombi qazan",
+      "central": "Mərkəzi",
+      "gas": "Qaz",
+      "none": "Yoxdur"
+    }
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",

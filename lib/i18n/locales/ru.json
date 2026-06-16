@@ -224,7 +224,42 @@
     "step6Title": "Удобства",
     "step7Title": "Контакты",
     "step8Title": "Предпросмотр",
-    "comingSoon": "Скоро"
+    "comingSoon": "Скоро",
+    "characteristics": "Характеристики",
+    "seriesLabel": "Серия дома",
+    "complexName": "Название ЖК / проекта",
+    "complexNamePlaceholder": "напр. Port Baku",
+    "materialLabel": "Материал",
+    "builtYear": "Год постройки",
+    "renovationLabel": "Ремонт",
+    "heatingLabel": "Отопление",
+    "seriesOpts": {
+      "kiev": "Киевский",
+      "leningrad": "Ленинградский",
+      "stalinka": "Сталинка",
+      "khrushchevka": "Хрущёвка",
+      "other": "Другая"
+    },
+    "materialOpts": {
+      "monolith": "Монолит",
+      "brick": "Кирпич",
+      "panel": "Панель",
+      "block": "Блочный",
+      "other": "Другое"
+    },
+    "renovationOpts": {
+      "euro": "Евроремонт",
+      "designer": "Дизайнерский",
+      "cosmetic": "Косметический",
+      "rough": "Черновой",
+      "none": "Без ремонта"
+    },
+    "heatingOpts": {
+      "kombi": "Комби-котёл",
+      "central": "Центральное",
+      "gas": "Газовое",
+      "none": "Нет"
+    }
   },
   "search": {
     "resultsCount": "Найдено {{count}}",

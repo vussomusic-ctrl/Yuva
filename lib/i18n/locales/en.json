@@ -224,7 +224,42 @@
     "step6Title": "Amenities",
     "step7Title": "Contacts",
     "step8Title": "Preview",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "characteristics": "Characteristics",
+    "seriesLabel": "Building series",
+    "complexName": "Complex / project name",
+    "complexNamePlaceholder": "e.g. Port Baku",
+    "materialLabel": "Material",
+    "builtYear": "Year built",
+    "renovationLabel": "Renovation",
+    "heatingLabel": "Heating",
+    "seriesOpts": {
+      "kiev": "Kiev",
+      "leningrad": "Leningrad",
+      "stalinka": "Stalinka",
+      "khrushchevka": "Khrushchevka",
+      "other": "Other"
+    },
+    "materialOpts": {
+      "monolith": "Monolith",
+      "brick": "Brick",
+      "panel": "Panel",
+      "block": "Block",
+      "other": "Other"
+    },
+    "renovationOpts": {
+      "euro": "Euro",
+      "designer": "Designer",
+      "cosmetic": "Cosmetic",
+      "rough": "Rough",
+      "none": "None"
+    },
+    "heatingOpts": {
+      "kombi": "Kombi boiler",
+      "central": "Central",
+      "gas": "Gas",
+      "none": "None"
+    }
   },
   "search": {
     "resultsCount": "{{count}} listings found",
