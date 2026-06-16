@@ -179,6 +179,7 @@ create table if not exists public.listings (
   amenities      text[] not null default '{}',
   contact_phone  text,
   contact_telegram text,
+  contact_whatsapp text,
   contact_type   text check (contact_type in ('owner', 'agent')),
   status         text not null default 'active'
                    check (status in ('active', 'sold', 'archived', 'moderation')),

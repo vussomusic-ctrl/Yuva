@@ -46,6 +46,7 @@ export type ListingRow = {
   amenities: string[] | null;
   contact_phone: string | null;
   contact_telegram: string | null;
+  contact_whatsapp: string | null;
   // Extended characteristics (apartment / house)
   building_series: string | null;
   complex_name: string | null;
@@ -148,6 +149,7 @@ export function rowToListing(row: ListingRow): Listing {
     ownerId: row.owner_id,
     ownerPhone: row.contact_phone ?? "",
     ownerTelegram: row.contact_telegram ?? "",
+    ownerWhatsapp: row.contact_whatsapp ?? "",
     placeId: row.place_id ?? "",
     metroId: row.metro_id ?? undefined,
     dealType: row.deal_type,

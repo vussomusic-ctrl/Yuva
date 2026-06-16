@@ -34,6 +34,7 @@ export type Listing = {
   ownerId: string;
   ownerPhone: string;
   ownerTelegram?: string; // optional contact handle
+  ownerWhatsapp?: string; // optional WhatsApp number
   // Extended premium characteristics (all optional — populated from DB row).
   buildingSeries?: string;
   complexName?: string;
