@@ -5,7 +5,6 @@ import {
   Pressable,
   ScrollView,
   TextInput,
-  Switch,
   Image,
   Dimensions,
   KeyboardAvoidingView,
@@ -26,6 +25,7 @@ import Animated from "react-native-reanimated";
 import { Segmented } from "../components/Segmented";
 import EnumField from "../components/EnumPickerSheet";
 import { usePressScale } from "../lib/animations";
+import { ClayToggle } from "../components/ClayToggle";
 import { RegionPickerSheet } from "../components/RegionPickerSheet";
 import { BottomSheet } from "../components/BottomSheet";
 import { PropertyCard } from "../components/PropertyCard";
@@ -1517,13 +1517,7 @@ function ToggleRow({
   return (
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
       <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 16 }}>{label}</Text>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{ false: colors.border, true: brand.violet }}
-        thumbColor="#FFFFFF"
-        ios_backgroundColor={colors.border}
-      />
+      <ClayToggle value={value} onValueChange={onValueChange} />
     </View>
   );
 }
