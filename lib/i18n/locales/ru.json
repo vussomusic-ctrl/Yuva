@@ -167,9 +167,9 @@
   "addListing": {
     "title": "Подать объявление",
     "step1Title": "Фотографии",
-    "step2Title": "Тип",
-    "step3Title": "Детали",
-    "step4Title": "Предпросмотр",
+    "step2Title": "Тип объекта",
+    "step3Title": "Основное",
+    "step4Title": "Локация",
     "next": "Далее",
     "back": "Назад",
     "publish": "Опубликовать",
@@ -219,7 +219,12 @@
     "replaceDescMsg": "Текущий текст будет заменён",
     "replace": "Заменить",
     "errGenerate": "Не удалось сгенерировать. Попробуйте снова.",
-    "generateHint": "Заполните тип, площадь и локацию"
+    "generateHint": "Заполните тип, площадь и локацию",
+    "step5Title": "Характеристики",
+    "step6Title": "Удобства",
+    "step7Title": "Контакты",
+    "step8Title": "Предпросмотр",
+    "comingSoon": "Скоро"
   },
   "search": {
     "resultsCount": "Найдено {{count}}",

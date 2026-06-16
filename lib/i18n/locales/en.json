@@ -167,9 +167,9 @@
   "addListing": {
     "title": "Add listing",
     "step1Title": "Photos",
-    "step2Title": "Type",
-    "step3Title": "Details",
-    "step4Title": "Preview",
+    "step2Title": "Property type",
+    "step3Title": "Basics",
+    "step4Title": "Location",
     "next": "Next",
     "back": "Back",
     "publish": "Publish",
@@ -219,7 +219,12 @@
     "replaceDescMsg": "The current text will be replaced",
     "replace": "Replace",
     "errGenerate": "Couldn't generate. Please try again.",
-    "generateHint": "Fill in type, area and location"
+    "generateHint": "Fill in type, area and location",
+    "step5Title": "Characteristics",
+    "step6Title": "Amenities",
+    "step7Title": "Contacts",
+    "step8Title": "Preview",
+    "comingSoon": "Coming soon"
   },
   "search": {
     "resultsCount": "{{count}} listings found",

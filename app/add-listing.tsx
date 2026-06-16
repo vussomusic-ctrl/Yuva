@@ -44,7 +44,7 @@ import { ListingFormInput, PhotoItem, rowToForm, rowToPhotoItems } from "../lib/
 import { useAuth } from "../lib/auth";
 import { useMapPick } from "../lib/map-pick";
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 8;
 const GRID_GAP = 12;
 const PHOTO_SIZE = (Dimensions.get("window").width - 32 - GRID_GAP * 2) / 3;
 
@@ -307,14 +307,16 @@ export default function AddListingModal() {
   const phoneOk = phoneLocal.length === 9; // AZ mobile local part = exactly 9 digits
   const step1Valid = photos.length > 0;
   const step2Valid = propertyType != null;
-  const step3Valid =
-    Number(price) > 0 &&
-    Number(area) > 0 &&
-    (placeId != null || picked != null) && // a place OR a map pin is enough
-    phoneOk &&
-    (isLand || Number(rooms) > 0);
+  const step3Valid = Number(price) > 0 && Number(area) > 0 && (isLand || Number(rooms) > 0);
+  const step4Valid = placeId != null || picked != null; // a place OR a map pin
+  const step7Valid = phoneOk;
   const canNext =
-    step === 1 ? step1Valid : step === 2 ? step2Valid : step === 3 ? step3Valid : true;
+    step === 1 ? step1Valid
+    : step === 2 ? step2Valid
+    : step === 3 ? step3Valid
+    : step === 4 ? step4Valid
+    : step === 7 ? step7Valid
+    : true; // steps 5/6 (characteristics/amenities) + 8 (preview) — no gate
 
   const close = () => (router.canGoBack() ? router.back() : router.replace("/home"));
   const goNext = () => step < TOTAL_STEPS && canNext && setStep(step + 1);
@@ -381,6 +383,10 @@ export default function AddListingModal() {
     t("addListing.step2Title"),
     t("addListing.step3Title"),
     t("addListing.step4Title"),
+    t("addListing.step5Title"),
+    t("addListing.step6Title"),
+    t("addListing.step7Title"),
+    t("addListing.step8Title"),
   ][step];
 
   // Preview listing built from the current form (Step 4 + PropertyCard reuse).
@@ -578,6 +584,15 @@ export default function AddListingModal() {
                 </>
               )}
 
+              {!isLand && (
+                <ToggleRow colors={colors} label={t("filters.furnished")} value={furnished} onValueChange={setFurnished} />
+              )}
+              <ToggleRow colors={colors} label={t("filters.mortgage")} value={mortgage} onValueChange={setMortgage} />
+            </View>
+          )}
+
+          {step === 4 && (
+            <View style={{ gap: 18, paddingTop: 4 }}>
               {/* Location — cascading region → Baku area (+ optional metro) */}
               <Field label={t("addListing.locationLabel")} colors={colors}>
                 <Pressable
@@ -646,7 +661,31 @@ export default function AddListingModal() {
                   <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
                 </Pressable>
               </Field>
+            </View>
+          )}
 
+          {step === 5 && (
+            <View style={{ gap: 18, paddingTop: 4 }}>
+              <Section title={t("addListing.step5Title")} colors={colors}>
+                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
+                  {t("addListing.comingSoon")}
+                </Text>
+              </Section>
+            </View>
+          )}
+
+          {step === 6 && (
+            <View style={{ gap: 18, paddingTop: 4 }}>
+              <Section title={t("addListing.step6Title")} colors={colors}>
+                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
+                  {t("addListing.comingSoon")}
+                </Text>
+              </Section>
+            </View>
+          )}
+
+          {step === 7 && (
+            <View style={{ gap: 18, paddingTop: 4 }}>
               <Field label={t("addListing.phoneLabel")} colors={colors}>
                 <View
                   style={{
@@ -721,15 +760,10 @@ export default function AddListingModal() {
                   multiline
                 />
               </Field>
-
-              {!isLand && (
-                <ToggleRow colors={colors} label={t("filters.furnished")} value={furnished} onValueChange={setFurnished} />
-              )}
-              <ToggleRow colors={colors} label={t("filters.mortgage")} value={mortgage} onValueChange={setMortgage} />
             </View>
           )}
 
-          {step === 4 && (
+          {step === 8 && (
             <View style={{ gap: 16, paddingTop: 4 }}>
               <Text style={{ color: colors.textSecondary, fontFamily: font.semibold, fontSize: 14 }}>
                 {t("addListing.reviewTitle")}

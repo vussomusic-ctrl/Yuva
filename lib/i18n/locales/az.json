@@ -167,9 +167,9 @@
   "addListing": {
     "title": "Elan yerləşdir",
     "step1Title": "Şəkillər",
-    "step2Title": "Növ",
-    "step3Title": "Detallar",
-    "step4Title": "Önizləmə",
+    "step2Title": "Obyekt növü",
+    "step3Title": "Əsas",
+    "step4Title": "Yerləşmə",
     "next": "Növbəti",
     "back": "Geri",
     "publish": "Yerləşdir",
@@ -219,7 +219,12 @@
     "replaceDescMsg": "Cari mətn əvəz olunacaq",
     "replace": "Əvəz et",
     "errGenerate": "Yaratmaq alınmadı. Yenidən cəhd edin.",
-    "generateHint": "Növ, sahə və yerləşməni doldurun"
+    "generateHint": "Növ, sahə və yerləşməni doldurun",
+    "step5Title": "Xüsusiyyətlər",
+    "step6Title": "Şərait",
+    "step7Title": "Əlaqə",
+    "step8Title": "Önizləmə",
+    "comingSoon": "Tezliklə"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",
