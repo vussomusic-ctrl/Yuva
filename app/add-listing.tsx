@@ -87,6 +87,7 @@ export default function AddListingModal() {
   const [metroId, setMetroId] = useState<string | null>(null);
   const [phoneLocal, setPhoneLocal] = useState(""); // local part; "+994" prefix is fixed in UI
   const [telegram, setTelegram] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   // Characteristics (step 5)
   const [buildingSeries, setBuildingSeries] = useState<string | null>(null);
   const [complexName, setComplexName] = useState("");
@@ -142,6 +143,7 @@ export default function AddListingModal() {
         // Strip +994 / country code / leading zeros → local part for the input.
         setPhoneLocal((f.phone ?? "").replace(/[^\d]/g, "").replace(/^994/, "").replace(/^0+/, ""));
         setTelegram(f.telegram ?? "");
+        setWhatsapp(f.whatsapp ?? "");
         setBuildingSeries(f.buildingSeries ?? null);
         setComplexName(f.complexName ?? "");
         setBuiltYear(f.builtYear ?? "");
@@ -366,6 +368,7 @@ export default function AddListingModal() {
       district: placeId ? placeName(placeById(placeId)!, "az") : "",
       phone: `+994${phoneLocal}`,
       telegram,
+      whatsapp,
       buildingSeries: propertyType === "apartment" && buildType === "secondary" ? buildingSeries : null,
       complexName: propertyType === "apartment" ? complexName.trim() || undefined : undefined,
       builtYear: propertyType === "house" ? builtYear || undefined : undefined,
@@ -814,6 +817,16 @@ export default function AddListingModal() {
                 />
               </Field>
 
+              <Field label={t("addListing.whatsappLabel")} colors={colors}>
+                <Input
+                  colors={colors}
+                  value={whatsapp}
+                  onChangeText={setWhatsapp}
+                  placeholder={t("addListing.whatsappPlaceholder")}
+                  keyboardType="phone-pad"
+                />
+              </Field>
+
               <Field label={t("addListing.descriptionLabel")} colors={colors}>
                 <Pressable
                   onPress={() => setGenOpen(true)}
@@ -928,6 +941,9 @@ export default function AddListingModal() {
                 <SummaryRow colors={colors} label={t("addListing.phoneLabel")} value={`+994 ${phoneLocal}`} />
                 {telegram.trim() !== "" && (
                   <SummaryRow colors={colors} label={t("addListing.telegramLabel")} value={telegram.trim()} />
+                )}
+                {whatsapp.trim() !== "" && (
+                  <SummaryRow colors={colors} label={t("addListing.whatsappLabel")} value={whatsapp.trim()} />
                 )}
                 {!isLand && (
                   <SummaryRow colors={colors} label={t("filters.furnished")} value={furnished ? "✓" : "—"} />

@@ -259,7 +259,9 @@
       "central": "Центральное",
       "gas": "Газовое",
       "none": "Нет"
-    }
+    },
+    "whatsappLabel": "WhatsApp (необязательно)",
+    "whatsappPlaceholder": "+994 50 123 45 67"
   },
   "search": {
     "resultsCount": "Найдено {{count}}",

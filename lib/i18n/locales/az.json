@@ -259,7 +259,9 @@
       "central": "Mərkəzi",
       "gas": "Qaz",
       "none": "Yoxdur"
-    }
+    },
+    "whatsappLabel": "WhatsApp (istəyə bağlı)",
+    "whatsappPlaceholder": "+994 50 123 45 67"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",

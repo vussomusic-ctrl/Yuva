@@ -104,6 +104,7 @@ export type ListingFormInput = {
   district: string;
   phone: string;
   telegram: string;
+  whatsapp: string;
   furnished: boolean;
   mortgage: boolean;
   description: string;
@@ -266,6 +267,7 @@ export function formToRow(form: ListingFormInput, ownerId: string) {
     heating: form.heating ?? null,
     contact_phone: form.phone.trim(),
     contact_telegram: form.telegram.trim() || null,
+    contact_whatsapp: form.whatsapp.trim() || null,
     contact_type: "owner" as const,
   };
 }
@@ -292,6 +294,7 @@ export function rowToForm(row: ListingRow): ListingFormInput {
     district: row.district ?? "",
     phone: row.contact_phone ?? "",
     telegram: row.contact_telegram ?? "",
+    whatsapp: row.contact_whatsapp ?? "",
     furnished: row.furnished,
     mortgage: row.mortgage,
     description: row.description ?? "",

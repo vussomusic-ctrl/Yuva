@@ -259,7 +259,9 @@
       "central": "Central",
       "gas": "Gas",
       "none": "None"
-    }
+    },
+    "whatsappLabel": "WhatsApp (optional)",
+    "whatsappPlaceholder": "+994 50 123 45 67"
   },
   "search": {
     "resultsCount": "{{count}} listings found",
