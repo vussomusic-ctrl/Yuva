@@ -22,8 +22,10 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
+import Animated from "react-native-reanimated";
 import { Segmented } from "../components/Segmented";
 import EnumField from "../components/EnumPickerSheet";
+import { usePressScale } from "../lib/animations";
 import { RegionPickerSheet } from "../components/RegionPickerSheet";
 import { BottomSheet } from "../components/BottomSheet";
 import { PropertyCard } from "../components/PropertyCard";
@@ -46,13 +48,21 @@ import { useAuth } from "../lib/auth";
 import { useMapPick } from "../lib/map-pick";
 
 const TOTAL_STEPS = 8;
+
+// Premium type cards (step 2) — clay category icons + pastel tints per theme.
+const TYPE_CARDS: { type: PropertyTypeKey; icon: number; labelKey: string; tint: { light: string; dark: string } }[] = [
+  { type: "apartment", icon: require("../assets/icons/categories/menziller.png"), labelKey: "filters.typeApartment", tint: { light: "#F0E9FB", dark: "#241B33" } },
+  { type: "house", icon: require("../assets/icons/categories/evler.png"), labelKey: "filters.typeHouse", tint: { light: "#E5F0FB", dark: "#1A2530" } },
+  { type: "land", icon: require("../assets/icons/categories/torpaq.png"), labelKey: "filters.typeLand", tint: { light: "#E8F5EA", dark: "#1A2A1E" } },
+  { type: "object", icon: require("../assets/icons/categories/obyektler.png"), labelKey: "filters.typeObject", tint: { light: "#FBEFE5", dark: "#30251A" } },
+];
 const GRID_GAP = 12;
 const PHOTO_SIZE = (Dimensions.get("window").width - 32 - GRID_GAP * 2) / 3;
 
 export default function AddListingModal() {
   const { t } = useTranslation();
   const { current: lang, languages } = useLanguage();
-  const { colors } = useTheme();
+  const { colors, mode } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -532,11 +542,19 @@ export default function AddListingModal() {
                 />
               </Section>
               <Section title={t("filters.propertyType")} colors={colors}>
-                <Segmented
-                  options={PROPERTY_TYPES.map((p) => ({ key: p.key, label: t(p.labelKey) }))}
-                  value={propertyType ?? ""}
-                  onChange={(k) => setPropertyType(k as PropertyTypeKey)}
-                />
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                  {TYPE_CARDS.map((card) => (
+                    <TypeCard
+                      key={card.type}
+                      icon={card.icon}
+                      label={t(card.labelKey)}
+                      tint={card.tint[mode]}
+                      active={propertyType === card.type}
+                      colors={colors}
+                      onPress={() => setPropertyType(card.type)}
+                    />
+                  ))}
+                </View>
               </Section>
               {!isLand && (
                 <Section title={t("filters.buildType")} colors={colors}>
@@ -1234,6 +1252,54 @@ function Step1Photos({
 }
 
 // --- Shared local form bits ---
+function TypeCard({
+  icon,
+  label,
+  tint,
+  active,
+  colors,
+  onPress,
+}: {
+  icon: number;
+  label: string;
+  tint: string;
+  active: boolean;
+  colors: Theme;
+  onPress: () => void;
+}) {
+  const press = usePressScale(0.96);
+  return (
+    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={{ width: "48%" }}>
+      <Animated.View
+        style={[
+          {
+            aspectRatio: 1.15,
+            borderRadius: 20,
+            backgroundColor: active ? tint : colors.card,
+            borderWidth: 2,
+            borderColor: active ? brand.violet : "transparent",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            paddingVertical: 16,
+            shadowColor: active ? brand.violet : "#000",
+            shadowOpacity: active ? 0.18 : 0.05,
+            shadowRadius: active ? 12 : 6,
+            shadowOffset: { width: 0, height: active ? 4 : 2 },
+            elevation: active ? 4 : 1,
+          },
+          press.style,
+        ]}
+      >
+        <Image source={icon} style={{ width: 52, height: 52 }} resizeMode="contain" />
+        <Text numberOfLines={1} style={{ color: active ? brand.violet : colors.text, fontFamily: active ? font.bold : font.medium, fontSize: 14 }}>
+          {label}
+        </Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 function Section({ title, colors, children }: { title: string; colors: Theme; children: React.ReactNode }) {
   return (
     <View style={{ gap: 12 }}>
