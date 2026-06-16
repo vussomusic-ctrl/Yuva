@@ -34,6 +34,32 @@ export type Listing = {
   ownerId: string;
   ownerPhone: string;
   ownerTelegram?: string; // optional contact handle
+  // Extended premium characteristics (all optional — populated from DB row).
+  buildingSeries?: string;
+  complexName?: string;
+  builtYear?: number;
+  material?: string;
+  renovation?: string;
+  ceilingHeight?: number;
+  bathroomType?: string;
+  heating?: string;
+  garage?: boolean;
+  landPurpose?: string;
+  utilGas?: boolean;
+  utilWater?: boolean;
+  utilElectricity?: boolean;
+  utilSewage?: boolean;
+  roadAccess?: boolean;
+  commercialType?: string;
+  separateEntrance?: boolean;
+  shopfront?: boolean;
+  deposit?: number;
+  commission?: string;
+  utilitiesIncluded?: boolean;
+  kidsAllowed?: boolean;
+  petsAllowed?: boolean;
+  minTerm?: number;
+  prepayment?: number;
   placeId: string;
   metroId?: string;
   dealType: DealKey;

@@ -46,6 +46,35 @@ export type ListingRow = {
   amenities: string[] | null;
   contact_phone: string | null;
   contact_telegram: string | null;
+  // Extended characteristics (apartment / house)
+  building_series: string | null;
+  complex_name: string | null;
+  built_year: number | null;
+  material: string | null;
+  renovation: string | null;
+  ceiling_height: number | null;
+  bathroom_type: string | null;
+  heating: string | null;
+  garage: boolean;
+  // Land
+  land_purpose: string | null;
+  util_gas: boolean;
+  util_water: boolean;
+  util_electricity: boolean;
+  util_sewage: boolean;
+  road_access: boolean;
+  // Commercial
+  commercial_type: string | null;
+  separate_entrance: boolean;
+  shopfront: boolean;
+  // Rent terms
+  deposit: number | null;
+  commission: string | null;
+  utilities_included: boolean;
+  kids_allowed: boolean;
+  pets_allowed: boolean;
+  min_term: number | null;
+  prepayment: number | null;
   premium: boolean;
   promo_tier: "none" | "vip" | "premium";
   promoted_until: string | null;
@@ -127,6 +156,31 @@ export function rowToListing(row: ListingRow): Listing {
     baths: row.baths ?? 0,
     furnished: row.furnished,
     mortgage: row.mortgage,
+    buildingSeries: row.building_series ?? undefined,
+    complexName: row.complex_name ?? undefined,
+    builtYear: row.built_year ?? undefined,
+    material: row.material ?? undefined,
+    renovation: row.renovation ?? undefined,
+    ceilingHeight: row.ceiling_height ?? undefined,
+    bathroomType: row.bathroom_type ?? undefined,
+    heating: row.heating ?? undefined,
+    garage: row.garage ?? false,
+    landPurpose: row.land_purpose ?? undefined,
+    utilGas: row.util_gas ?? false,
+    utilWater: row.util_water ?? false,
+    utilElectricity: row.util_electricity ?? false,
+    utilSewage: row.util_sewage ?? false,
+    roadAccess: row.road_access ?? false,
+    commercialType: row.commercial_type ?? undefined,
+    separateEntrance: row.separate_entrance ?? false,
+    shopfront: row.shopfront ?? false,
+    deposit: row.deposit ?? undefined,
+    commission: row.commission ?? undefined,
+    utilitiesIncluded: row.utilities_included ?? false,
+    kidsAllowed: row.kids_allowed ?? false,
+    petsAllowed: row.pets_allowed ?? false,
+    minTerm: row.min_term ?? undefined,
+    prepayment: row.prepayment ?? undefined,
     createdAt: row.created_at,
     lat: row.lat ?? 0,
     lng: row.lng ?? 0,

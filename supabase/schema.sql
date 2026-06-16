@@ -178,6 +178,7 @@ create table if not exists public.listings (
   description    text,
   amenities      text[] not null default '{}',
   contact_phone  text,
+  contact_telegram text,
   contact_type   text check (contact_type in ('owner', 'agent')),
   status         text not null default 'active'
                    check (status in ('active', 'sold', 'archived', 'moderation')),
@@ -189,6 +190,35 @@ create table if not exists public.listings (
   promoted_until  timestamptz,                     -- vip/premium expiry; null = none
   bumps_remaining int not null default 0,          -- purchased boost balance
   last_bumped_at  timestamptz,                      -- last manual bump (search freshness)
+  -- Extended characteristics (apartment / house) ---------------------------
+  building_series   text check (building_series in ('kiev', 'leningrad', 'stalinka', 'khrushchevka', 'other')),
+  complex_name      text,
+  built_year        int,
+  material          text check (material in ('monolith', 'brick', 'panel', 'block', 'other')),
+  renovation        text check (renovation in ('euro', 'designer', 'cosmetic', 'rough', 'none')),
+  ceiling_height    numeric,
+  bathroom_type     text check (bathroom_type in ('combined', 'separate')),
+  heating           text check (heating in ('kombi', 'central', 'gas', 'none')),
+  garage            boolean not null default false,
+  -- Land -------------------------------------------------------------------
+  land_purpose      text check (land_purpose in ('residential', 'commercial', 'agricultural')),
+  util_gas          boolean not null default false,
+  util_water        boolean not null default false,
+  util_electricity  boolean not null default false,
+  util_sewage       boolean not null default false,
+  road_access       boolean not null default false,
+  -- Commercial -------------------------------------------------------------
+  commercial_type   text check (commercial_type in ('office', 'shop', 'warehouse', 'restaurant', 'beauty', 'other')),
+  separate_entrance boolean not null default false,
+  shopfront         boolean not null default false,
+  -- Rent terms -------------------------------------------------------------
+  deposit            numeric,
+  commission         text check (commission in ('none', 'half', 'full')),
+  utilities_included boolean not null default false,
+  kids_allowed       boolean not null default false,
+  pets_allowed       boolean not null default false,
+  min_term           int,
+  prepayment         int,
   views_count    int not null default 0,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
