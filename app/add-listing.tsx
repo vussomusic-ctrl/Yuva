@@ -105,6 +105,26 @@ export default function AddListingModal() {
   const [material, setMaterial] = useState<string | null>(null);
   const [renovation, setRenovation] = useState<string | null>(null);
   const [heating, setHeating] = useState<string | null>(null);
+  // Land
+  const [landPurpose, setLandPurpose] = useState<string | null>(null);
+  const [utilGas, setUtilGas] = useState(false);
+  const [utilWater, setUtilWater] = useState(false);
+  const [utilElectricity, setUtilElectricity] = useState(false);
+  const [utilSewage, setUtilSewage] = useState(false);
+  const [roadAccess, setRoadAccess] = useState(false);
+  // Commercial
+  const [commercialType, setCommercialType] = useState<string | null>(null);
+  const [separateEntrance, setSeparateEntrance] = useState(false);
+  const [shopfront, setShopfront] = useState(false);
+  // Rent terms
+  const [deposit, setDeposit] = useState("");
+  const [commissionPercent, setCommissionPercent] = useState("");
+  const [commissionNegotiable, setCommissionNegotiable] = useState(false);
+  const [utilitiesIncluded, setUtilitiesIncluded] = useState(false);
+  const [kidsAllowed, setKidsAllowed] = useState(false);
+  const [petsAllowed, setPetsAllowed] = useState(false);
+  const [minTerm, setMinTerm] = useState("");
+  const [prepayment, setPrepayment] = useState("");
   const [furnished, setFurnished] = useState(false);
   const [mortgage, setMortgage] = useState(false);
   const [description, setDescription] = useState("");
@@ -160,6 +180,23 @@ export default function AddListingModal() {
         setMaterial(f.material ?? null);
         setRenovation(f.renovation ?? null);
         setHeating(f.heating ?? null);
+        setLandPurpose(f.landPurpose ?? null);
+        setUtilGas(f.utilGas ?? false);
+        setUtilWater(f.utilWater ?? false);
+        setUtilElectricity(f.utilElectricity ?? false);
+        setUtilSewage(f.utilSewage ?? false);
+        setRoadAccess(f.roadAccess ?? false);
+        setCommercialType(f.commercialType ?? null);
+        setSeparateEntrance(f.separateEntrance ?? false);
+        setShopfront(f.shopfront ?? false);
+        setDeposit(f.deposit ?? "");
+        setCommissionPercent(f.commissionPercent ?? "");
+        setCommissionNegotiable(f.commissionNegotiable ?? false);
+        setUtilitiesIncluded(f.utilitiesIncluded ?? false);
+        setKidsAllowed(f.kidsAllowed ?? false);
+        setPetsAllowed(f.petsAllowed ?? false);
+        setMinTerm(f.minTerm ?? "");
+        setPrepayment(f.prepayment ?? "");
         setFurnished(f.furnished);
         setMortgage(f.mortgage);
         setDescription(f.description);
@@ -194,6 +231,10 @@ export default function AddListingModal() {
   const MATERIAL_OPTS = opts("materialOpts", ["monolith", "brick", "panel", "block", "other"]);
   const RENOVATION_OPTS = opts("renovationOpts", ["euro", "designer", "cosmetic", "rough", "none"]);
   const HEATING_OPTS = opts("heatingOpts", ["kombi", "central", "gas", "none"]);
+  const LAND_PURPOSE_OPTS = opts("landPurposeOpts", ["residential", "commercial", "agricultural"]);
+  const COMMERCIAL_OPTS = opts("commercialTypeOpts", ["office", "shop", "warehouse", "restaurant", "beauty", "other"]);
+  const isCommercial = propertyType === "object";
+  const isRent = dealType === "rent";
 
   // Location field label: region name, or "Bakı › Area" when inside Baku.
   const locationLabel = (() => {
@@ -385,6 +426,26 @@ export default function AddListingModal() {
       material: propertyType === "house" ? material : null,
       renovation: isResidential ? renovation : null,
       heating: isResidential ? heating : null,
+      // Land
+      landPurpose: isLand ? landPurpose : null,
+      utilGas: isLand ? utilGas : false,
+      utilWater: isLand ? utilWater : false,
+      utilElectricity: isLand ? utilElectricity : false,
+      utilSewage: isLand ? utilSewage : false,
+      roadAccess: isLand ? roadAccess : false,
+      // Commercial
+      commercialType: isCommercial ? commercialType : null,
+      separateEntrance: isCommercial ? separateEntrance : false,
+      shopfront: isCommercial ? shopfront : false,
+      // Rent terms (residential rent)
+      deposit: isRent ? deposit || undefined : undefined,
+      commissionNegotiable: isRent ? commissionNegotiable : false,
+      commissionPercent: isRent && !commissionNegotiable ? commissionPercent || undefined : undefined,
+      utilitiesIncluded: isRent ? utilitiesIncluded : false,
+      kidsAllowed: isRent ? kidsAllowed : false,
+      petsAllowed: isRent ? petsAllowed : false,
+      minTerm: isRent ? minTerm || undefined : undefined,
+      prepayment: isRent ? prepayment || undefined : undefined,
       furnished,
       mortgage,
       description,
@@ -715,7 +776,7 @@ export default function AddListingModal() {
 
           {step === 5 && (
             <View style={{ gap: 18, paddingTop: 4 }}>
-              {isResidential ? (
+              {isResidential && (
                 <Section title={t("addListing.characteristics")} colors={colors}>
                   {propertyType === "apartment" && (
                     <>
@@ -777,11 +838,83 @@ export default function AddListingModal() {
                     />
                   </Field>
                 </Section>
-              ) : (
-                <Section title={t("addListing.step5Title")} colors={colors}>
-                  <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
-                    {t("addListing.comingSoon")}
-                  </Text>
+              )}
+
+              {propertyType === "land" && (
+                <Section title={t("addListing.landCharacteristics")} colors={colors}>
+                  <Field label={t("addListing.landPurposeLabel")} colors={colors}>
+                    <EnumField
+                      label={t("addListing.landPurposeLabel")}
+                      value={landPurpose}
+                      options={LAND_PURPOSE_OPTS}
+                      onChange={setLandPurpose}
+                      placeholder={t("addListing.notSelected")}
+                    />
+                  </Field>
+                  <Field label={t("addListing.utilitiesGroupLabel")} colors={colors}>
+                    <ToggleRow colors={colors} label={t("addListing.utilGas")} value={utilGas} onValueChange={setUtilGas} />
+                    <ToggleRow colors={colors} label={t("addListing.utilWater")} value={utilWater} onValueChange={setUtilWater} />
+                    <ToggleRow colors={colors} label={t("addListing.utilElectricity")} value={utilElectricity} onValueChange={setUtilElectricity} />
+                    <ToggleRow colors={colors} label={t("addListing.utilSewage")} value={utilSewage} onValueChange={setUtilSewage} />
+                  </Field>
+                  <ToggleRow colors={colors} label={t("addListing.roadAccess")} value={roadAccess} onValueChange={setRoadAccess} />
+                </Section>
+              )}
+
+              {propertyType === "object" && (
+                <Section title={t("addListing.commercialCharacteristics")} colors={colors}>
+                  <Field label={t("addListing.commercialTypeLabel")} colors={colors}>
+                    <EnumField
+                      label={t("addListing.commercialTypeLabel")}
+                      value={commercialType}
+                      options={COMMERCIAL_OPTS}
+                      onChange={setCommercialType}
+                      placeholder={t("addListing.notSelected")}
+                    />
+                  </Field>
+                  <ToggleRow colors={colors} label={t("addListing.separateEntrance")} value={separateEntrance} onValueChange={setSeparateEntrance} />
+                  <ToggleRow colors={colors} label={t("addListing.shopfront")} value={shopfront} onValueChange={setShopfront} />
+                </Section>
+              )}
+
+              {isRent && isResidential && (
+                <Section title={t("addListing.rentConditions")} colors={colors}>
+                  <Field label={t("addListing.depositLabel")} colors={colors}>
+                    <Input colors={colors} value={deposit} onChangeText={setDeposit} placeholder="0" keyboardType="numeric" />
+                  </Field>
+                  <Field label={t("addListing.commissionLabel")} colors={colors}>
+                    <ToggleRow
+                      colors={colors}
+                      label={t("addListing.commissionNegotiable")}
+                      value={commissionNegotiable}
+                      onValueChange={setCommissionNegotiable}
+                    />
+                    {!commissionNegotiable && (
+                      <View style={{ marginTop: 8 }}>
+                        <Input
+                          colors={colors}
+                          value={commissionPercent}
+                          onChangeText={(txt) => {
+                            const digits = txt.replace(/[^0-9]/g, "");
+                            if (digits === "") return setCommissionPercent("");
+                            const n = parseInt(digits, 10);
+                            setCommissionPercent(n > 100 ? "100" : String(n));
+                          }}
+                          keyboardType="numeric"
+                          placeholder={t("addListing.commissionPercentPlaceholder")}
+                        />
+                      </View>
+                    )}
+                  </Field>
+                  <ToggleRow colors={colors} label={t("addListing.utilitiesIncluded")} value={utilitiesIncluded} onValueChange={setUtilitiesIncluded} />
+                  <ToggleRow colors={colors} label={t("addListing.kidsAllowed")} value={kidsAllowed} onValueChange={setKidsAllowed} />
+                  <ToggleRow colors={colors} label={t("addListing.petsAllowed")} value={petsAllowed} onValueChange={setPetsAllowed} />
+                  <Field label={t("addListing.minTerm")} colors={colors}>
+                    <Input colors={colors} value={minTerm} onChangeText={setMinTerm} placeholder="6" keyboardType="numeric" />
+                  </Field>
+                  <Field label={t("addListing.prepayment")} colors={colors}>
+                    <Input colors={colors} value={prepayment} onChangeText={setPrepayment} placeholder="1" keyboardType="numeric" />
+                  </Field>
                 </Section>
               )}
             </View>

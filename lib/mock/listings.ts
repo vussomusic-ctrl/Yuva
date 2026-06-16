@@ -55,7 +55,9 @@ export type Listing = {
   separateEntrance?: boolean;
   shopfront?: boolean;
   deposit?: number;
-  commission?: string;
+  commission?: string; // legacy
+  commissionPercent?: number | null;
+  commissionNegotiable?: boolean;
   utilitiesIncluded?: boolean;
   kidsAllowed?: boolean;
   petsAllowed?: boolean;

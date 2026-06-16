@@ -261,7 +261,47 @@
       "none": "Нет"
     },
     "whatsappLabel": "WhatsApp (необязательно)",
-    "whatsappPlaceholder": "+994 50 123 45 67"
+    "whatsappPlaceholder": "+994 50 123 45 67",
+    "landCharacteristics": "Характеристики участка",
+    "commercialCharacteristics": "Характеристики помещения",
+    "rentConditions": "Условия аренды",
+    "utilitiesGroupLabel": "Коммуникации",
+    "utilGas": "Газ",
+    "utilWater": "Вода",
+    "utilElectricity": "Электричество",
+    "utilSewage": "Канализация",
+    "roadAccess": "Подъездная дорога",
+    "landPurposeLabel": "Назначение",
+    "landPurposeOpts": {
+      "residential": "Под ИЖС",
+      "commercial": "Коммерческое",
+      "agricultural": "Сельхоз"
+    },
+    "commercialTypeLabel": "Тип коммерции",
+    "commercialTypeOpts": {
+      "office": "Офис",
+      "shop": "Магазин",
+      "warehouse": "Склад",
+      "restaurant": "Общепит",
+      "beauty": "Салон",
+      "other": "Другое"
+    },
+    "separateEntrance": "Отдельный вход",
+    "shopfront": "Витрина",
+    "depositLabel": "Залог, ₼",
+    "commissionLabel": "Комиссия",
+    "commissionOpts": {
+      "none": "Без комиссии",
+      "half": "50%",
+      "full": "100%"
+    },
+    "utilitiesIncluded": "Коммуналка включена",
+    "kidsAllowed": "Можно с детьми",
+    "petsAllowed": "Можно с животными",
+    "minTerm": "Мин. срок, мес",
+    "prepayment": "Предоплата, мес",
+    "commissionNegotiable": "Договорная",
+    "commissionPercentPlaceholder": "напр. 50"
   },
   "search": {
     "resultsCount": "Найдено {{count}}",

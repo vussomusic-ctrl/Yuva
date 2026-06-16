@@ -214,7 +214,9 @@ create table if not exists public.listings (
   shopfront         boolean not null default false,
   -- Rent terms -------------------------------------------------------------
   deposit            numeric,
-  commission         text check (commission in ('none', 'half', 'full')),
+  commission         text check (commission in ('none', 'half', 'full')), -- legacy (replaced by percent + negotiable)
+  commission_percent int,
+  commission_negotiable boolean not null default false,
   utilities_included boolean not null default false,
   kids_allowed       boolean not null default false,
   pets_allowed       boolean not null default false,

@@ -70,7 +70,9 @@ export type ListingRow = {
   shopfront: boolean;
   // Rent terms
   deposit: number | null;
-  commission: string | null;
+  commission: string | null; // legacy
+  commission_percent: number | null;
+  commission_negotiable: boolean;
   utilities_included: boolean;
   kids_allowed: boolean;
   pets_allowed: boolean;
@@ -117,6 +119,26 @@ export type ListingFormInput = {
   material?: string | null;
   renovation?: string | null;
   heating?: string | null;
+  // Land
+  landPurpose?: string | null;
+  utilGas?: boolean;
+  utilWater?: boolean;
+  utilElectricity?: boolean;
+  utilSewage?: boolean;
+  roadAccess?: boolean;
+  // Commercial
+  commercialType?: string | null;
+  separateEntrance?: boolean;
+  shopfront?: boolean;
+  // Rent terms (deposit/minTerm/prepayment kept as strings like price)
+  deposit?: string;
+  commissionPercent?: string;
+  commissionNegotiable?: boolean;
+  utilitiesIncluded?: boolean;
+  kidsAllowed?: boolean;
+  petsAllowed?: boolean;
+  minTerm?: string;
+  prepayment?: string;
 };
 
 // Form photo item. `existing` = already in DB (rowId + storagePath); `new` =
@@ -186,6 +208,8 @@ export function rowToListing(row: ListingRow): Listing {
     shopfront: row.shopfront ?? false,
     deposit: row.deposit ?? undefined,
     commission: row.commission ?? undefined,
+    commissionPercent: row.commission_percent ?? undefined,
+    commissionNegotiable: row.commission_negotiable ?? false,
     utilitiesIncluded: row.utilities_included ?? false,
     kidsAllowed: row.kids_allowed ?? false,
     petsAllowed: row.pets_allowed ?? false,
@@ -265,6 +289,27 @@ export function formToRow(form: ListingFormInput, ownerId: string) {
     material: form.material ?? null,
     renovation: form.renovation ?? null,
     heating: form.heating ?? null,
+    // Land
+    land_purpose: form.landPurpose ?? null,
+    util_gas: form.utilGas ?? false,
+    util_water: form.utilWater ?? false,
+    util_electricity: form.utilElectricity ?? false,
+    util_sewage: form.utilSewage ?? false,
+    road_access: form.roadAccess ?? false,
+    // Commercial
+    commercial_type: form.commercialType ?? null,
+    separate_entrance: form.separateEntrance ?? false,
+    shopfront: form.shopfront ?? false,
+    // Rent terms
+    deposit: form.deposit ? Number(form.deposit) : null,
+    commission: null, // legacy — replaced by percent + negotiable
+    commission_percent: form.commissionPercent ? Number(form.commissionPercent) : null,
+    commission_negotiable: form.commissionNegotiable ?? false,
+    utilities_included: form.utilitiesIncluded ?? false,
+    kids_allowed: form.kidsAllowed ?? false,
+    pets_allowed: form.petsAllowed ?? false,
+    min_term: form.minTerm ? Number(form.minTerm) : null,
+    prepayment: form.prepayment ? Number(form.prepayment) : null,
     contact_phone: form.phone.trim(),
     contact_telegram: form.telegram.trim() || null,
     contact_whatsapp: form.whatsapp.trim() || null,
@@ -306,6 +351,23 @@ export function rowToForm(row: ListingRow): ListingFormInput {
     material: row.material,
     renovation: row.renovation,
     heating: row.heating,
+    landPurpose: row.land_purpose,
+    utilGas: row.util_gas ?? false,
+    utilWater: row.util_water ?? false,
+    utilElectricity: row.util_electricity ?? false,
+    utilSewage: row.util_sewage ?? false,
+    roadAccess: row.road_access ?? false,
+    commercialType: row.commercial_type,
+    separateEntrance: row.separate_entrance ?? false,
+    shopfront: row.shopfront ?? false,
+    deposit: row.deposit != null ? String(row.deposit) : "",
+    commissionPercent: row.commission_percent != null ? String(row.commission_percent) : "",
+    commissionNegotiable: row.commission_negotiable ?? false,
+    utilitiesIncluded: row.utilities_included ?? false,
+    kidsAllowed: row.kids_allowed ?? false,
+    petsAllowed: row.pets_allowed ?? false,
+    minTerm: row.min_term != null ? String(row.min_term) : "",
+    prepayment: row.prepayment != null ? String(row.prepayment) : "",
   };
 }
 

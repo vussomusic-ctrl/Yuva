@@ -261,7 +261,47 @@
       "none": "None"
     },
     "whatsappLabel": "WhatsApp (optional)",
-    "whatsappPlaceholder": "+994 50 123 45 67"
+    "whatsappPlaceholder": "+994 50 123 45 67",
+    "landCharacteristics": "Land characteristics",
+    "commercialCharacteristics": "Premises characteristics",
+    "rentConditions": "Rent terms",
+    "utilitiesGroupLabel": "Utilities",
+    "utilGas": "Gas",
+    "utilWater": "Water",
+    "utilElectricity": "Electricity",
+    "utilSewage": "Sewage",
+    "roadAccess": "Road access",
+    "landPurposeLabel": "Purpose",
+    "landPurposeOpts": {
+      "residential": "Residential",
+      "commercial": "Commercial",
+      "agricultural": "Agricultural"
+    },
+    "commercialTypeLabel": "Premises type",
+    "commercialTypeOpts": {
+      "office": "Office",
+      "shop": "Shop",
+      "warehouse": "Warehouse",
+      "restaurant": "Restaurant",
+      "beauty": "Salon",
+      "other": "Other"
+    },
+    "separateEntrance": "Separate entrance",
+    "shopfront": "Shopfront",
+    "depositLabel": "Deposit, ₼",
+    "commissionLabel": "Commission",
+    "commissionOpts": {
+      "none": "No commission",
+      "half": "50%",
+      "full": "100%"
+    },
+    "utilitiesIncluded": "Utilities included",
+    "kidsAllowed": "Kids allowed",
+    "petsAllowed": "Pets allowed",
+    "minTerm": "Min. term, months",
+    "prepayment": "Prepayment, months",
+    "commissionNegotiable": "Negotiable",
+    "commissionPercentPlaceholder": "e.g. 50"
   },
   "search": {
     "resultsCount": "{{count}} listings found",

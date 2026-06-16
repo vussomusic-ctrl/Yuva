@@ -261,7 +261,47 @@
       "none": "Yoxdur"
     },
     "whatsappLabel": "WhatsApp (istəyə bağlı)",
-    "whatsappPlaceholder": "+994 50 123 45 67"
+    "whatsappPlaceholder": "+994 50 123 45 67",
+    "landCharacteristics": "Torpağın xüsusiyyətləri",
+    "commercialCharacteristics": "Obyektin xüsusiyyətləri",
+    "rentConditions": "Kirayə şərtləri",
+    "utilitiesGroupLabel": "Kommunikasiyalar",
+    "utilGas": "Qaz",
+    "utilWater": "Su",
+    "utilElectricity": "Elektrik",
+    "utilSewage": "Kanalizasiya",
+    "roadAccess": "Giriş yolu",
+    "landPurposeLabel": "Təyinat",
+    "landPurposeOpts": {
+      "residential": "Fərdi tikinti",
+      "commercial": "Kommersiya",
+      "agricultural": "Kənd təsərrüfatı"
+    },
+    "commercialTypeLabel": "Obyekt növü",
+    "commercialTypeOpts": {
+      "office": "Ofis",
+      "shop": "Mağaza",
+      "warehouse": "Anbar",
+      "restaurant": "İaşə",
+      "beauty": "Salon",
+      "other": "Digər"
+    },
+    "separateEntrance": "Ayrı giriş",
+    "shopfront": "Vitrin",
+    "depositLabel": "Depozit, ₼",
+    "commissionLabel": "Komissiya",
+    "commissionOpts": {
+      "none": "Komissiyasız",
+      "half": "50%",
+      "full": "100%"
+    },
+    "utilitiesIncluded": "Kommunal daxil",
+    "kidsAllowed": "Uşaqlarla olar",
+    "petsAllowed": "Heyvanlarla olar",
+    "minTerm": "Min. müddət, ay",
+    "prepayment": "Öncədən ödəniş, ay",
+    "commissionNegotiable": "Razılaşma ilə",
+    "commissionPercentPlaceholder": "məs. 50"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",
