@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import MapView, { PROVIDER_DEFAULT, Region } from "react-native-maps";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
@@ -77,6 +78,7 @@ export default function MapPickerScreen() {
   const cancel = () => (router.canGoBack() ? router.back() : router.replace("/add-listing"));
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top", "bottom"]}>
       {/* Header: X (left) + title. No logo. */}
       <View style={{ height: 56, justifyContent: "center" }}>
@@ -156,5 +158,6 @@ export default function MapPickerScreen() {
         <PrimaryButton label={t("mapPicker.confirm")} onPress={confirm} />
       </View>
     </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
