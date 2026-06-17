@@ -168,7 +168,7 @@
     "title": "Add listing",
     "step1Title": "Photos",
     "step2Title": "Property type",
-    "step3Title": "Basics",
+    "step3Title": "Key details",
     "step4Title": "Location",
     "next": "Next",
     "back": "Back",
@@ -303,7 +303,11 @@
     "commissionNegotiable": "Negotiable",
     "commissionPercentPlaceholder": "e.g. 50",
     "uploaderHint": "Drag here or tap",
-    "uploadedPhotos": "Uploaded photos"
+    "uploadedPhotos": "Uploaded photos",
+    "step3Subtitle": "Enter the main characteristics of the property",
+    "areaCardLabel": "Area, m²",
+    "furnishedLabel": "Furnished",
+    "mortgageLabel": "Mortgage available"
   },
   "search": {
     "resultsCount": "{{count}} listings found",

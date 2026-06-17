@@ -168,7 +168,7 @@
     "title": "Подать объявление",
     "step1Title": "Фотографии",
     "step2Title": "Тип объекта",
-    "step3Title": "Основное",
+    "step3Title": "Основные параметры",
     "step4Title": "Локация",
     "next": "Далее",
     "back": "Назад",
@@ -303,7 +303,11 @@
     "commissionNegotiable": "Договорная",
     "commissionPercentPlaceholder": "напр. 50",
     "uploaderHint": "Перетащите сюда или нажмите",
-    "uploadedPhotos": "Загруженные фото"
+    "uploadedPhotos": "Загруженные фото",
+    "step3Subtitle": "Укажите ключевые характеристики объекта",
+    "areaCardLabel": "Площадь, м²",
+    "furnishedLabel": "Меблировано",
+    "mortgageLabel": "Возможна ипотека"
   },
   "search": {
     "resultsCount": "Найдено {{count}}",

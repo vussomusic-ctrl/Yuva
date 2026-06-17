@@ -19,7 +19,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
-import { brand, Theme } from "../lib/theme/colors";
+import { brand, tints, TintKey, Theme } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
 import Animated from "react-native-reanimated";
 import { Segmented } from "../components/Segmented";
@@ -638,18 +638,112 @@ export default function AddListingModal() {
           )}
 
           {step === 3 && (
-            <View style={{ gap: 18, paddingTop: 4 }}>
+            <View style={{ gap: 18, paddingTop: 16 }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, marginBottom: 2 }}>
+                {t("addListing.step3Subtitle")}
+              </Text>
+
+              {/* Hero price card */}
+              <TintCard tint="violet">
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 13 }}>
+                      {t("filters.price")}
+                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
+                      <TextInput
+                        value={price}
+                        onChangeText={setPrice}
+                        placeholder="0"
+                        placeholderTextColor={colors.textSecondary}
+                        keyboardType="numeric"
+                        style={{ flex: 1, color: colors.text, fontFamily: font.bold, fontSize: 30, padding: 0 }}
+                      />
+                      {/* Currency pill — static, not a dropdown */}
+                      <View style={{ backgroundColor: "#FFFFFF", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 }}>
+                        <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 18 }}>₼</Text>
+                      </View>
+                    </View>
+                  </View>
+                  {/* TODO: replace with clay building PNG from assets/icons */}
+                  <Ionicons name="business" size={56} color={brand.violet} style={{ marginLeft: 8 }} />
+                </View>
+              </TintCard>
+
+              {/* Area — full width clay field-card */}
+              <NumCard
+                colors={colors}
+                tint="violet"
+                icon={require("../assets/icons/promo/clay-ruler.png")}
+                label={t("addListing.areaCardLabel")}
+                value={area}
+                onChangeText={setArea}
+              />
+
+              {!isLand && (
+                <>
+                  <View style={{ flexDirection: "row", gap: 12 }}>
+                    <NumCard
+                      colors={colors}
+                      tint="blue"
+                      icon={require("../assets/icons/promo/clay-bed.png")}
+                      label={t("filters.rooms")}
+                      value={rooms}
+                      onChangeText={setRooms}
+                      style={{ flex: 1 }}
+                    />
+                    <NumCard
+                      colors={colors}
+                      tint="magenta"
+                      ionicon="water"
+                      label={t("filters.baths")}
+                      value={baths}
+                      onChangeText={setBaths}
+                      style={{ flex: 1 }}
+                    />
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 12 }}>
+                    <NumCard
+                      colors={colors}
+                      tint="peach"
+                      icon={require("../assets/icons/promo/clay-stairs.png")}
+                      label={t("filters.floor")}
+                      value={floor}
+                      onChangeText={setFloor}
+                      style={{ flex: 1 }}
+                    />
+                    <NumCard
+                      colors={colors}
+                      tint="green"
+                      icon={require("../assets/icons/promo/clay-house.png")}
+                      label={t("addListing.floorTotal")}
+                      value={floorTotal}
+                      onChangeText={setFloorTotal}
+                      style={{ flex: 1 }}
+                    />
+                  </View>
+                </>
+              )}
+
+              {!isLand && (
+                <ToggleCard
+                  colors={colors}
+                  ionicon="bed-outline"
+                  label={t("addListing.furnishedLabel")}
+                  value={furnished}
+                  onValueChange={setFurnished}
+                />
+              )}
+              <ToggleCard
+                colors={colors}
+                ionicon="card-outline"
+                label={t("addListing.mortgageLabel")}
+                value={mortgage}
+                onValueChange={setMortgage}
+              />
+
               {/* Auto-generated title — read-only live preview */}
-              <View
-                style={{
-                  backgroundColor: colors.card,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  padding: 12,
-                  gap: 4,
-                }}
-              >
+              <TintCard tint="violet" style={{ gap: 4 }}>
                 <Text
                   style={{
                     color: colors.textSecondary,
@@ -664,48 +758,7 @@ export default function AddListingModal() {
                 <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 15 }}>
                   {generatedTitle || t("addListing.titlePlaceholder")}
                 </Text>
-              </View>
-
-              <View style={{ flexDirection: "row", gap: 12 }}>
-                <Field label={t("filters.price")} colors={colors} style={{ flex: 1 }}>
-                  <Input colors={colors} value={price} onChangeText={setPrice} placeholder="0" keyboardType="numeric" />
-                </Field>
-                <Field label={t("filters.area")} colors={colors} style={{ flex: 1 }}>
-                  <Input colors={colors} value={area} onChangeText={setArea} placeholder="0" keyboardType="numeric" />
-                </Field>
-              </View>
-
-              {!isLand && (
-                <>
-                  <View style={{ flexDirection: "row", gap: 12 }}>
-                    <Field label={t("filters.rooms")} colors={colors} style={{ flex: 1 }}>
-                      <Input colors={colors} value={rooms} onChangeText={setRooms} placeholder="0" keyboardType="numeric" />
-                    </Field>
-                    <Field label={t("filters.baths")} colors={colors} style={{ flex: 1 }}>
-                      <Input colors={colors} value={baths} onChangeText={setBaths} placeholder="0" keyboardType="numeric" />
-                    </Field>
-                  </View>
-                  <View style={{ flexDirection: "row", gap: 12 }}>
-                    <Field label={t("filters.floor")} colors={colors} style={{ flex: 1 }}>
-                      <Input colors={colors} value={floor} onChangeText={setFloor} placeholder="0" keyboardType="numeric" />
-                    </Field>
-                    <Field label={t("addListing.floorTotal")} colors={colors} style={{ flex: 1 }}>
-                      <Input
-                        colors={colors}
-                        value={floorTotal}
-                        onChangeText={setFloorTotal}
-                        placeholder="0"
-                        keyboardType="numeric"
-                      />
-                    </Field>
-                  </View>
-                </>
-              )}
-
-              {!isLand && (
-                <ToggleRow colors={colors} label={t("filters.furnished")} value={furnished} onValueChange={setFurnished} />
-              )}
-              <ToggleRow colors={colors} label={t("filters.mortgage")} value={mortgage} onValueChange={setMortgage} />
+              </TintCard>
             </View>
           )}
 
@@ -1474,6 +1527,76 @@ function TypeCard({
         </Text>
       </Animated.View>
     </Pressable>
+  );
+}
+
+// Clay number field-card: tinted card + icon (PNG or Ionicons) + label over a
+// borderless transparent numeric input that blends into the card surface.
+function NumCard({
+  colors,
+  tint,
+  icon,
+  ionicon,
+  label,
+  value,
+  onChangeText,
+  style,
+}: {
+  colors: Theme;
+  tint: TintKey;
+  icon?: number;
+  ionicon?: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string;
+  onChangeText: (s: string) => void;
+  style?: object;
+}) {
+  return (
+    <TintCard tint={tint} style={[{ paddingVertical: 12 }, style]}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        {icon != null ? (
+          <Image source={icon} style={{ width: 36, height: 36 }} resizeMode="contain" />
+        ) : (
+          <Ionicons name={ionicon!} size={32} color={tints[tint].shadow} />
+        )}
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 12 }}>{label}</Text>
+          <TextInput
+            value={value}
+            onChangeText={onChangeText}
+            placeholder="0"
+            placeholderTextColor={colors.textSecondary}
+            keyboardType="numeric"
+            style={{ color: colors.text, fontFamily: font.bold, fontSize: 20, padding: 0, backgroundColor: "transparent" }}
+          />
+        </View>
+      </View>
+    </TintCard>
+  );
+}
+
+// Clay toggle field-card: tinted card + icon + label + ClayToggle (step 3).
+function ToggleCard({
+  colors,
+  ionicon,
+  label,
+  value,
+  onValueChange,
+}: {
+  colors: Theme;
+  ionicon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: boolean;
+  onValueChange: (v: boolean) => void;
+}) {
+  return (
+    <TintCard tint="violet" style={{ paddingVertical: 14 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <Ionicons name={ionicon} size={22} color={brand.violet} />
+        <Text style={{ flex: 1, color: colors.text, fontFamily: font.semibold, fontSize: 16 }}>{label}</Text>
+        <ClayToggle value={value} onValueChange={onValueChange} />
+      </View>
+    </TintCard>
   );
 }
 

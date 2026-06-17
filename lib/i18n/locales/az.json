@@ -168,7 +168,7 @@
     "title": "Elan yerləşdir",
     "step1Title": "Şəkillər",
     "step2Title": "Obyekt növü",
-    "step3Title": "Əsas",
+    "step3Title": "Əsas parametrlər",
     "step4Title": "Yerləşmə",
     "next": "Növbəti",
     "back": "Geri",
@@ -303,7 +303,11 @@
     "commissionNegotiable": "Razılaşma ilə",
     "commissionPercentPlaceholder": "məs. 50",
     "uploaderHint": "Bura sürüşdürün və ya toxunun",
-    "uploadedPhotos": "Yüklənmiş şəkillər"
+    "uploadedPhotos": "Yüklənmiş şəkillər",
+    "step3Subtitle": "Obyektin əsas xüsusiyyətlərini göstərin",
+    "areaCardLabel": "Sahə, m²",
+    "furnishedLabel": "Mebellə",
+    "mortgageLabel": "İpoteka mümkündür"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",
