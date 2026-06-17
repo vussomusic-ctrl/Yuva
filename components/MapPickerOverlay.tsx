@@ -53,10 +53,19 @@ export function MapPickerOverlay({ visible, startPlaceId, startCoords, onConfirm
   // The map centre = pin position (crosshair is fixed to screen centre).
   const [center, setCenter] = useState({ lat: start.lat, lng: start.lng });
 
+  // One forced re-mount of MapView after onMapReady — on the very first open the
+  // freshly shown overlay container isn't "warm" yet and Apple Maps doesn't bind
+  // its pan/zoom gestures; remounting once (key bump) inside the ready native
+  // context rebinds them. Reset to 0 on each open so the cycle repeats fresh.
+  const [readyKey, setReadyKey] = useState(0);
+
   // Overlay stays mounted (returns null when hidden), so re-sync center to the
   // start each time it opens — mirrors the old screen's fresh-mount behaviour.
   useEffect(() => {
-    if (visible) setCenter({ lat: start.lat, lng: start.lng });
+    if (visible) {
+      setCenter({ lat: start.lat, lng: start.lng });
+      setReadyKey(0);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
@@ -110,10 +119,14 @@ export function MapPickerOverlay({ visible, startPlaceId, startCoords, onConfirm
 
           <View style={{ flex: 1 }}>
             <MapView
+              key={readyKey}
               ref={mapRef}
               provider={PROVIDER_DEFAULT}
               style={{ flex: 1 }}
-              initialRegion={toRegion(start.lat, start.lng)}
+              initialRegion={toRegion(center.lat, center.lng)}
+              onMapReady={() => {
+                if (readyKey === 0) setReadyKey(1);
+              }}
               onRegionChangeComplete={(r) => setCenter({ lat: r.latitude, lng: r.longitude })}
             />
 
