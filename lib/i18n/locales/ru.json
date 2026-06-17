@@ -169,7 +169,7 @@
     "step1Title": "Фотографии",
     "step2Title": "Тип объекта",
     "step3Title": "Основные параметры",
-    "step4Title": "Локация",
+    "step4Title": "Где находится объект",
     "next": "Далее",
     "back": "Назад",
     "publish": "Опубликовать",
@@ -307,7 +307,10 @@
     "step3Subtitle": "Укажите ключевые характеристики объекта",
     "areaCardLabel": "Площадь, м²",
     "furnishedLabel": "Меблировано",
-    "mortgageLabel": "Возможна ипотека"
+    "mortgageLabel": "Возможна ипотека",
+    "step4Subtitle": "Укажите город и точное расположение",
+    "pickHint": "Нажмите, чтобы выбрать точку",
+    "changePoint": "Изменить точку"
   },
   "search": {
     "resultsCount": "Найдено {{count}}",

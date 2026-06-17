@@ -22,6 +22,7 @@ import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, tints, TintKey, Theme } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
 import Animated from "react-native-reanimated";
+import MapView, { PROVIDER_DEFAULT } from "react-native-maps";
 import { Segmented } from "../components/Segmented";
 import EnumField from "../components/EnumPickerSheet";
 import { usePressScale } from "../lib/animations";
@@ -763,28 +764,28 @@ export default function AddListingModal() {
           )}
 
           {step === 4 && (
-            <View style={{ gap: 18, paddingTop: 4 }}>
-              {/* Location — cascading region → Baku area (+ optional metro) */}
-              <Field label={t("addListing.locationLabel")} colors={colors}>
-                <Pressable
-                  onPress={() => setLocationSheet(true)}
-                  style={({ pressed }) => ({
-                    minHeight: 48,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    backgroundColor: colors.card,
-                    paddingHorizontal: 14,
-                    paddingVertical: 8,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 10,
-                    opacity: pressed ? 0.7 : 1,
-                  })}
-                >
+            <View style={{ gap: 18, paddingTop: 16 }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, marginBottom: 2 }}>
+                {t("addListing.step4Subtitle")}
+              </Text>
+
+              {/* Location selector card — cascading region → Baku area (+ metro) */}
+              <TintCard tint="violet" onPress={() => setLocationSheet(true)}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  {/* TODO: replace with clay pin PNG */}
+                  <Ionicons name="location" size={26} color={brand.violet} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: placeId ? colors.text : colors.textSecondary, fontFamily: font.regular, fontSize: 15 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 12 }}>
+                      {t("addListing.locationLabel")}
+                    </Text>
+                    <Text
+                      style={{
+                        color: placeId ? colors.text : colors.textSecondary,
+                        fontFamily: font.medium,
+                        fontSize: 16,
+                        marginTop: 2,
+                      }}
+                    >
                       {placeId ? locationLabel : t("addListing.selectLocation")}
                     </Text>
                     {metroId && (
@@ -794,44 +795,68 @@ export default function AddListingModal() {
                     )}
                   </View>
                   <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
-                </Pressable>
-              </Field>
+                </View>
+              </TintCard>
 
-              {/* Map pin picker — exact building point (overrides rayon centre) */}
-              <Field label={t("addListing.mapPointLabel")} colors={colors}>
-                <Pressable
-                  onPress={openMapPicker}
-                  style={({ pressed }) => ({
-                    minHeight: 48,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: picked ? brand.violet : colors.border,
-                    backgroundColor: colors.card,
-                    paddingHorizontal: 14,
-                    paddingVertical: 10,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 10,
-                    opacity: pressed ? 0.7 : 1,
-                  })}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
-                    <Ionicons name={picked ? "location" : "map-outline"} size={20} color={brand.violet} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ color: colors.text, fontFamily: picked ? font.bold : font.medium, fontSize: 15 }}>
-                        {picked ? t("addListing.pointSelected") : t("addListing.pickOnMap")}
-                      </Text>
-                      {picked && (
-                        <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12, marginTop: 2 }}>
-                          {picked.lat.toFixed(5)}, {picked.lng.toFixed(5)}
-                        </Text>
-                      )}
+              {/* Map point — non-interactive preview when picked, invite card otherwise */}
+              {picked ? (
+                <>
+                  <TintCard tint="violet" onPress={openMapPicker} style={{ padding: 0 }}>
+                    {/* inner clip keeps the map/footer rounded without clipping the card shadow */}
+                    <View style={{ borderRadius: 20, overflow: "hidden" }}>
+                      <View style={{ width: "100%", height: 200 }}>
+                        <MapView
+                          provider={PROVIDER_DEFAULT}
+                          style={{ width: "100%", height: 200 }}
+                          pointerEvents="none"
+                          scrollEnabled={false}
+                          zoomEnabled={false}
+                          rotateEnabled={false}
+                          pitchEnabled={false}
+                          region={{ latitude: picked.lat, longitude: picked.lng, latitudeDelta: 0.01, longitudeDelta: 0.01 }}
+                        />
+                        {/* Centered clay pin overlay (TODO: clay PNG) */}
+                        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
+                          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                            <Ionicons
+                              name="location"
+                              size={40}
+                              color={brand.magenta}
+                              style={{
+                                marginBottom: 40,
+                                textShadowColor: "rgba(0,0,0,0.3)",
+                                textShadowRadius: 4,
+                                textShadowOffset: { width: 0, height: 2 },
+                              }}
+                            />
+                          </View>
+                        </View>
+                      </View>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16, paddingVertical: 12 }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 15 }}>{t("addListing.pointSelected")}</Text>
+                          <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12, marginTop: 2 }}>
+                            {picked.lat.toFixed(5)}, {picked.lng.toFixed(5)}
+                          </Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+                      </View>
                     </View>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
-                </Pressable>
-              </Field>
+                  </TintCard>
+                  <SecondaryButton label={t("addListing.changePoint")} onPress={openMapPicker} />
+                </>
+              ) : (
+                <TintCard
+                  tint="violet"
+                  onPress={openMapPicker}
+                  style={{ height: 120, alignItems: "center", justifyContent: "center", gap: 6 }}
+                >
+                  {/* TODO: replace with clay pin PNG */}
+                  <Ionicons name="map-outline" size={36} color={brand.violet} />
+                  <Text style={{ color: brand.violet, fontFamily: font.medium, fontSize: 16 }}>{t("addListing.pickOnMap")}</Text>
+                  <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12 }}>{t("addListing.pickHint")}</Text>
+                </TintCard>
+              )}
             </View>
           )}
 

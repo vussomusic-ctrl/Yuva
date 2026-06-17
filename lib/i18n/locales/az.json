@@ -169,7 +169,7 @@
     "step1Title": "Şəkillər",
     "step2Title": "Obyekt növü",
     "step3Title": "Əsas parametrlər",
-    "step4Title": "Yerləşmə",
+    "step4Title": "Obyekt harada yerləşir",
     "next": "Növbəti",
     "back": "Geri",
     "publish": "Yerləşdir",
@@ -307,7 +307,10 @@
     "step3Subtitle": "Obyektin əsas xüsusiyyətlərini göstərin",
     "areaCardLabel": "Sahə, m²",
     "furnishedLabel": "Mebellə",
-    "mortgageLabel": "İpoteka mümkündür"
+    "mortgageLabel": "İpoteka mümkündür",
+    "step4Subtitle": "Şəhəri və dəqiq yeri göstərin",
+    "pickHint": "Nöqtəni seçmək üçün toxunun",
+    "changePoint": "Nöqtəni dəyiş"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",

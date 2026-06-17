@@ -169,7 +169,7 @@
     "step1Title": "Photos",
     "step2Title": "Property type",
     "step3Title": "Key details",
-    "step4Title": "Location",
+    "step4Title": "Where is the property",
     "next": "Next",
     "back": "Back",
     "publish": "Publish",
@@ -307,7 +307,10 @@
     "step3Subtitle": "Enter the main characteristics of the property",
     "areaCardLabel": "Area, m²",
     "furnishedLabel": "Furnished",
-    "mortgageLabel": "Mortgage available"
+    "mortgageLabel": "Mortgage available",
+    "step4Subtitle": "Set the city and exact location",
+    "pickHint": "Tap to pick a point",
+    "changePoint": "Change point"
   },
   "search": {
     "resultsCount": "{{count}} listings found",
