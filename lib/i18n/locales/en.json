@@ -315,7 +315,31 @@
     "commissionAgentLabel": "Agent commission",
     "commissionNegotiableLabel": "Negotiable",
     "commissionNegotiableHint": "Amount is negotiable",
-    "commissionPercentHint": "percent of the monthly rent"
+    "commissionPercentHint": "percent of the monthly rent",
+    "step6Subtitle": "Select what the property offers",
+    "amenInHouse": "Building & complex",
+    "amenInApartment": "Inside the apartment",
+    "amenNearby": "Nearby",
+    "amenity": {
+      "concierge": "Concierge",
+      "security": "Security",
+      "fence": "Gated yard",
+      "parking": "Parking",
+      "elevator": "Elevator",
+      "playground": "Playground",
+      "pool": "Swimming pool",
+      "gym": "Gym",
+      "ac": "Air conditioning",
+      "warmFloor": "Underfloor heating",
+      "balcony": "Balcony",
+      "seaView": "Sea view",
+      "panoramic": "Panoramic windows",
+      "appliances": "Appliances",
+      "metro": "Metro",
+      "school": "School",
+      "sea": "Sea",
+      "park": "Park"
+    }
   },
   "search": {
     "resultsCount": "{{count}} listings found",

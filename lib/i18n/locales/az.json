@@ -315,7 +315,31 @@
     "commissionAgentLabel": "Agent komissiyası",
     "commissionNegotiableLabel": "Razılaşma ilə",
     "commissionNegotiableHint": "Məbləğ razılaşdırılır",
-    "commissionPercentHint": "aylıq kirayənin faizi"
+    "commissionPercentHint": "aylıq kirayənin faizi",
+    "step6Subtitle": "Obyektdə nələrin olduğunu seçin",
+    "amenInHouse": "Bina və kompleks",
+    "amenInApartment": "Mənzilin içində",
+    "amenNearby": "Yaxınlıqda",
+    "amenity": {
+      "concierge": "Konsyerj",
+      "security": "Mühafizə",
+      "fence": "Qapalı həyət",
+      "parking": "Parking",
+      "elevator": "Lift",
+      "playground": "Uşaq meydançası",
+      "pool": "Hovuz",
+      "gym": "İdman zalı",
+      "ac": "Kondisioner",
+      "warmFloor": "İsti döşəmə",
+      "balcony": "Balkon",
+      "seaView": "Dəniz mənzərəsi",
+      "panoramic": "Panoramik pəncərələr",
+      "appliances": "Məişət texnikası",
+      "metro": "Metro",
+      "school": "Məktəb",
+      "sea": "Dəniz",
+      "park": "Park"
+    }
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",

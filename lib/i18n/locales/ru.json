@@ -315,7 +315,31 @@
     "commissionAgentLabel": "Комиссия агента",
     "commissionNegotiableLabel": "Договорная",
     "commissionNegotiableHint": "Размер обсуждается",
-    "commissionPercentHint": "процент от месячной аренды"
+    "commissionPercentHint": "процент от месячной аренды",
+    "step6Subtitle": "Отметьте, что есть в объекте",
+    "amenInHouse": "В доме и комплексе",
+    "amenInApartment": "В квартире",
+    "amenNearby": "Рядом",
+    "amenity": {
+      "concierge": "Консьерж",
+      "security": "Охрана",
+      "fence": "Закрытый двор",
+      "parking": "Парковка",
+      "elevator": "Лифт",
+      "playground": "Детская площадка",
+      "pool": "Бассейн",
+      "gym": "Спортзал",
+      "ac": "Кондиционер",
+      "warmFloor": "Тёплый пол",
+      "balcony": "Балкон",
+      "seaView": "Вид на море",
+      "panoramic": "Панорамные окна",
+      "appliances": "Бытовая техника",
+      "metro": "Метро",
+      "school": "Школа",
+      "sea": "Море",
+      "park": "Парк"
+    }
   },
   "search": {
     "resultsCount": "Найдено {{count}}",

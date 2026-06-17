@@ -112,6 +112,7 @@ export type ListingFormInput = {
   description: string;
   lat: number | null;
   lng: number | null;
+  amenities: string[]; // step 6 — multi-select keys
   // Characteristics (step 5) — numeric kept as strings; enums string | null.
   buildingSeries?: string | null;
   complexName?: string;
@@ -258,12 +259,13 @@ const num = (s: string): number | null => {
 
 // Form → `listings` insert payload. owner_id from the auth session.
 // Columns with DB defaults (currency/status/premium/views_count/has_deed/
-// amenities/created_at/updated_at) are intentionally omitted.
+// created_at/updated_at) are intentionally omitted.
 export function formToRow(form: ListingFormInput, ownerId: string) {
   const isLand = isLandType(form.propertyType);
   const area = num(form.area);
   return {
     owner_id: ownerId,
+    amenities: form.amenities ?? [],
     deal_type: form.dealType,
     property_type: form.propertyType,
     build_type: isLand ? null : form.buildType,
@@ -345,6 +347,7 @@ export function rowToForm(row: ListingRow): ListingFormInput {
     description: row.description ?? "",
     lat: row.lat,
     lng: row.lng,
+    amenities: row.amenities ?? [],
     buildingSeries: row.building_series,
     complexName: row.complex_name ?? "",
     builtYear: row.built_year != null ? String(row.built_year) : "",

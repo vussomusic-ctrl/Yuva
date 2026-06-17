@@ -58,6 +58,44 @@ const TYPE_CARDS: { type: PropertyTypeKey; icon: number; labelKey: string; tint:
   { type: "land", icon: require("../assets/icons/categories/torpaq.png"), labelKey: "filters.typeLand", tint: { light: "#E8F5EA", dark: "#1A2A1E" } },
   { type: "object", icon: require("../assets/icons/categories/obyektler.png"), labelKey: "filters.typeObject", tint: { light: "#FBEFE5", dark: "#30251A" } },
 ];
+
+// Amenities (step 6) — multi-select, grouped. `key` is stored in amenities[];
+// icons are static requires from assets/icons/amenities.
+const AMENITY_GROUPS: { titleKey: string; items: { key: string; labelKey: string; icon: number }[] }[] = [
+  {
+    titleKey: "addListing.amenInHouse",
+    items: [
+      { key: "concierge", labelKey: "addListing.amenity.concierge", icon: require("../assets/icons/amenities/concierge.png") },
+      { key: "security", labelKey: "addListing.amenity.security", icon: require("../assets/icons/amenities/shield.png") },
+      { key: "fence", labelKey: "addListing.amenity.fence", icon: require("../assets/icons/amenities/fence.png") },
+      { key: "parking", labelKey: "addListing.amenity.parking", icon: require("../assets/icons/amenities/parking.png") },
+      { key: "elevator", labelKey: "addListing.amenity.elevator", icon: require("../assets/icons/amenities/elevator.png") },
+      { key: "playground", labelKey: "addListing.amenity.playground", icon: require("../assets/icons/amenities/playground.png") },
+      { key: "pool", labelKey: "addListing.amenity.pool", icon: require("../assets/icons/amenities/pool.png") },
+      { key: "gym", labelKey: "addListing.amenity.gym", icon: require("../assets/icons/amenities/gym.png") },
+    ],
+  },
+  {
+    titleKey: "addListing.amenInApartment",
+    items: [
+      { key: "ac", labelKey: "addListing.amenity.ac", icon: require("../assets/icons/amenities/ac.png") },
+      { key: "warm_floor", labelKey: "addListing.amenity.warmFloor", icon: require("../assets/icons/amenities/warm_floor.png") },
+      { key: "balcony", labelKey: "addListing.amenity.balcony", icon: require("../assets/icons/amenities/balcony.png") },
+      { key: "sea_view", labelKey: "addListing.amenity.seaView", icon: require("../assets/icons/amenities/wave.png") },
+      { key: "panoramic", labelKey: "addListing.amenity.panoramic", icon: require("../assets/icons/amenities/window.png") },
+      { key: "appliances", labelKey: "addListing.amenity.appliances", icon: require("../assets/icons/amenities/appliances.png") },
+    ],
+  },
+  {
+    titleKey: "addListing.amenNearby",
+    items: [
+      { key: "metro", labelKey: "addListing.amenity.metro", icon: require("../assets/icons/amenities/metro.png") },
+      { key: "school", labelKey: "addListing.amenity.school", icon: require("../assets/icons/amenities/school.png") },
+      { key: "sea", labelKey: "addListing.amenity.sea", icon: require("../assets/icons/amenities/boat.png") },
+      { key: "park", labelKey: "addListing.amenity.park", icon: require("../assets/icons/amenities/park.png") },
+    ],
+  },
+];
 const GRID_GAP = 12;
 const PHOTO_SIZE = (Dimensions.get("window").width - 32 - GRID_GAP * 2) / 3;
 
@@ -130,6 +168,10 @@ export default function AddListingModal() {
   const [furnished, setFurnished] = useState(false);
   const [mortgage, setMortgage] = useState(false);
   const [description, setDescription] = useState("");
+  // Amenities (step 6) — multi-select keys
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const toggleAmenity = (key: string) =>
+    setAmenities((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
 
   const [locationSheet, setLocationSheet] = useState(false);
   const [showMap, setShowMap] = useState(false);
@@ -203,6 +245,7 @@ export default function AddListingModal() {
         setFurnished(f.furnished);
         setMortgage(f.mortgage);
         setDescription(f.description);
+        setAmenities(f.amenities ?? []);
         setPhotos(rowToPhotoItems(row));
         if (row.lat != null && row.lng != null) setPicked({ lat: row.lat, lng: row.lng });
         setEditStatus("ok");
@@ -445,6 +488,7 @@ export default function AddListingModal() {
       furnished,
       mortgage,
       description,
+      amenities,
       lat: coords?.lat ?? null,
       lng: coords?.lng ?? null,
     };
@@ -1040,12 +1084,30 @@ export default function AddListingModal() {
           )}
 
           {step === 6 && (
-            <View style={{ gap: 18, paddingTop: 4 }}>
-              <Section title={t("addListing.step6Title")} colors={colors}>
-                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
-                  {t("addListing.comingSoon")}
-                </Text>
-              </Section>
+            <View style={{ gap: 18, paddingTop: 16 }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, marginBottom: 2 }}>
+                {t("addListing.step6Subtitle")}
+              </Text>
+
+              {AMENITY_GROUPS.map((g) => (
+                <View key={g.titleKey}>
+                  <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 15, marginTop: 8, marginBottom: 10 }}>
+                    {t(g.titleKey)}
+                  </Text>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "space-between" }}>
+                    {g.items.map((it) => (
+                      <AmenityCard
+                        key={it.key}
+                        icon={it.icon}
+                        label={t(it.labelKey)}
+                        active={amenities.includes(it.key)}
+                        colors={colors}
+                        onPress={() => toggleAmenity(it.key)}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ))}
             </View>
           )}
 
@@ -1754,6 +1816,64 @@ function ToggleCard({
         <ClayToggle value={value} onValueChange={onValueChange} />
       </View>
     </TintCard>
+  );
+}
+
+// Amenity toggle card (step 6) — PNG icon + label, violet border + gradient
+// checkmark badge when active. Multi-select; adaptive width for the 2-col grid.
+function AmenityCard({
+  icon,
+  label,
+  active,
+  colors,
+  onPress,
+}: {
+  icon: number;
+  label: string;
+  active: boolean;
+  colors: Theme;
+  onPress: () => void;
+}) {
+  const press = usePressScale(0.96);
+  return (
+    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={{ width: "48%" }}>
+      <Animated.View
+        style={[
+          {
+            height: 92,
+            borderRadius: 18,
+            backgroundColor: active ? "rgba(139,63,214,0.12)" : colors.card,
+            borderWidth: active ? 2 : 1,
+            borderColor: active ? brand.violet : colors.border,
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 12,
+            gap: 10,
+            shadowColor: "#8B3FD6",
+            shadowOpacity: active ? 0.18 : 0.06,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 2,
+          },
+          press.style,
+        ]}
+      >
+        <Image source={icon} style={{ width: 38, height: 38 }} resizeMode="contain" />
+        <Text numberOfLines={2} style={{ flex: 1, color: colors.text, fontFamily: font.medium, fontSize: 13, lineHeight: 16 }}>
+          {label}
+        </Text>
+        {active && (
+          <LinearGradient
+            colors={brand.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ position: "absolute", top: 8, right: 8, width: 20, height: 20, borderRadius: 10, alignItems: "center", justifyContent: "center" }}
+          >
+            <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+          </LinearGradient>
+        )}
+      </Animated.View>
+    </Pressable>
   );
 }
 
