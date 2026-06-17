@@ -28,6 +28,7 @@ import EnumField from "../components/EnumPickerSheet";
 import { usePressScale } from "../lib/animations";
 import { ClayToggle } from "../components/ClayToggle";
 import { TintCard } from "../components/TintCard";
+import { MapPickerOverlay } from "../components/MapPickerOverlay";
 import { RegionPickerSheet } from "../components/RegionPickerSheet";
 import { BottomSheet } from "../components/BottomSheet";
 import { PropertyCard } from "../components/PropertyCard";
@@ -132,6 +133,7 @@ export default function AddListingModal() {
   const [description, setDescription] = useState("");
 
   const [locationSheet, setLocationSheet] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   const [published, setPublished] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
@@ -264,14 +266,7 @@ export default function AddListingModal() {
     lang,
   );
 
-  const openMapPicker = () =>
-    router.push({
-      pathname: "/map-picker",
-      params: {
-        ...(placeId ? { placeId } : {}),
-        ...(picked ? { lat: String(picked.lat), lng: String(picked.lng) } : {}),
-      },
-    });
+  const openMapPicker = () => setShowMap(true);
 
   // --- Photos (create) ---
   // Pick from gallery → compress each (≤1280 long side, JPEG 0.7) right here, so
@@ -1328,6 +1323,18 @@ export default function AddListingModal() {
           </View>
         </View>
       )}
+
+      {/* Map point picker — full-screen overlay (NOT a nested modal → gestures live) */}
+      <MapPickerOverlay
+        visible={showMap}
+        startPlaceId={placeId}
+        startCoords={picked}
+        onConfirm={(c) => {
+          setPicked(c);
+          setShowMap(false);
+        }}
+        onCancel={() => setShowMap(false)}
+      />
     </SafeAreaView>
   );
 }
