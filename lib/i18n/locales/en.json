@@ -301,7 +301,9 @@
     "minTerm": "Min. term, months",
     "prepayment": "Prepayment, months",
     "commissionNegotiable": "Negotiable",
-    "commissionPercentPlaceholder": "e.g. 50"
+    "commissionPercentPlaceholder": "e.g. 50",
+    "uploaderHint": "Drag here or tap",
+    "uploadedPhotos": "Uploaded photos"
   },
   "search": {
     "resultsCount": "{{count}} listings found",

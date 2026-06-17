@@ -301,7 +301,9 @@
     "minTerm": "Мин. срок, мес",
     "prepayment": "Предоплата, мес",
     "commissionNegotiable": "Договорная",
-    "commissionPercentPlaceholder": "напр. 50"
+    "commissionPercentPlaceholder": "напр. 50",
+    "uploaderHint": "Перетащите сюда или нажмите",
+    "uploadedPhotos": "Загруженные фото"
   },
   "search": {
     "resultsCount": "Найдено {{count}}",

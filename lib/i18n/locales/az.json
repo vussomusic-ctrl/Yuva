@@ -301,7 +301,9 @@
     "minTerm": "Min. müddət, ay",
     "prepayment": "Öncədən ödəniş, ay",
     "commissionNegotiable": "Razılaşma ilə",
-    "commissionPercentPlaceholder": "məs. 50"
+    "commissionPercentPlaceholder": "məs. 50",
+    "uploaderHint": "Bura sürüşdürün və ya toxunun",
+    "uploadedPhotos": "Yüklənmiş şəkillər"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",

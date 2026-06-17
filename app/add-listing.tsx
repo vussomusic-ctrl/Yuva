@@ -26,6 +26,7 @@ import { Segmented } from "../components/Segmented";
 import EnumField from "../components/EnumPickerSheet";
 import { usePressScale } from "../lib/animations";
 import { ClayToggle } from "../components/ClayToggle";
+import { TintCard } from "../components/TintCard";
 import { RegionPickerSheet } from "../components/RegionPickerSheet";
 import { BottomSheet } from "../components/BottomSheet";
 import { PropertyCard } from "../components/PropertyCard";
@@ -1275,8 +1276,63 @@ function Step1Photos({
 }) {
   const coverUri = photos[0]?.uri;
   return (
-    <View style={{ gap: 12, paddingTop: 4 }}>
+    <View style={{ gap: 16, paddingTop: 4 }}>
       <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>{t("addListing.photosHint")}</Text>
+
+      {/* Main uploader — large dashed clay card above the preview grid */}
+      {canAddMore && (
+        <TintCard
+          tint="violet"
+          onPress={onAdd}
+          style={{
+            height: 190,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 2,
+            borderStyle: "dashed",
+            borderColor: "rgba(139,63,214,0.4)",
+          }}
+        >
+          <LinearGradient
+            colors={brand.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              width: 88,
+              height: 88,
+              borderRadius: 44,
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: brand.magenta,
+              shadowOpacity: 0.4,
+              shadowRadius: 16,
+              shadowOffset: { width: 0, height: 8 },
+            }}
+          >
+            <Ionicons name="camera" size={40} color="#FFFFFF" />
+            <View style={{ position: "absolute", bottom: 6, right: 6 }}>
+              <Ionicons name="add-circle" size={22} color="#FFFFFF" />
+            </View>
+          </LinearGradient>
+          <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 17, marginTop: 14 }}>
+            {t("addListing.addPhoto")}
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13, marginTop: 4 }}>
+            {t("addListing.uploaderHint")}
+          </Text>
+        </TintCard>
+      )}
+
+      {/* Grid header — title + counter */}
+      {photos.length > 0 && (
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{t("addListing.uploadedPhotos")}</Text>
+          <Text style={{ fontFamily: font.bold, fontSize: 16 }}>
+            <Text style={{ color: brand.violet }}>{photos.length}</Text>
+            <Text style={{ color: colors.textSecondary }}>/10</Text>
+          </Text>
+        </View>
+      )}
 
       {/* Drag-to-reorder grid. Drag only from the photo (Sortable.Handle) — the
           remove/cover overlays sit outside the handle so taps reach them. */}
@@ -1286,6 +1342,8 @@ function Step1Photos({
           data={photos}
           keyExtractor={(p) => p.uri}
           customHandle
+          dragActivationDelay={250}
+          dragActivationFailOffset={12}
           rowGap={GRID_GAP}
           columnGap={GRID_GAP}
           onDragEnd={({ data }) => onReorder(data)}
@@ -1296,28 +1354,44 @@ function Step1Photos({
                 style={{
                   width: "100%",
                   height: PHOTO_SIZE,
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  backgroundColor: colors.card,
-                  borderWidth: 1,
-                  borderColor: colors.border,
+                  borderRadius: 16,
+                  backgroundColor: "transparent",
+                  shadowColor: "#000",
+                  shadowOpacity: 0.08,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 4 },
                 }}
               >
+                {/* Handle is a direct child of the item root (keeps drag working);
+                    the image rounds itself so no clipping parent is needed. */}
                 <Sortable.Handle style={{ width: "100%", height: "100%" }}>
-                  <Image source={{ uri: item.uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                  <Image
+                    source={{ uri: item.uri }}
+                    style={{ width: "100%", height: "100%", borderRadius: 16 }}
+                    resizeMode="cover"
+                  />
                 </Sortable.Handle>
 
-                {/* Cover pill — top-left (by identity, not index) */}
+                {/* Cover badge — top-left (by identity, not index) */}
                 {isCover && (
                   <LinearGradient
                     colors={brand.gradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={{ position: "absolute", top: 6, left: 6, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}
+                    style={{
+                      position: "absolute",
+                      top: 8,
+                      left: 8,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderRadius: 12,
+                    }}
                   >
-                    <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 9, letterSpacing: 0.5 }}>
-                      {t("addListing.cover").toUpperCase()}
-                    </Text>
+                    <Ionicons name="star" size={11} color="#FFFFFF" />
+                    <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 11 }}>{t("addListing.cover")}</Text>
                   </LinearGradient>
                 )}
 
@@ -1329,64 +1403,27 @@ function Step1Photos({
                     position: "absolute",
                     top: 6,
                     right: 6,
-                    width: 24,
-                    height: 24,
-                    borderRadius: 12,
-                    backgroundColor: "rgba(20,18,24,0.7)",
+                    width: 26,
+                    height: 26,
+                    borderRadius: 13,
+                    backgroundColor: "#FFFFFF",
                     alignItems: "center",
                     justifyContent: "center",
+                    shadowColor: "#000",
+                    shadowOpacity: 0.15,
+                    shadowRadius: 4,
+                    shadowOffset: { width: 0, height: 2 },
+                    elevation: 3,
                   }}
                 >
-                  <Ionicons name="close" size={15} color="#FFFFFF" />
+                  <Ionicons name="close" size={16} color={brand.magenta} />
                 </Pressable>
-
-                {/* Make cover — bottom-right star (hidden on the current cover) */}
-                {!isCover && (
-                  <Pressable
-                    onPress={() => onMakeCover(item.uri)}
-                    accessibilityLabel={t("addListing.makeCover")}
-                    hitSlop={6}
-                    style={{
-                      position: "absolute",
-                      bottom: 6,
-                      right: 6,
-                      width: 24,
-                      height: 24,
-                      borderRadius: 12,
-                      backgroundColor: "rgba(20,18,24,0.7)",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Ionicons name="star" size={14} color="#FFFFFF" />
-                  </Pressable>
-                )}
               </View>
             );
           }}
         />
       )}
 
-      {/* Add tile — OUTSIDE the sortable grid (not draggable) */}
-      {canAddMore && (
-        <Pressable
-          onPress={onAdd}
-          style={({ pressed }) => ({
-            width: PHOTO_SIZE,
-            height: PHOTO_SIZE,
-            borderRadius: 12,
-            borderWidth: 1.5,
-            borderColor: brand.violet,
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 4,
-            opacity: pressed ? 0.6 : 1,
-          })}
-        >
-          <Ionicons name="add" size={28} color={brand.violet} />
-          <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 12 }}>{t("addListing.addPhoto")}</Text>
-        </Pressable>
-      )}
     </View>
   );
 }
