@@ -310,7 +310,12 @@
     "mortgageLabel": "Возможна ипотека",
     "step4Subtitle": "Укажите город и точное расположение",
     "pickHint": "Нажмите, чтобы выбрать точку",
-    "changePoint": "Изменить точку"
+    "changePoint": "Изменить точку",
+    "step5Subtitle": "Укажите важные детали объекта",
+    "commissionAgentLabel": "Комиссия агента",
+    "commissionNegotiableLabel": "Договорная",
+    "commissionNegotiableHint": "Размер обсуждается",
+    "commissionPercentHint": "процент от месячной аренды"
   },
   "search": {
     "resultsCount": "Найдено {{count}}",

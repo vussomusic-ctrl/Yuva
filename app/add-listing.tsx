@@ -24,7 +24,6 @@ import { font } from "../lib/theme/typography";
 import Animated from "react-native-reanimated";
 import MapView, { PROVIDER_DEFAULT } from "react-native-maps";
 import { Segmented } from "../components/Segmented";
-import EnumField from "../components/EnumPickerSheet";
 import { usePressScale } from "../lib/animations";
 import { ClayToggle } from "../components/ClayToggle";
 import { TintCard } from "../components/TintCard";
@@ -856,147 +855,186 @@ export default function AddListingModal() {
           )}
 
           {step === 5 && (
-            <View style={{ gap: 18, paddingTop: 4 }}>
+            <View style={{ gap: 18, paddingTop: 16 }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, marginBottom: 2 }}>
+                {t("addListing.step5Subtitle")}
+              </Text>
+
               {isResidential && (
                 <Section title={t("addListing.characteristics")} colors={colors}>
                   {propertyType === "apartment" && (
                     <>
                       {buildType === "secondary" && (
-                        <Field label={t("addListing.seriesLabel")} colors={colors}>
-                          <EnumField
-                            label={t("addListing.seriesLabel")}
-                            value={buildingSeries}
-                            options={SERIES_OPTS}
-                            onChange={setBuildingSeries}
-                            placeholder={t("addListing.notSelected")}
-                          />
-                        </Field>
-                      )}
-                      <Field label={t("addListing.complexName")} colors={colors}>
-                        <Input
+                        <EnumCard
                           colors={colors}
-                          value={complexName}
-                          onChangeText={setComplexName}
-                          placeholder={t("addListing.complexNamePlaceholder")}
+                          tint="violet"
+                          ionicon="business"
+                          label={t("addListing.seriesLabel")}
+                          value={buildingSeries}
+                          options={SERIES_OPTS}
+                          onChange={setBuildingSeries}
+                          placeholder={t("addListing.notSelected")}
                         />
-                      </Field>
+                      )}
+                      <NumCard
+                        colors={colors}
+                        tint="peach"
+                        ionicon="business-outline"
+                        label={t("addListing.complexName")}
+                        value={complexName}
+                        onChangeText={setComplexName}
+                        placeholder={t("addListing.complexNamePlaceholder")}
+                        keyboardType="default"
+                      />
                     </>
                   )}
 
                   {propertyType === "house" && (
                     <>
-                      <Field label={t("addListing.materialLabel")} colors={colors}>
-                        <EnumField
-                          label={t("addListing.materialLabel")}
-                          value={material}
-                          options={MATERIAL_OPTS}
-                          onChange={setMaterial}
-                          placeholder={t("addListing.notSelected")}
-                        />
-                      </Field>
-                      <Field label={t("addListing.builtYear")} colors={colors}>
-                        <Input colors={colors} value={builtYear} onChangeText={setBuiltYear} placeholder="2020" keyboardType="numeric" />
-                      </Field>
+                      <EnumCard
+                        colors={colors}
+                        tint="violet"
+                        ionicon="construct"
+                        label={t("addListing.materialLabel")}
+                        value={material}
+                        options={MATERIAL_OPTS}
+                        onChange={setMaterial}
+                        placeholder={t("addListing.notSelected")}
+                      />
+                      <NumCard
+                        colors={colors}
+                        tint="green"
+                        ionicon="calendar"
+                        label={t("addListing.builtYear")}
+                        value={builtYear}
+                        onChangeText={setBuiltYear}
+                        placeholder="2020"
+                      />
                     </>
                   )}
 
-                  <Field label={t("addListing.renovationLabel")} colors={colors}>
-                    <EnumField
-                      label={t("addListing.renovationLabel")}
-                      value={renovation}
-                      options={RENOVATION_OPTS}
-                      onChange={setRenovation}
-                      placeholder={t("addListing.notSelected")}
-                    />
-                  </Field>
-                  <Field label={t("addListing.heatingLabel")} colors={colors}>
-                    <EnumField
-                      label={t("addListing.heatingLabel")}
-                      value={heating}
-                      options={HEATING_OPTS}
-                      onChange={setHeating}
-                      placeholder={t("addListing.notSelected")}
-                    />
-                  </Field>
+                  <EnumCard
+                    colors={colors}
+                    tint="blue"
+                    ionicon="brush"
+                    label={t("addListing.renovationLabel")}
+                    value={renovation}
+                    options={RENOVATION_OPTS}
+                    onChange={setRenovation}
+                    placeholder={t("addListing.notSelected")}
+                  />
+                  <EnumCard
+                    colors={colors}
+                    tint="magenta"
+                    ionicon="flame"
+                    label={t("addListing.heatingLabel")}
+                    value={heating}
+                    options={HEATING_OPTS}
+                    onChange={setHeating}
+                    placeholder={t("addListing.notSelected")}
+                  />
                 </Section>
               )}
 
               {propertyType === "land" && (
                 <Section title={t("addListing.landCharacteristics")} colors={colors}>
-                  <Field label={t("addListing.landPurposeLabel")} colors={colors}>
-                    <EnumField
-                      label={t("addListing.landPurposeLabel")}
-                      value={landPurpose}
-                      options={LAND_PURPOSE_OPTS}
-                      onChange={setLandPurpose}
-                      placeholder={t("addListing.notSelected")}
-                    />
-                  </Field>
+                  <EnumCard
+                    colors={colors}
+                    tint="green"
+                    ionicon="compass"
+                    label={t("addListing.landPurposeLabel")}
+                    value={landPurpose}
+                    options={LAND_PURPOSE_OPTS}
+                    onChange={setLandPurpose}
+                    placeholder={t("addListing.notSelected")}
+                  />
                   <Field label={t("addListing.utilitiesGroupLabel")} colors={colors}>
-                    <ToggleRow colors={colors} label={t("addListing.utilGas")} value={utilGas} onValueChange={setUtilGas} />
-                    <ToggleRow colors={colors} label={t("addListing.utilWater")} value={utilWater} onValueChange={setUtilWater} />
-                    <ToggleRow colors={colors} label={t("addListing.utilElectricity")} value={utilElectricity} onValueChange={setUtilElectricity} />
-                    <ToggleRow colors={colors} label={t("addListing.utilSewage")} value={utilSewage} onValueChange={setUtilSewage} />
+                    <ToggleCard colors={colors} ionicon="flame" label={t("addListing.utilGas")} value={utilGas} onValueChange={setUtilGas} />
+                    <ToggleCard colors={colors} ionicon="water" label={t("addListing.utilWater")} value={utilWater} onValueChange={setUtilWater} />
+                    <ToggleCard colors={colors} ionicon="flash" label={t("addListing.utilElectricity")} value={utilElectricity} onValueChange={setUtilElectricity} />
+                    <ToggleCard colors={colors} ionicon="water-outline" label={t("addListing.utilSewage")} value={utilSewage} onValueChange={setUtilSewage} />
                   </Field>
-                  <ToggleRow colors={colors} label={t("addListing.roadAccess")} value={roadAccess} onValueChange={setRoadAccess} />
+                  <ToggleCard colors={colors} ionicon="car" label={t("addListing.roadAccess")} value={roadAccess} onValueChange={setRoadAccess} />
                 </Section>
               )}
 
               {propertyType === "object" && (
                 <Section title={t("addListing.commercialCharacteristics")} colors={colors}>
-                  <Field label={t("addListing.commercialTypeLabel")} colors={colors}>
-                    <EnumField
-                      label={t("addListing.commercialTypeLabel")}
-                      value={commercialType}
-                      options={COMMERCIAL_OPTS}
-                      onChange={setCommercialType}
-                      placeholder={t("addListing.notSelected")}
-                    />
-                  </Field>
-                  <ToggleRow colors={colors} label={t("addListing.separateEntrance")} value={separateEntrance} onValueChange={setSeparateEntrance} />
-                  <ToggleRow colors={colors} label={t("addListing.shopfront")} value={shopfront} onValueChange={setShopfront} />
+                  <EnumCard
+                    colors={colors}
+                    tint="violet"
+                    ionicon="storefront"
+                    label={t("addListing.commercialTypeLabel")}
+                    value={commercialType}
+                    options={COMMERCIAL_OPTS}
+                    onChange={setCommercialType}
+                    placeholder={t("addListing.notSelected")}
+                  />
+                  <ToggleCard colors={colors} ionicon="log-in" label={t("addListing.separateEntrance")} value={separateEntrance} onValueChange={setSeparateEntrance} />
+                  <ToggleCard colors={colors} ionicon="storefront-outline" label={t("addListing.shopfront")} value={shopfront} onValueChange={setShopfront} />
                 </Section>
               )}
 
               {isRent && isResidential && (
-                <Section title={t("addListing.rentConditions")} colors={colors}>
-                  <Field label={t("addListing.depositLabel")} colors={colors}>
-                    <Input colors={colors} value={deposit} onChangeText={setDeposit} placeholder="0" keyboardType="numeric" />
-                  </Field>
-                  <Field label={t("addListing.commissionLabel")} colors={colors}>
-                    <ToggleRow
-                      colors={colors}
-                      label={t("addListing.commissionNegotiable")}
-                      value={commissionNegotiable}
-                      onValueChange={setCommissionNegotiable}
-                    />
-                    {!commissionNegotiable && (
-                      <View style={{ marginTop: 8 }}>
-                        <Input
-                          colors={colors}
-                          value={commissionPercent}
-                          onChangeText={(txt) => {
-                            const digits = txt.replace(/[^0-9]/g, "");
-                            if (digits === "") return setCommissionPercent("");
-                            const n = parseInt(digits, 10);
-                            setCommissionPercent(n > 100 ? "100" : String(n));
-                          }}
-                          keyboardType="numeric"
-                          placeholder={t("addListing.commissionPercentPlaceholder")}
-                        />
+                <TintCard tint="violet" style={{ gap: 12 }}>
+                  <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 16 }}>{t("addListing.rentConditions")}</Text>
+                  <NumCard
+                    colors={colors}
+                    tint="violet"
+                    ionicon="cash"
+                    label={t("addListing.depositLabel")}
+                    value={deposit}
+                    onChangeText={setDeposit}
+                    placeholder="0"
+                  />
+                  {/* Commission — ONE card: negotiable toggle + conditional % (logic unchanged) */}
+                  <TintCard tint="violet">
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                      <Ionicons name="calculator" size={26} color={tints.violet.shadow} />
+                      <Text style={{ flex: 1, color: colors.textSecondary, fontFamily: font.medium, fontSize: 12 }}>
+                        {t("addListing.commissionAgentLabel")}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
+                      <Text style={{ color: colors.text, fontFamily: font.medium, fontSize: 14 }}>
+                        {t("addListing.commissionNegotiableLabel")}
+                      </Text>
+                      <ClayToggle value={commissionNegotiable} onValueChange={setCommissionNegotiable} />
+                    </View>
+                    {commissionNegotiable ? (
+                      <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13, marginTop: 10 }}>
+                        {t("addListing.commissionNegotiableHint")}
+                      </Text>
+                    ) : (
+                      <View style={{ marginTop: 10 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                          <TextInput
+                            value={commissionPercent}
+                            onChangeText={(txt) => {
+                              const digits = txt.replace(/[^0-9]/g, "");
+                              if (digits === "") return setCommissionPercent("");
+                              const n = parseInt(digits, 10);
+                              setCommissionPercent(n > 100 ? "100" : String(n));
+                            }}
+                            keyboardType="numeric"
+                            placeholder={t("addListing.commissionPercentPlaceholder")}
+                            placeholderTextColor={colors.textSecondary}
+                            style={{ flex: 1, color: colors.text, fontFamily: font.bold, fontSize: 20, padding: 0, backgroundColor: "transparent" }}
+                          />
+                          <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 20 }}>%</Text>
+                        </View>
+                        <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12, marginTop: 4 }}>
+                          {t("addListing.commissionPercentHint")}
+                        </Text>
                       </View>
                     )}
-                  </Field>
-                  <ToggleRow colors={colors} label={t("addListing.utilitiesIncluded")} value={utilitiesIncluded} onValueChange={setUtilitiesIncluded} />
-                  <ToggleRow colors={colors} label={t("addListing.kidsAllowed")} value={kidsAllowed} onValueChange={setKidsAllowed} />
-                  <ToggleRow colors={colors} label={t("addListing.petsAllowed")} value={petsAllowed} onValueChange={setPetsAllowed} />
-                  <Field label={t("addListing.minTerm")} colors={colors}>
-                    <Input colors={colors} value={minTerm} onChangeText={setMinTerm} placeholder="6" keyboardType="numeric" />
-                  </Field>
-                  <Field label={t("addListing.prepayment")} colors={colors}>
-                    <Input colors={colors} value={prepayment} onChangeText={setPrepayment} placeholder="1" keyboardType="numeric" />
-                  </Field>
-                </Section>
+                  </TintCard>
+                  <ToggleCard colors={colors} ionicon="bulb" label={t("addListing.utilitiesIncluded")} value={utilitiesIncluded} onValueChange={setUtilitiesIncluded} />
+                  <ToggleCard colors={colors} ionicon="happy" label={t("addListing.kidsAllowed")} value={kidsAllowed} onValueChange={setKidsAllowed} />
+                  <ToggleCard colors={colors} ionicon="paw" label={t("addListing.petsAllowed")} value={petsAllowed} onValueChange={setPetsAllowed} />
+                  <NumCard colors={colors} tint="violet" ionicon="time" label={t("addListing.minTerm")} value={minTerm} onChangeText={setMinTerm} placeholder="6" />
+                  <NumCard colors={colors} tint="violet" ionicon="card" label={t("addListing.prepayment")} value={prepayment} onChangeText={setPrepayment} placeholder="1" />
+                </TintCard>
               )}
             </View>
           )}
@@ -1572,6 +1610,8 @@ function NumCard({
   label,
   value,
   onChangeText,
+  placeholder = "0",
+  keyboardType = "numeric",
   style,
 }: {
   colors: Theme;
@@ -1581,6 +1621,8 @@ function NumCard({
   label: string;
   value: string;
   onChangeText: (s: string) => void;
+  placeholder?: string;
+  keyboardType?: "numeric" | "default";
   style?: object;
 }) {
   return (
@@ -1596,14 +1638,97 @@ function NumCard({
           <TextInput
             value={value}
             onChangeText={onChangeText}
-            placeholder="0"
+            placeholder={placeholder}
             placeholderTextColor={colors.textSecondary}
-            keyboardType="numeric"
+            keyboardType={keyboardType}
             style={{ color: colors.text, fontFamily: font.bold, fontSize: 20, padding: 0, backgroundColor: "transparent" }}
           />
         </View>
       </View>
     </TintCard>
+  );
+}
+
+// Clay enum field-card: tinted card + icon + label over the chosen value + a
+// bottom-sheet radio list. A clay-styled sibling of EnumField (the global
+// EnumPickerSheet stays untouched) — reuses the same BottomSheet primitive and
+// the identical options/value/onChange contract (no forked selection logic).
+function EnumCard({
+  colors,
+  tint,
+  ionicon,
+  label,
+  value,
+  options,
+  onChange,
+  placeholder,
+}: {
+  colors: Theme;
+  tint: TintKey;
+  ionicon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string | null;
+  options: { key: string; label: string }[];
+  onChange: (key: string) => void;
+  placeholder: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find((o) => o.key === value);
+  return (
+    <>
+      <TintCard tint={tint} onPress={() => setOpen(true)}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Ionicons name={ionicon} size={26} color={tints[tint].shadow} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 12 }}>{label}</Text>
+            <Text
+              style={{
+                color: value ? colors.text : colors.textSecondary,
+                fontFamily: font.medium,
+                fontSize: 16,
+                marginTop: 2,
+              }}
+            >
+              {selected ? selected.label : placeholder}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+        </View>
+      </TintCard>
+
+      <BottomSheet visible={open} onClose={() => setOpen(false)}>
+        <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 17, textAlign: "center", paddingTop: 6, paddingBottom: 10 }}>
+          {label}
+        </Text>
+        {options.map((o) => {
+          const active = o.key === value;
+          return (
+            <Pressable
+              key={o.key}
+              onPress={() => {
+                onChange(o.key);
+                setOpen(false);
+              }}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                paddingVertical: 16,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.border,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Text style={{ color: active ? brand.violet : colors.text, fontFamily: active ? font.bold : font.medium, fontSize: 16 }}>
+                {o.label}
+              </Text>
+              <Ionicons name={active ? "radio-button-on" : "radio-button-off"} size={22} color={active ? brand.violet : colors.textSecondary} />
+            </Pressable>
+          );
+        })}
+      </BottomSheet>
+    </>
   );
 }
 

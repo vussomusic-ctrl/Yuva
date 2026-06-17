@@ -310,7 +310,12 @@
     "mortgageLabel": "İpoteka mümkündür",
     "step4Subtitle": "Şəhəri və dəqiq yeri göstərin",
     "pickHint": "Nöqtəni seçmək üçün toxunun",
-    "changePoint": "Nöqtəni dəyiş"
+    "changePoint": "Nöqtəni dəyiş",
+    "step5Subtitle": "Obyektin vacib detallarını göstərin",
+    "commissionAgentLabel": "Agent komissiyası",
+    "commissionNegotiableLabel": "Razılaşma ilə",
+    "commissionNegotiableHint": "Məbləğ razılaşdırılır",
+    "commissionPercentHint": "aylıq kirayənin faizi"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",

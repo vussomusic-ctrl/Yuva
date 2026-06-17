@@ -310,7 +310,12 @@
     "mortgageLabel": "Mortgage available",
     "step4Subtitle": "Set the city and exact location",
     "pickHint": "Tap to pick a point",
-    "changePoint": "Change point"
+    "changePoint": "Change point",
+    "step5Subtitle": "Add the key details of the property",
+    "commissionAgentLabel": "Agent commission",
+    "commissionNegotiableLabel": "Negotiable",
+    "commissionNegotiableHint": "Amount is negotiable",
+    "commissionPercentHint": "percent of the monthly rent"
   },
   "search": {
     "resultsCount": "{{count}} listings found",
