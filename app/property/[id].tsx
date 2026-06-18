@@ -651,6 +651,27 @@ export default function PropertyDetailScreen() {
             </LinearGradient>
           )}
 
+          {/* Amenities — hidden when none are set */}
+          {listing.amenities.length > 0 && (
+            <Section title={t("propertyDetail.amenities")} colors={colors}>
+              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                {listing.amenities.map((key) => {
+                  const meta = AMENITY_META[key];
+                  if (!meta) return null;
+                  return (
+                    <View
+                      key={key}
+                      style={{ width: "50%", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
+                    >
+                      <Ionicons name={meta.icon} size={20} color={brand.violet} />
+                      <Text style={{ color: colors.text, fontFamily: font.regular, fontSize: 14, flex: 1 }}>{t(meta.labelKey)}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </Section>
+          )}
+
           {/* Description — full text, full width (no house, no collapse) */}
           {listing.description.trim() !== "" && (
             <View style={{ marginTop: 24 }}>
@@ -682,27 +703,6 @@ export default function PropertyDetailScreen() {
                 </Pressable>
               ) : null}
             </View>
-          )}
-
-          {/* Amenities — hidden when none are set */}
-          {listing.amenities.length > 0 && (
-            <Section title={t("propertyDetail.amenities")} colors={colors}>
-              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                {listing.amenities.map((key) => {
-                  const meta = AMENITY_META[key];
-                  if (!meta) return null;
-                  return (
-                    <View
-                      key={key}
-                      style={{ width: "50%", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
-                    >
-                      <Ionicons name={meta.icon} size={20} color={brand.violet} />
-                      <Text style={{ color: colors.text, fontFamily: font.regular, fontSize: 14, flex: 1 }}>{t(meta.labelKey)}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </Section>
           )}
 
           {/* Location map — real mini-map + marker; hidden when no coords

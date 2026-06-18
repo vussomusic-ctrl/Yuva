@@ -1,5 +1,6 @@
 import { View, Text, Image, Pressable } from "react-native";
 import Animated from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 
@@ -46,17 +47,20 @@ export function PropertyCardCompact({ listing, favorited, onToggleFavorite, onPr
       <Animated.View
         style={[
           {
-            backgroundColor: colors.card,
+            aspectRatio: 1,
             borderRadius: 16,
-            borderWidth: 1,
-            borderColor: colors.border,
-            overflow: "hidden",
+            backgroundColor: colors.border,
+            shadowColor: "#000",
+            shadowOpacity: 0.12,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 3,
           },
           press.style,
         ]}
       >
-        {/* Photo */}
-        <View style={{ height: 100, backgroundColor: colors.border }}>
+        {/* Photo fills the whole card; clip wrapper keeps it rounded (card shadow stays) */}
+        <View style={{ flex: 1, borderRadius: 16, overflow: "hidden", backgroundColor: colors.border }}>
           {listing.image ? (
             <Image source={{ uri: listing.image }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
           ) : (
@@ -107,21 +111,40 @@ export function PropertyCardCompact({ listing, favorited, onToggleFavorite, onPr
           >
             <Ionicons name={favorited ? "heart" : "heart-outline"} size={15} color={favorited ? brand.magenta : colors.text} />
           </Pressable>
-        </View>
 
-        {/* Info */}
-        <View style={{ paddingHorizontal: 10, paddingTop: 6, paddingBottom: 10, gap: 3 }}>
-          <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 15 }}>
-            {formatPrice(listing.priceAzn)}
-          </Text>
-          <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.medium, fontSize: 12 }}>
-            {title}
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-            <Ionicons name="location-outline" size={12} color={colors.textSecondary} />
-            <Text numberOfLines={1} style={{ flex: 1, color: colors.textSecondary, fontFamily: font.regular, fontSize: 11 }}>
-              {listing.district}
+          {/* Bottom darkening — stronger, for 3 lines of white text over the photo */}
+          <LinearGradient
+            pointerEvents="none"
+            colors={["transparent", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.75)"]}
+            locations={[0, 0.5, 1]}
+            style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "65%" }}
+          />
+
+          {/* Info — price + title + district in white, over the gradient */}
+          <View pointerEvents="none" style={{ position: "absolute", left: 12, right: 12, bottom: 12 }}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 18, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 4 }}
+            >
+              {formatPrice(listing.priceAzn)}
             </Text>
+            <Text
+              numberOfLines={1}
+              style={{ color: "rgba(255,255,255,0.95)", fontFamily: font.medium, fontSize: 12.5, marginTop: 3, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
+            >
+              {title}
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginTop: 2 }}>
+              <Ionicons name="location-outline" size={11} color="rgba(255,255,255,0.9)" />
+              <Text
+                numberOfLines={1}
+                style={{ flex: 1, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 11, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
+              >
+                {listing.district}
+              </Text>
+            </View>
           </View>
         </View>
       </Animated.View>

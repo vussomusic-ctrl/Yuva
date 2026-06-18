@@ -94,7 +94,7 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
             the card (24). Gradient/price/badges/counter live inside this block. */}
         <View
           onLayout={(e) => setSlideW(e.nativeEvent.layout.width)}
-          style={{ alignSelf: "stretch", height: carousel ? 150 : 210, borderRadius: 24, overflow: "hidden", backgroundColor: colors.bg }}
+          style={{ alignSelf: "stretch", height: carousel ? 196 : 210, borderRadius: 24, overflow: "hidden", backgroundColor: colors.bg }}
         >
           {useSwiper ? (
             <ScrollView
@@ -134,8 +134,9 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
               never intercepts the horizontal photo swipe. */}
           <LinearGradient
             pointerEvents="none"
-            colors={["transparent", "rgba(0,0,0,0.55)"]}
-            style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "40%" }}
+            colors={carousel ? ["transparent", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.75)"] : ["transparent", "rgba(0,0,0,0.55)"]}
+            locations={carousel ? [0, 0.5, 1] : undefined}
+            style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: carousel ? "65%" : "40%" }}
           />
 
           {/* Badges top-left: promo tier (or NEW), with optional Boost below.
@@ -202,25 +203,55 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
             <Ionicons name={favorited ? "heart" : "heart-outline"} size={18} color={favorited ? brand.magenta : colors.text} />
           </Pressable>
 
-          {/* Price — bounded width (left/right) so long values shrink instead of
-              colliding with the photo counter */}
-          <Text
-            pointerEvents="none"
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.7}
-            style={{
-              position: "absolute",
-              bottom: 12,
-              left: 14,
-              right: 72,
-              color: "#FFFFFF",
-              fontFamily: font.extrabold,
-              fontSize: 26,
-            }}
-          >
-            {formatPrice(listing.priceAzn)}
-          </Text>
+          {/* Price (feed) — bounded width so long values shrink, not collide with counter */}
+          {!carousel && (
+            <Text
+              pointerEvents="none"
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              style={{
+                position: "absolute",
+                bottom: 12,
+                left: 14,
+                right: 72,
+                color: "#FFFFFF",
+                fontFamily: font.extrabold,
+                fontSize: 26,
+              }}
+            >
+              {formatPrice(listing.priceAzn)}
+            </Text>
+          )}
+
+          {/* Info (carousel) — price + title + district in white, over the gradient */}
+          {carousel && (
+            <View pointerEvents="none" style={{ position: "absolute", left: 14, right: 14, bottom: 12 }}>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+                style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 20, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 4 }}
+              >
+                {formatPrice(listing.priceAzn)}
+              </Text>
+              <Text
+                numberOfLines={1}
+                style={{ color: "rgba(255,255,255,0.95)", fontFamily: font.medium, fontSize: 13, marginTop: 3, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
+              >
+                {title}
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginTop: 2 }}>
+                <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.9)" />
+                <Text
+                  numberOfLines={1}
+                  style={{ flex: 1, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 12, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
+                >
+                  {listing.district}
+                </Text>
+              </View>
+            </View>
+          )}
 
           {/* Photo counter — live index when swiping (only when >1 photo) */}
           {listing.photoCount > 1 && (
@@ -248,8 +279,9 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
           )}
         </View>
 
-        {/* Body — tap opens detail. Pressable lives here (not wrapping the card),
-            so it never competes with the photo swiper above. */}
+        {/* Body (feed only) — title + district + specs under the photo. Carousel
+            puts price/title/district on the photo instead (no white shelf). */}
+        {!carousel && (
         <Pressable
           onPress={handleTap}
           onPressIn={press.onPressIn}
@@ -297,6 +329,7 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
             )}
           </View>
         </Pressable>
+        )}
       </Animated.View>
     </View>
   );
