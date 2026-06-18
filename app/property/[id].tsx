@@ -59,15 +59,27 @@ const badgePill = (bg: string) =>
     backgroundColor: bg,
   }) as const;
 
+// Mirrors the form's AMENITY_GROUPS (add-listing) — same keys + i18n labels
+// (addListing.amenity.*). Ionicons (calm outline set) for a tidy reference list.
 const AMENITY_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; labelKey: string }> = {
-  parking: { icon: "car-outline", labelKey: "propertyDetail.amParking" },
-  elevator: { icon: "swap-vertical-outline", labelKey: "propertyDetail.amElevator" },
-  renovation: { icon: "construct-outline", labelKey: "propertyDetail.amRenovation" },
-  furniture: { icon: "bed-outline", labelKey: "propertyDetail.amFurniture" },
-  internet: { icon: "wifi-outline", labelKey: "propertyDetail.amInternet" },
-  security: { icon: "shield-checkmark-outline", labelKey: "propertyDetail.amSecurity" },
-  seaview: { icon: "water-outline", labelKey: "propertyDetail.amSeaView" },
-  kitchen: { icon: "restaurant-outline", labelKey: "propertyDetail.amKitchen" },
+  concierge: { icon: "notifications-outline", labelKey: "addListing.amenity.concierge" },
+  security: { icon: "shield-checkmark-outline", labelKey: "addListing.amenity.security" },
+  fence: { icon: "lock-closed-outline", labelKey: "addListing.amenity.fence" },
+  parking: { icon: "car-outline", labelKey: "addListing.amenity.parking" },
+  elevator: { icon: "swap-vertical-outline", labelKey: "addListing.amenity.elevator" },
+  playground: { icon: "happy-outline", labelKey: "addListing.amenity.playground" },
+  pool: { icon: "water-outline", labelKey: "addListing.amenity.pool" },
+  gym: { icon: "barbell-outline", labelKey: "addListing.amenity.gym" },
+  ac: { icon: "snow-outline", labelKey: "addListing.amenity.ac" },
+  warm_floor: { icon: "flame-outline", labelKey: "addListing.amenity.warmFloor" },
+  balcony: { icon: "browsers-outline", labelKey: "addListing.amenity.balcony" },
+  sea_view: { icon: "eye-outline", labelKey: "addListing.amenity.seaView" },
+  panoramic: { icon: "tablet-landscape-outline", labelKey: "addListing.amenity.panoramic" },
+  appliances: { icon: "hardware-chip-outline", labelKey: "addListing.amenity.appliances" },
+  metro: { icon: "train-outline", labelKey: "addListing.amenity.metro" },
+  school: { icon: "school-outline", labelKey: "addListing.amenity.school" },
+  sea: { icon: "boat-outline", labelKey: "addListing.amenity.sea" },
+  park: { icon: "leaf-outline", labelKey: "addListing.amenity.park" },
 };
 
 export default function PropertyDetailScreen() {
