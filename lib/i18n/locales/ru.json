@@ -103,7 +103,9 @@
     "badgeBoosted": "Поднято",
     "roomsUnit": "комн.",
     "floorUnit": "этаж",
-    "recentlyViewed": "Недавно просмотренные"
+    "recentlyViewed": "Недавно просмотренные",
+    "openMap": "Открыть карту",
+    "nearby": "Рядом с вами"
   },
   "propertyDetail": {
     "area": "Площадь",

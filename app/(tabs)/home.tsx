@@ -29,6 +29,7 @@ import { PropertyTypeKey } from "../../lib/propertyTypes";
 import { Listing, isPromoActive } from "../../lib/mock/listings";
 import { fetchFeed, fetchListingsByIds } from "../../lib/api/listings";
 import { getViewedIds } from "../../lib/recentlyViewed";
+import { NearbyMap } from "../../components/NearbyMap";
 import { unreadCount, subscribeNotifications } from "../../lib/api/notifications";
 import { useAuth } from "../../lib/auth";
 
@@ -115,6 +116,7 @@ export default function HomeScreen() {
 
   const loading = feed === null && !error;
   const recommended = (feed ?? []).filter((l) => l.promoTier === "premium" && isPromoActive(l));
+  const nearby = (feed ?? []).filter((l) => l.lat !== 0 && l.lng !== 0);
 
   const { width: winW } = useWindowDimensions();
 
@@ -356,6 +358,25 @@ export default function HomeScreen() {
                     </View>
                   ))}
                 </ScrollView>
+              </View>
+            )}
+
+            {/* Nearby — compact map with price pins; only with geo-located listings */}
+            {nearby.length > 0 && (
+              <View style={{ gap: 16 }}>
+                <SectionHeader
+                  title={`📍 ${t("home.nearby")}`}
+                  action={t("home.seeAll")}
+                  colors={colors}
+                  onAction={() => router.push("/search")}
+                />
+                <View style={{ paddingHorizontal: 16 }}>
+                  <NearbyMap
+                    listings={nearby}
+                    onOpenListing={(id) => openListing(id)}
+                    onOpenMap={() => router.push("/map")}
+                  />
+                </View>
               </View>
             )}
           </>

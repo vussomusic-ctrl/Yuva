@@ -103,7 +103,9 @@
     "badgeBoosted": "Boosted",
     "roomsUnit": "rooms",
     "floorUnit": "floor",
-    "recentlyViewed": "Recently viewed"
+    "recentlyViewed": "Recently viewed",
+    "openMap": "Open map",
+    "nearby": "Near you"
   },
   "propertyDetail": {
     "area": "Area",

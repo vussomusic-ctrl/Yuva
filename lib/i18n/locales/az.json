@@ -103,7 +103,9 @@
     "badgeBoosted": "Qaldırılıb",
     "roomsUnit": "Otaq",
     "floorUnit": "Mərtəbə",
-    "recentlyViewed": "Son baxılanlar"
+    "recentlyViewed": "Son baxılanlar",
+    "openMap": "Xəritəni aç",
+    "nearby": "Yaxınlığınızda"
   },
   "propertyDetail": {
     "area": "Sahə",

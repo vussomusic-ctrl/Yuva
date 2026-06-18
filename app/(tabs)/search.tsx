@@ -1,9 +1,9 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import Animated, { useAnimatedScrollHandler, withSpring } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useScrollCtx } from "../../lib/scrollContext";
 import { useTranslation } from "react-i18next";
 
@@ -38,9 +38,16 @@ export default function SearchScreen() {
   const { current: lang } = useLanguage();
   const { colors } = useTheme();
   const router = useRouter();
+  const params = useLocalSearchParams<{ view?: string }>();
 
   const [query, setQuery] = useState("");
-  const [view, setView] = useState<"list" | "map">("list");
+  const [view, setView] = useState<"list" | "map">(params.view === "map" ? "map" : "list");
+
+  // Re-honor view=map on every navigation (the tab stays mounted, so the useState
+  // initializer above only runs once — this catches subsequent "open map" taps).
+  useEffect(() => {
+    if (params.view === "map") setView("map");
+  }, [params.view]);
   const [sort, setSort] = useState<SortKey>("default");
   const [sortOpen, setSortOpen] = useState(false);
   const { isFavorite, toggle: toggleFavorite } = useFavorites();

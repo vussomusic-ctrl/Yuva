@@ -60,6 +60,7 @@ function RootInner() {
         <Stack.Screen name="create-account" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="property/[id]" />
+        <Stack.Screen name="map" />
         <Stack.Screen name="chat/[id]" />
         <Stack.Screen name="agencies/index" />
         <Stack.Screen name="agencies/[id]" />
