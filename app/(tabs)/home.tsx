@@ -27,7 +27,8 @@ import { useFavorites } from "../../lib/favorites";
 import { useFilters } from "../../lib/filters-state";
 import { PropertyTypeKey } from "../../lib/propertyTypes";
 import { Listing, isPromoActive } from "../../lib/mock/listings";
-import { fetchFeed } from "../../lib/api/listings";
+import { fetchFeed, fetchListingsByIds } from "../../lib/api/listings";
+import { getViewedIds } from "../../lib/recentlyViewed";
 import { unreadCount, subscribeNotifications } from "../../lib/api/notifications";
 import { useAuth } from "../../lib/auth";
 
@@ -67,20 +68,38 @@ export default function HomeScreen() {
   const [feed, setFeed] = useState<Listing[] | null>(null);
   const [error, setError] = useState(false);
   const [unread, setUnread] = useState(0); // live bell badge
+  const [recentlyViewed, setRecentlyViewed] = useState<Listing[]>([]);
   const load = useCallback(() => {
     setError(false);
     fetchFeed()
       .then(setFeed)
       .catch(() => setError(true));
   }, []);
+
+  // Recently-viewed history → listings, reordered to the stored (most-recent) order.
+  const loadRecent = useCallback(async () => {
+    const ids = await getViewedIds();
+    if (ids.length === 0) {
+      setRecentlyViewed([]);
+      return;
+    }
+    try {
+      const fetched = await fetchListingsByIds(ids);
+      const ordered = ids.map((id) => fetched.find((l) => l.id === id)).filter((l): l is Listing => !!l);
+      setRecentlyViewed(ordered);
+    } catch {
+      // keep whatever was shown
+    }
+  }, []);
   useFocusEffect(
     useCallback(() => {
       scrollY.value = withSpring(0, { damping: 18, stiffness: 120 }); // expand bar on focus
       load();
+      loadRecent();
       // Live unread count for the bell — guests have none.
       if (session) unreadCount().then(setUnread).catch(() => setUnread(0));
       else setUnread(0);
-    }, [load, session, scrollY]),
+    }, [load, loadRecent, session, scrollY]),
   );
 
   // Realtime: a new notification → instant dot (refetch the exact count so it
@@ -97,9 +116,7 @@ export default function HomeScreen() {
   const loading = feed === null && !error;
   const recommended = (feed ?? []).filter((l) => l.promoTier === "premium" && isPromoActive(l));
 
-  // 2-column grid width: screen − horizontal padding (16×2) − inter-column gap (10).
   const { width: winW } = useWindowDimensions();
-  const colW = (winW - 32 - 10) / 2;
 
   const openListing = (id: string) => router.push(`/property/${id}`);
 
@@ -251,7 +268,7 @@ export default function HomeScreen() {
             {recommended.length > 0 && (
               <View style={{ gap: 12 }}>
                 <SectionHeader
-                  title={t("home.recommended")}
+                  title={`✨ ${t("home.recommended")}`}
                   action={t("home.seeAll")}
                   colors={colors}
                   onAction={() => router.push("/search")}
@@ -259,6 +276,9 @@ export default function HomeScreen() {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
+                  snapToInterval={winW - 16}
+                  snapToAlignment="start"
+                  decelerationRate="fast"
                   contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}
                 >
                   {recommended.map((l) => (
@@ -266,6 +286,7 @@ export default function HomeScreen() {
                       key={l.id}
                       listing={l}
                       variant="carousel"
+                      cardWidth={winW - 32}
                       favorited={isFavorite(l.id)}
                       onToggleFavorite={() => toggleFavorite(l.id)}
                       onPress={() => openListing(l.id)}
@@ -276,10 +297,13 @@ export default function HomeScreen() {
             )}
 
             {/* New listings feed */}
-            <View style={{ gap: 16, paddingHorizontal: 16 }}>
-              <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 18 }}>
-                {t("home.newListings")}
-              </Text>
+            <View style={{ gap: 16 }}>
+              <SectionHeader
+                title={`🔥 ${t("home.newListings")}`}
+                action={t("home.seeAll")}
+                colors={colors}
+                onAction={() => router.push("/search")}
+              />
               {(feed ?? []).length === 0 ? (
                 <EmptyState
                   image={require("../../assets/icons/empty/empty-home.png")}
@@ -287,11 +311,14 @@ export default function HomeScreen() {
                   subtitle={t("home.emptyDesc")}
                 />
               ) : (
-                // 2-column grid; fixed colW so a lone last card keeps its half
-                // (the other slot stays empty, not stretched).
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+                // Horizontal rail — compact cards scroll sideways (≈2.5 visible).
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+                >
                   {(feed ?? []).map((l) => (
-                    <View key={l.id} style={{ width: colW }}>
+                    <View key={l.id} style={{ width: 170 }}>
                       <PropertyCardCompact
                         listing={l}
                         favorited={isFavorite(l.id)}
@@ -300,9 +327,37 @@ export default function HomeScreen() {
                       />
                     </View>
                   ))}
-                </View>
+                </ScrollView>
               )}
             </View>
+
+            {/* Recently viewed — only when the user has history */}
+            {recentlyViewed.length > 0 && (
+              <View style={{ gap: 16 }}>
+                <SectionHeader
+                  title={`👀 ${t("home.recentlyViewed")}`}
+                  action={t("home.seeAll")}
+                  colors={colors}
+                  onAction={() => router.push("/search")}
+                />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+                >
+                  {recentlyViewed.map((l) => (
+                    <View key={l.id} style={{ width: 170 }}>
+                      <PropertyCardCompact
+                        listing={l}
+                        favorited={isFavorite(l.id)}
+                        onToggleFavorite={() => toggleFavorite(l.id)}
+                        onPress={() => openListing(l.id)}
+                      />
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
           </>
         )}
       </Animated.ScrollView>

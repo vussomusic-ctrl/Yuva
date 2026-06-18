@@ -91,9 +91,9 @@
     "catHouses": "Evlər",
     "catLand": "Torpaq",
     "catObjects": "Obyektlər",
-    "recommended": "Tövsiyə olunanlar",
+    "recommended": "Qaynar təkliflər",
     "seeAll": "Hamısına bax",
-    "newListings": "Yeni elanlar",
+    "newListings": "Yeni əlavə olundu",
     "emptyTitle": "Hələlik elan yoxdur",
     "emptyDesc": "Tezliklə burada elanlar olacaq",
     "premium": "Premium",
@@ -102,7 +102,8 @@
     "badgePremium": "PREMIUM",
     "badgeBoosted": "Qaldırılıb",
     "roomsUnit": "Otaq",
-    "floorUnit": "Mərtəbə"
+    "floorUnit": "Mərtəbə",
+    "recentlyViewed": "Son baxılanlar"
   },
   "propertyDetail": {
     "area": "Sahə",

@@ -17,6 +17,7 @@ import { usePressShrink } from "../lib/animations";
 type Props = {
   listing: Listing;
   variant?: "carousel" | "feed";
+  cardWidth?: number; // carousel only — fixed card width (default 260)
   favorited: boolean;
   onToggleFavorite: () => void;
   onPress: () => void;
@@ -44,7 +45,7 @@ const badgePill = (bg: string) =>
     backgroundColor: bg,
   }) as const;
 
-export function PropertyCard({ listing, variant = "feed", favorited, onToggleFavorite, onPress }: Props) {
+export function PropertyCard({ listing, variant = "feed", cardWidth = 260, favorited, onToggleFavorite, onPress }: Props) {
   const { t } = useTranslation();
   const { current: lang } = useLanguage();
   const { colors, mode } = useTheme();
@@ -75,7 +76,7 @@ export function PropertyCard({ listing, variant = "feed", favorited, onToggleFav
   const handleTap = onPress;
 
   return (
-    <View style={carousel ? { width: 260 } : { alignSelf: "stretch" }}>
+    <View style={carousel ? { width: cardWidth } : { alignSelf: "stretch" }}>
       <Animated.View
         style={[
           {

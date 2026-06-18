@@ -91,9 +91,9 @@
     "catHouses": "Дома",
     "catLand": "Земля",
     "catObjects": "Объекты",
-    "recommended": "Рекомендуемые",
+    "recommended": "Горячие предложения",
     "seeAll": "Все",
-    "newListings": "Новые объявления",
+    "newListings": "Только появились",
     "emptyTitle": "Пока нет объявлений",
     "emptyDesc": "Скоро здесь появятся объявления",
     "premium": "Premium",
@@ -102,7 +102,8 @@
     "badgePremium": "ПРЕМИУМ",
     "badgeBoosted": "Поднято",
     "roomsUnit": "комн.",
-    "floorUnit": "этаж"
+    "floorUnit": "этаж",
+    "recentlyViewed": "Недавно просмотренные"
   },
   "propertyDetail": {
     "area": "Площадь",
