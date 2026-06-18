@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -28,6 +28,7 @@ import { ListingDetail, formatPrice, formatArea, isPromoActive, isRecentlyBumped
 import { isLandType } from "../../lib/propertyTypes";
 import { pluralSuffix } from "../../lib/i18n/plural";
 import { fetchListingDetail } from "../../lib/api/listings";
+import { addViewed } from "../../lib/recentlyViewed";
 import { bumpListing } from "../../lib/api/promo";
 import { useFavorites } from "../../lib/favorites";
 import { useAuth } from "../../lib/auth";
@@ -219,6 +220,12 @@ export default function PropertyDetailScreen() {
       });
   }, [id]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  // Record this listing in the recently-viewed history (once per id). Fire-and-
+  // forget — storage errors are swallowed in the wrapper, never block the screen.
+  useEffect(() => {
+    if (id) addViewed(id);
+  }, [id]);
 
   if (status !== "ok" || !listing) {
     return (
