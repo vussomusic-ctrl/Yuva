@@ -11,6 +11,7 @@ import { font } from "../lib/theme/typography";
 import { Listing, formatPrice, formatArea, isPromoActive, isRecentlyBumped } from "../lib/mock/listings";
 import { isLandType } from "../lib/propertyTypes";
 import { buildListingTitle } from "../lib/listingTitle";
+import { placeById, placeName } from "../lib/places";
 import { useLanguage } from "../lib/i18n/languages";
 import { usePressShrink } from "../lib/animations";
 
@@ -23,16 +24,18 @@ type Props = {
   onPress: () => void;
 };
 
-// Pastel chips behind spec icons — same gamut as the Home category tints.
-const SPEC_TINT = {
-  area: { light: "#EFE7FB", dark: "#2A2138", icon: brand.violet },
-  rooms: { light: "#E3EEFB", dark: "#1E2A3C", icon: brand.blue },
-  floor: { light: "#FBE7F1", dark: "#331C2A", icon: brand.magenta },
-};
-
 const NEW_WINDOW_MS = 72 * 60 * 60 * 1000;
 const VIP_RED = "#E5322D";
 const PREMIUM_GOLD = "#E0A526";
+
+// Native metro mark — green circle with a white "M" (no PNG/asset).
+function MetroBadge() {
+  return (
+    <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: "#0F9D58", alignItems: "center", justifyContent: "center" }}>
+      <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 10, lineHeight: 12 }}>M</Text>
+    </View>
+  );
+}
 
 const badgePill = (bg: string) =>
   ({
@@ -52,6 +55,7 @@ export function PropertyCard({ listing, variant = "feed", cardWidth = 260, favor
   const press = usePressShrink(0.97);
   const carousel = variant === "carousel";
   const title = buildListingTitle(listing, t, lang);
+  const station = listing.metroId ? placeById(listing.metroId) : undefined; // user-picked metro, never inferred
 
   const isNew = (() => {
     const ts = new Date(listing.createdAt).getTime();
@@ -135,9 +139,9 @@ export function PropertyCard({ listing, variant = "feed", cardWidth = 260, favor
               never intercepts the horizontal photo swipe. */}
           <LinearGradient
             pointerEvents="none"
-            colors={carousel ? ["transparent", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.75)"] : ["transparent", "rgba(0,0,0,0.55)"]}
-            locations={carousel ? [0, 0.5, 1] : undefined}
-            style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: carousel ? "65%" : "40%" }}
+            colors={["transparent", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.75)"]}
+            locations={[0, 0.5, 1]}
+            style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "65%" }}
           />
 
           {/* Badges top-left: promo tier (or NEW), with optional Boost below.
@@ -204,55 +208,62 @@ export function PropertyCard({ listing, variant = "feed", cardWidth = 260, favor
             <Ionicons name={favorited ? "heart" : "heart-outline"} size={18} color={favorited ? brand.magenta : colors.text} />
           </Pressable>
 
-          {/* Price (feed) — bounded width so long values shrink, not collide with counter */}
-          {!carousel && (
+          {/* Info — price + title + district (+ metro) over the gradient; specs in feed.
+              Same "info on photo" style for both variants. */}
+          <View pointerEvents="none" style={{ position: "absolute", left: 14, right: 14, bottom: 12 }}>
             <Text
-              pointerEvents="none"
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.7}
-              style={{
-                position: "absolute",
-                bottom: 12,
-                left: 14,
-                right: 72,
-                color: "#FFFFFF",
-                fontFamily: font.extrabold,
-                fontSize: 26,
-              }}
+              style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: carousel ? 20 : 24, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 4 }}
             >
               {formatPrice(listing.priceAzn)}
             </Text>
-          )}
-
-          {/* Info (carousel) — price + title + district in white, over the gradient */}
-          {carousel && (
-            <View pointerEvents="none" style={{ position: "absolute", left: 14, right: 14, bottom: 12 }}>
+            <Text
+              numberOfLines={1}
+              style={{ color: "rgba(255,255,255,0.95)", fontFamily: font.medium, fontSize: 13, marginTop: 3, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
+            >
+              {title}
+            </Text>
+            {/* District + metro on ONE row; metro only when the user picked one */}
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+              <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.9)" />
               <Text
                 numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.7}
-                style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 20, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 4 }}
+                style={{ flexShrink: 1, marginLeft: 3, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 12, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
               >
-                {formatPrice(listing.priceAzn)}
+                {listing.district}
               </Text>
-              <Text
-                numberOfLines={1}
-                style={{ color: "rgba(255,255,255,0.95)", fontFamily: font.medium, fontSize: 13, marginTop: 3, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
-              >
-                {title}
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginTop: 2 }}>
-                <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.9)" />
-                <Text
-                  numberOfLines={1}
-                  style={{ flex: 1, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 12, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
-                >
-                  {listing.district}
-                </Text>
-              </View>
+              {station && (
+                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 10 }}>
+                  <MetroBadge />
+                  <Text
+                    numberOfLines={1}
+                    style={{ marginLeft: 4, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 12, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
+                  >
+                    {placeName(station, lang)}
+                  </Text>
+                </View>
+              )}
             </View>
-          )}
+            {/* Specs — feed only (compact line, like the detail overlay) */}
+            {!carousel && (
+              <Text
+                numberOfLines={1}
+                style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.medium, fontSize: 12, marginTop: 4, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
+              >
+                {[
+                  !isLandType(listing.propertyType) ? `${listing.rooms} ${t("home.roomsUnit")}` : null,
+                  formatArea(listing, t),
+                  listing.floor != null && listing.floorTotal != null
+                    ? `${listing.floor}/${listing.floorTotal} ${t("home.floorUnit")}`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join("  •  ")}
+              </Text>
+            )}
+          </View>
 
           {/* Photo counter — live index when swiping (only when >1 photo) */}
           {listing.photoCount > 1 && (
@@ -280,91 +291,8 @@ export function PropertyCard({ listing, variant = "feed", cardWidth = 260, favor
           )}
         </View>
 
-        {/* Body (feed only) — title + district + specs under the photo. Carousel
-            puts price/title/district on the photo instead (no white shelf). */}
-        {!carousel && (
-        <Pressable
-          onPress={handleTap}
-          onPressIn={press.onPressIn}
-          onPressOut={press.onPressOut}
-          style={{ paddingHorizontal: 10, paddingTop: 6, paddingBottom: 16 }}
-        >
-          <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 17 }}>
-            {title}
-          </Text>
-
-          {!carousel && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 }}>
-              <Ionicons name="location-outline" size={15} color={colors.textSecondary} />
-              <Text numberOfLines={1} style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, flex: 1 }}>
-                {listing.district}
-              </Text>
-            </View>
-          )}
-
-          {/* Divider between title/location and specs. Explicit hairline pair —
-              the theme `border` token is too faint as a 1px line on the card. */}
-          <View
-            style={{
-              height: 1.5,
-              backgroundColor: mode === "dark" ? "#2E2838" : "#E4DEF0",
-              opacity: 1,
-              alignSelf: "stretch",
-              marginVertical: 12,
-            }}
-          />
-
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 2 }}>
-            <Spec kind="area" icon="resize-outline" text={formatArea(listing, t)} colors={colors} mode={mode} />
-            {!isLandType(listing.propertyType) && (
-              <Spec kind="rooms" icon="bed-outline" text={`${listing.rooms} ${t("home.roomsUnit")}`} colors={colors} mode={mode} />
-            )}
-            {listing.floor != null && listing.floorTotal != null && (
-              <Spec
-                kind="floor"
-                icon="layers-outline"
-                text={`${listing.floor}/${listing.floorTotal} ${t("home.floorUnit")}`}
-                colors={colors}
-                mode={mode}
-              />
-            )}
-          </View>
-        </Pressable>
-        )}
       </Animated.View>
     </View>
   );
 }
 
-function Spec({
-  kind,
-  icon,
-  text,
-  colors,
-  mode,
-}: {
-  kind: keyof typeof SPEC_TINT;
-  icon: keyof typeof Ionicons.glyphMap;
-  text: string;
-  colors: Theme;
-  mode: "light" | "dark";
-}) {
-  const tint = SPEC_TINT[kind];
-  return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-      <View
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: 8,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: mode === "dark" ? tint.dark : tint.light,
-        }}
-      >
-        <Ionicons name={icon} size={15} color={tint.icon} />
-      </View>
-      <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 13 }}>{text}</Text>
-    </View>
-  );
-}
