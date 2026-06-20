@@ -12,7 +12,8 @@
     "loadError": "Yükləmə alınmadı",
     "cancel": "Ləğv et",
     "delete": "Sil",
-    "later": "Sonra"
+    "later": "Sonra",
+    "yes": "Bəli"
   },
   "splash": {
     "subtitle": "Premium yuvanız sizi gözləyir.",
@@ -341,7 +342,9 @@
       "metro": "Metro",
       "school": "Məktəb",
       "sea": "Dəniz",
-      "park": "Park"
+      "park": "Park",
+      "warm_floor": "İsti döşəmə",
+      "sea_view": "Dəniz mənzərəsi"
     },
     "step7Subtitle": "Alıcılar sizinlə necə əlaqə saxlayacaq",
     "step8Subtitle": "Dərc etməzdən əvvəl hər şeyi yoxlayın",
@@ -361,6 +364,12 @@
       "telegram": "Telegram: @username göstərin",
       "whatsapp": "WhatsApp: minimum 9 rəqəm",
       "fixStep": "Dərc etməzdən əvvəl məlumatları yoxlayın"
+    },
+    "summary": {
+      "main": "Əsas",
+      "location": "Yerləşmə",
+      "specs": "Xüsusiyyətlər",
+      "contacts": "Əlaqə"
     }
   },
   "search": {

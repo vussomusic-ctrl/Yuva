@@ -46,6 +46,7 @@ import { formatPrice, Listing } from "../lib/mock/listings";
 import { createListing, updateListing, fetchListingRow } from "../lib/api/listings";
 import { generateDescription } from "../lib/api/ai";
 import { validateStep, validateAll, ValidationState } from "../lib/validation";
+import { amenityLabel } from "../lib/amenityLabel";
 import { ListingFormInput, PhotoItem, rowToForm, rowToPhotoItems } from "../lib/adapters/listing";
 import { useAuth } from "../lib/auth";
 import { useMapPick } from "../lib/map-pick";
@@ -415,7 +416,7 @@ export default function AddListingModal() {
       if (kidsAllowed) features.push(tg("addListing.kidsAllowed"));
       if (petsAllowed) features.push(tg("addListing.petsAllowed"));
     }
-    const amenityLabels = amenities.map((k) => tg(`addListing.amenity.${k}`));
+    const amenityLabels = amenities.map((k) => amenityLabel(k, tg));
 
     try {
       const text = await generateDescription(
@@ -1300,86 +1301,81 @@ export default function AddListingModal() {
                 onPress={() => {}}
               />
 
-              <TintCard tint="violet" style={{ paddingHorizontal: 16, paddingVertical: 6 }}>
-                <SummaryRow
-                  colors={colors}
-                  label={t("filters.dealType")}
-                  value={t(DEALS.find((d) => d.key === dealType)!.labelKey)}
-                />
-                <SummaryRow
-                  colors={colors}
-                  label={t("filters.propertyType")}
-                  value={propertyType ? t(PROPERTY_TYPES.find((p) => p.key === propertyType)!.labelKey) : "—"}
-                />
-                {!isLand && (
-                  <SummaryRow
-                    colors={colors}
-                    label={t("filters.buildType")}
-                    value={t(BUILD_TYPES.find((b) => b.key === buildType)!.labelKey)}
-                  />
+              {/* Price hero — the headline number */}
+              <TintCard tint="violet">
+                <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 13 }}>{t("filters.price")}</Text>
+                <Text style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 28, marginTop: 2 }}>
+                  {formatPrice(Number(price) || 0)}
+                </Text>
+              </TintCard>
+
+              {/* Основное */}
+              <SummaryGroup colors={colors} tint="violet" icon={require("../assets/icons/clay/ruler.png")} title={t("addListing.summary.main")}>
+                <SummaryRow colors={colors} label={t("filters.dealType")} value={t(DEALS.find((d) => d.key === dealType)!.labelKey)} />
+                {propertyType && (
+                  <SummaryRow colors={colors} label={t("filters.propertyType")} value={t(PROPERTY_TYPES.find((p) => p.key === propertyType)!.labelKey)} />
                 )}
-                <SummaryRow colors={colors} label={t("filters.price")} value={formatPrice(Number(price) || 0)} />
+                {!isLand && (
+                  <SummaryRow colors={colors} label={t("filters.buildType")} value={t(BUILD_TYPES.find((b) => b.key === buildType)!.labelKey)} />
+                )}
                 <SummaryRow
                   colors={colors}
                   label={t("filters.area")}
-                  value={
-                    isLand
-                      ? `${Number(area) || 0} ${t("listingTitle.sotUnit")}`
-                      : `${Number(area) || 0} ${t("listingTitle.areaUnit")}`
-                  }
+                  value={isLand ? `${Number(area) || 0} ${t("listingTitle.sotUnit")}` : `${Number(area) || 0} ${t("listingTitle.areaUnit")}`}
                 />
-                {!isLand && (
-                  <SummaryRow colors={colors} label={t("filters.rooms")} value={rooms || "—"} />
-                )}
-                {!isLand && (
-                  <SummaryRow colors={colors} label={t("filters.baths")} value={baths || "—"} />
-                )}
+                {!isLand && rooms !== "" && <SummaryRow colors={colors} label={t("filters.rooms")} value={rooms} />}
+                {!isLand && baths !== "" && <SummaryRow colors={colors} label={t("filters.baths")} value={baths} />}
                 {!isLand && floor !== "" && (
-                  <SummaryRow
-                    colors={colors}
-                    label={t("filters.floor")}
-                    value={floorTotal ? `${floor}/${floorTotal}` : floor}
-                  />
+                  <SummaryRow colors={colors} label={t("filters.floor")} value={floorTotal ? `${floor}/${floorTotal}` : floor} />
                 )}
-                <SummaryRow colors={colors} label={t("filters.region")} value={placeId ? placeName(placeById(placeId)!, lang) : "—"} />
-                <SummaryRow colors={colors} label={t("filters.metro")} value={metroId ? placeName(placeById(metroId)!, lang) : "—"} />
-                <SummaryRow
-                  colors={colors}
-                  label={t("addListing.mapPointLabel")}
-                  value={picked ? `${picked.lat.toFixed(5)}, ${picked.lng.toFixed(5)}` : "—"}
-                />
+              </SummaryGroup>
+
+              {/* Локация */}
+              {(placeId || metroId || picked) && (
+                <SummaryGroup colors={colors} tint="blue" icon={require("../assets/icons/clay/pin.png")} title={t("addListing.summary.location")}>
+                  {placeId && <SummaryRow colors={colors} label={t("filters.region")} value={placeName(placeById(placeId)!, lang)} />}
+                  {metroId && <SummaryRow colors={colors} label={t("filters.metro")} value={placeName(placeById(metroId)!, lang)} />}
+                  {picked && (
+                    <SummaryRow colors={colors} label={t("addListing.mapPointLabel")} value={`${picked.lat.toFixed(5)}, ${picked.lng.toFixed(5)}`} />
+                  )}
+                </SummaryGroup>
+              )}
+
+              {/* Характеристики — only when something is filled */}
+              {((isResidential && (renovation || heating)) ||
+                (propertyType === "house" && material) ||
+                amenities.length > 0 ||
+                (!isLand && furnished) ||
+                mortgage) && (
+                <SummaryGroup colors={colors} tint="green" icon={require("../assets/icons/clay/building.png")} title={t("addListing.summary.specs")}>
+                  {isResidential && renovation && (
+                    <SummaryRow colors={colors} label={t("addListing.renovationLabel")} value={t(`addListing.renovationOpts.${renovation}`)} />
+                  )}
+                  {propertyType === "house" && material && (
+                    <SummaryRow colors={colors} label={t("addListing.materialLabel")} value={t(`addListing.materialOpts.${material}`)} />
+                  )}
+                  {isResidential && heating && (
+                    <SummaryRow colors={colors} label={t("addListing.heatingLabel")} value={t(`addListing.heatingOpts.${heating}`)} />
+                  )}
+                  {!isLand && furnished && <SummaryRow colors={colors} label={t("filters.furnished")} value={t("common.yes")} />}
+                  {mortgage && <SummaryRow colors={colors} label={t("filters.mortgage")} value={t("common.yes")} />}
+                  {amenities.length > 0 && (
+                    <SummaryRow colors={colors} label={t("addListing.step6Title")} value={amenities.map((k) => amenityLabel(k, t)).join(", ")} />
+                  )}
+                </SummaryGroup>
+              )}
+
+              {/* Контакты */}
+              <SummaryGroup colors={colors} tint="peach" ionicon="call" title={t("addListing.summary.contacts")}>
                 <SummaryRow colors={colors} label={t("addListing.phoneLabel")} value={`+994 ${phoneLocal}`} />
-                {telegram.trim() !== "" && (
-                  <SummaryRow colors={colors} label={t("addListing.telegramLabel")} value={telegram.trim()} />
-                )}
-                {whatsapp.trim() !== "" && (
-                  <SummaryRow colors={colors} label={t("addListing.whatsappLabel")} value={whatsapp.trim()} />
-                )}
-                {/* Characteristics (steps 5–6) — shown only when filled, UI-language labels */}
-                {isResidential && renovation && (
-                  <SummaryRow colors={colors} label={t("addListing.renovationLabel")} value={t(`addListing.renovationOpts.${renovation}`)} />
-                )}
-                {propertyType === "house" && material && (
-                  <SummaryRow colors={colors} label={t("addListing.materialLabel")} value={t(`addListing.materialOpts.${material}`)} />
-                )}
-                {isResidential && heating && (
-                  <SummaryRow colors={colors} label={t("addListing.heatingLabel")} value={t(`addListing.heatingOpts.${heating}`)} />
-                )}
-                {amenities.length > 0 && (
-                  <SummaryRow
-                    colors={colors}
-                    label={t("addListing.step6Title")}
-                    value={amenities.map((k) => t(`addListing.amenity.${k}`)).join(", ")}
-                  />
-                )}
-                {!isLand && (
-                  <SummaryRow colors={colors} label={t("filters.furnished")} value={furnished ? "✓" : "—"} />
-                )}
-                <SummaryRow colors={colors} label={t("filters.mortgage")} value={mortgage ? "✓" : "—"} isLast />
-              </TintCard>
+                {telegram.trim() !== "" && <SummaryRow colors={colors} label={t("addListing.telegramLabel")} value={telegram.trim()} />}
+                {whatsapp.trim() !== "" && <SummaryRow colors={colors} label={t("addListing.whatsappLabel")} value={whatsapp.trim()} />}
+              </SummaryGroup>
 
               {description.trim() !== "" && (
-                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, lineHeight: 20 }}>{description.trim()}</Text>
+                <SummaryGroup colors={colors} tint="violet" icon={require("../assets/icons/clay/roller.png")} title={t("addListing.descriptionLabel")}>
+                  <Text style={{ color: colors.text, fontFamily: font.regular, fontSize: 14, lineHeight: 20 }}>{description.trim()}</Text>
+                </SummaryGroup>
               )}
             </View>
           )}
@@ -2138,32 +2134,44 @@ function ToggleRow({
   );
 }
 
-function SummaryRow({
-  colors,
-  label,
-  value,
-  isLast,
-}: {
-  colors: Theme;
-  label: string;
-  value: string;
-  isLast?: boolean;
-}) {
+function SummaryRow({ colors, label, value }: { colors: Theme; label: string; value: string }) {
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingVertical: 11,
-        borderBottomWidth: isLast ? 0 : 1,
-        borderBottomColor: colors.border,
-      }}
-    >
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 7 }}>
       <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>{label}</Text>
       <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 14, flexShrink: 1, textAlign: "right", marginLeft: 12 }}>
         {value}
       </Text>
     </View>
+  );
+}
+
+// Clay summary category — tinted card + clay icon + title + SummaryRows.
+function SummaryGroup({
+  colors,
+  tint,
+  icon,
+  ionicon,
+  title,
+  children,
+}: {
+  colors: Theme;
+  tint: TintKey;
+  icon?: number;
+  ionicon?: keyof typeof Ionicons.glyphMap;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <TintCard tint={tint} style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 }}>
+        {icon != null ? (
+          <Image source={icon} style={{ width: 22, height: 22 }} resizeMode="contain" />
+        ) : ionicon ? (
+          <Ionicons name={ionicon} size={20} color={tints[tint].shadow} />
+        ) : null}
+        <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 15 }}>{title}</Text>
+      </View>
+      {children}
+    </TintCard>
   );
 }

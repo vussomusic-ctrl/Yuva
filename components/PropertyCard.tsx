@@ -8,8 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
-import { Listing, formatPrice, formatArea, isPromoActive, isRecentlyBumped } from "../lib/mock/listings";
-import { isLandType } from "../lib/propertyTypes";
+import { Listing, formatPrice, isPromoActive, isRecentlyBumped } from "../lib/mock/listings";
 import { buildListingTitle } from "../lib/listingTitle";
 import { placeById, placeName } from "../lib/places";
 import { MetroBadge } from "./MetroBadge";
@@ -240,23 +239,6 @@ export function PropertyCard({ listing, variant = "feed", cardWidth = 260, favor
                 </View>
               )}
             </View>
-            {/* Specs — feed only (compact line, like the detail overlay) */}
-            {!carousel && (
-              <Text
-                numberOfLines={1}
-                style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.medium, fontSize: 12, marginTop: 4, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
-              >
-                {[
-                  !isLandType(listing.propertyType) ? `${listing.rooms} ${t("home.roomsUnit")}` : null,
-                  formatArea(listing, t),
-                  listing.floor != null && listing.floorTotal != null
-                    ? `${listing.floor}/${listing.floorTotal} ${t("home.floorUnit")}`
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join("  •  ")}
-              </Text>
-            )}
           </View>
 
           {/* Photo counter — live index when swiping (only when >1 photo) */}

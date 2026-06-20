@@ -12,7 +12,8 @@
     "loadError": "Couldn't load",
     "cancel": "Cancel",
     "delete": "Delete",
-    "later": "Later"
+    "later": "Later",
+    "yes": "Yes"
   },
   "splash": {
     "subtitle": "Your premium nest awaits.",
@@ -341,7 +342,9 @@
       "metro": "Metro",
       "school": "School",
       "sea": "Sea",
-      "park": "Park"
+      "park": "Park",
+      "warm_floor": "Warm floor",
+      "sea_view": "Sea view"
     },
     "step7Subtitle": "How buyers will reach you",
     "step8Subtitle": "Review everything before publishing",
@@ -361,6 +364,12 @@
       "telegram": "Telegram: enter @username",
       "whatsapp": "WhatsApp: at least 9 digits",
       "fixStep": "Check the data before publishing"
+    },
+    "summary": {
+      "main": "Main",
+      "location": "Location",
+      "specs": "Features",
+      "contacts": "Contacts"
     }
   },
   "search": {

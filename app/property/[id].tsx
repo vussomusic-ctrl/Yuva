@@ -43,6 +43,7 @@ import { useDraggableSheet, useSheetScrollGesture, usePressScale } from "../../l
 import { Header } from "../my-listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { placeById, placeName } from "../../lib/places";
+import { amenityLabel } from "../../lib/amenityLabel";
 import { MetroBadge } from "../../components/MetroBadge";
 import { useLanguage } from "../../lib/i18n/languages";
 import { detectLang } from "../../lib/langDetect";
@@ -684,7 +685,7 @@ export default function PropertyDetailScreen() {
                       style={{ width: "50%", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
                     >
                       <Ionicons name={meta.icon} size={20} color={brand.violet} />
-                      <Text style={{ color: colors.text, fontFamily: font.regular, fontSize: 14, flex: 1 }}>{t(meta.labelKey)}</Text>
+                      <Text style={{ color: colors.text, fontFamily: font.regular, fontSize: 14, flex: 1 }}>{amenityLabel(key, t)}</Text>
                     </View>
                   );
                 })}
