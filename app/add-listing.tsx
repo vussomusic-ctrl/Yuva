@@ -100,7 +100,7 @@ const GRID_GAP = 12;
 const PHOTO_SIZE = (Dimensions.get("window").width - 32 - GRID_GAP * 2) / 3;
 
 export default function AddListingModal() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { current: lang, languages } = useLanguage();
   const { colors, mode } = useTheme();
   const router = useRouter();
@@ -389,6 +389,32 @@ export default function AddListingModal() {
     setGenOpen(false);
     if (!canGenerate || generating) return;
     setGenerating(true);
+
+    // Map codes → human-readable labels IN THE GENERATION LANGUAGE (not the UI
+    // language) so the model gets real words, e.g. "Евроремонт"/"Pool".
+    const tg = i18n.getFixedT(targetLang);
+    const opt = (group: string, code: string | null) => (code ? tg(`addListing.${group}.${code}`) : undefined);
+
+    // True booleans → readable feature labels (only the ones that hold).
+    const features: string[] = [];
+    if (isLand) {
+      if (utilGas) features.push(tg("addListing.utilGas"));
+      if (utilWater) features.push(tg("addListing.utilWater"));
+      if (utilElectricity) features.push(tg("addListing.utilElectricity"));
+      if (utilSewage) features.push(tg("addListing.utilSewage"));
+      if (roadAccess) features.push(tg("addListing.roadAccess"));
+    }
+    if (isCommercial) {
+      if (separateEntrance) features.push(tg("addListing.separateEntrance"));
+      if (shopfront) features.push(tg("addListing.shopfront"));
+    }
+    if (isRent) {
+      if (utilitiesIncluded) features.push(tg("addListing.utilitiesIncluded"));
+      if (kidsAllowed) features.push(tg("addListing.kidsAllowed"));
+      if (petsAllowed) features.push(tg("addListing.petsAllowed"));
+    }
+    const amenityLabels = amenities.map((k) => tg(`addListing.amenity.${k}`));
+
     try {
       const text = await generateDescription(
         {
@@ -406,6 +432,24 @@ export default function AddListingModal() {
           furnished: isLand ? false : furnished,
           mortgage,
           location: resolveLocation(targetLang),
+          // Characteristics (step 5) — only when set, gated by property type.
+          ...(isResidential && renovation ? { renovation: opt("renovationOpts", renovation) } : {}),
+          ...(propertyType === "house" && material ? { material: opt("materialOpts", material) } : {}),
+          ...(isResidential && heating ? { heating: opt("heatingOpts", heating) } : {}),
+          ...(propertyType === "apartment" && buildType === "secondary" && buildingSeries
+            ? { buildingSeries: opt("seriesOpts", buildingSeries) }
+            : {}),
+          ...(propertyType === "apartment" && complexName.trim() ? { complexName: complexName.trim() } : {}),
+          ...(propertyType === "house" && builtYear ? { builtYear: Number(builtYear) } : {}),
+          ...(isLand && landPurpose ? { landPurpose: opt("landPurposeOpts", landPurpose) } : {}),
+          ...(isCommercial && commercialType ? { commercialType: opt("commercialTypeOpts", commercialType) } : {}),
+          // Amenities (step 6) + true-boolean features.
+          ...(amenityLabels.length ? { amenities: amenityLabels } : {}),
+          ...(features.length ? { features } : {}),
+          // Rent terms (numbers only when set).
+          ...(isRent && deposit ? { deposit: Number(deposit) } : {}),
+          ...(isRent && minTerm ? { minTerm: Number(minTerm) } : {}),
+          ...(isRent && prepayment ? { prepayment: Number(prepayment) } : {}),
         },
         targetLang,
       );

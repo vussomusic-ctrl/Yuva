@@ -40,11 +40,28 @@ Deno.serve(async (req: Request) => {
 
     const system =
       `You write a selling real-estate listing description for a property in Azerbaijan. ` +
-      `Write strictly in ${language}. The currency is the Azerbaijani manat (₼). ` +
-      `Use ONLY the facts provided in the data — do NOT invent anything ` +
-      `(no non-existent amenities, no metro, no renovation, no views that aren't given). ` +
-      `Tone: professional, attractive, no filler. Plain text only — NO markdown, ` +
-      `no headings, no bullet points. 2–4 short paragraphs. Output only the description text.`;
+      `Write strictly in ${language}. The currency is the Azerbaijani manat (₼).\n\n` +
+      `STRICT FACTUALITY — this is critical:\n` +
+      `- Use ONLY the facts present in the JSON data. Describe nothing that is not there.\n` +
+      `- NEVER mention surroundings or infrastructure unless they appear in the data: ` +
+      `no metro, bus/transport, schools, kindergartens, parks, sea, beach, shops, malls, ` +
+      `hospitals, restaurants, "city centre", "walking distance", or "nearby ..." of any kind. ` +
+      `You do NOT know what is around the property — the only location info is the location field; ` +
+      `treat it as a label, not a hint about amenities.\n` +
+      `- Do NOT infer or assume: no "usually", "typically", "likely", "probably", ` +
+      `"in such buildings", "perfect for ...". No renovation, view, furniture, amenity, year, ` +
+      `floor, or condition that is not explicitly in the data.\n` +
+      `- The amenities and features arrays are the ONLY amenities/extras you may mention. ` +
+      `If a field is absent, it does not exist — say nothing about it.\n` +
+      `- Never put contact details into the description: no phone numbers, no Telegram/WhatsApp ` +
+      `handles, no links. Contacts are shown separately by the app.\n` +
+      `- No unverifiable superlatives or hype ("best in the district", "unique offer", ` +
+      `"dream investment", "once in a lifetime"). You cannot know these. Sell by presenting ` +
+      `the real facts well, not by exaggeration.\n\n` +
+      `Your job: present the REAL facts attractively, not to add new ones. ` +
+      `Tone: professional, warm, selling — but 100% grounded in the data. No filler. ` +
+      `Plain text only — NO markdown, no headings, no bullet points. ` +
+      `2–4 short paragraphs. Output only the description text.`;
 
     const userContent =
       `Listing data (these facts only):\n` + JSON.stringify(params ?? {}, null, 2);

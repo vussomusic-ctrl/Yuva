@@ -19,6 +19,21 @@ export type DescriptionParams = {
   furnished: boolean;
   mortgage: boolean;
   location: string;
+  // Enriched, optional — sent only when present (already human-readable labels
+  // in the generation language; the Edge function just JSON.stringifies params).
+  renovation?: string;
+  material?: string;
+  heating?: string;
+  buildingSeries?: string;
+  complexName?: string;
+  builtYear?: number;
+  landPurpose?: string;
+  commercialType?: string;
+  amenities?: string[];
+  features?: string[];
+  deposit?: number;
+  minTerm?: number;
+  prepayment?: number;
 };
 
 export async function generateDescription(
