@@ -370,7 +370,13 @@
       "location": "Yerləşmə",
       "specs": "Xüsusiyyətlər",
       "contacts": "Əlaqə"
-    }
+    },
+    "sellSubtitle": "Daşınmazı satın",
+    "rentSubtitle": "Kirayəyə verin",
+    "typeApartmentSub": "Yaşayış daşınmazı",
+    "typeHouseSub": "Fərdi ev və ya villa",
+    "typeLandSub": "Tikinti üçün torpaq",
+    "typeObjectSub": "Mağaza, ofis, anbar"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",

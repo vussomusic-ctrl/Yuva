@@ -23,7 +23,6 @@ import { brand, tints, TintKey, Theme } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
 import Animated from "react-native-reanimated";
 import MapView, { PROVIDER_DEFAULT } from "react-native-maps";
-import { Segmented } from "../components/Segmented";
 import { usePressScale } from "../lib/animations";
 import { ClayToggle } from "../components/ClayToggle";
 import { TintCard } from "../components/TintCard";
@@ -54,11 +53,17 @@ import { useMapPick } from "../lib/map-pick";
 const TOTAL_STEPS = 8;
 
 // Premium type cards (step 2) — clay category icons + pastel tints per theme.
-const TYPE_CARDS: { type: PropertyTypeKey; icon: number; labelKey: string; tint: { light: string; dark: string } }[] = [
-  { type: "apartment", icon: require("../assets/icons/categories/menziller.png"), labelKey: "filters.typeApartment", tint: { light: "#F0E9FB", dark: "#241B33" } },
-  { type: "house", icon: require("../assets/icons/categories/evler.png"), labelKey: "filters.typeHouse", tint: { light: "#E5F0FB", dark: "#1A2530" } },
-  { type: "land", icon: require("../assets/icons/categories/torpaq.png"), labelKey: "filters.typeLand", tint: { light: "#E8F5EA", dark: "#1A2A1E" } },
-  { type: "object", icon: require("../assets/icons/categories/obyektler.png"), labelKey: "filters.typeObject", tint: { light: "#FBEFE5", dark: "#30251A" } },
+const TYPE_CARDS: { type: PropertyTypeKey; icon: number; labelKey: string; subKey: string; tint: { light: string; dark: string } }[] = [
+  { type: "apartment", icon: require("../assets/icons/categories/menziller.png"), labelKey: "filters.typeApartment", subKey: "addListing.typeApartmentSub", tint: { light: "#F0E9FB", dark: "#241B33" } },
+  { type: "house", icon: require("../assets/icons/categories/evler.png"), labelKey: "filters.typeHouse", subKey: "addListing.typeHouseSub", tint: { light: "#E5F0FB", dark: "#1A2530" } },
+  { type: "land", icon: require("../assets/icons/categories/torpaq.png"), labelKey: "filters.typeLand", subKey: "addListing.typeLandSub", tint: { light: "#E8F5EA", dark: "#1A2A1E" } },
+  { type: "object", icon: require("../assets/icons/categories/obyektler.png"), labelKey: "filters.typeObject", subKey: "addListing.typeObjectSub", tint: { light: "#FBEFE5", dark: "#30251A" } },
+];
+
+// Deal-type clay cards (3D bird illustrations, transparent PNG).
+const DEAL_CARDS: { key: DealKey; image: number; labelKey: string; subKey: string }[] = [
+  { key: "sale", image: require("../assets/icons/deals/deal-sale.png"), labelKey: "home.dealSale", subKey: "addListing.sellSubtitle" },
+  { key: "rent", image: require("../assets/icons/deals/deal-rent.png"), labelKey: "home.dealRent", subKey: "addListing.rentSubtitle" },
 ];
 
 // Amenities (step 6) — multi-select, grouped. `key` is stored in amenities[];
@@ -719,22 +724,33 @@ export default function AddListingModal() {
           {step === 2 && (
             <View style={{ gap: 24, paddingTop: 4 }}>
               <Section title={t("filters.dealType")} colors={colors}>
-                <Segmented
-                  options={DEALS.map((d) => ({ key: d.key, label: t(d.labelKey) }))}
-                  value={dealType}
-                  onChange={(k) => setDealType(k as DealKey)}
-                />
+                <View style={{ flexDirection: "row", gap: 12 }}>
+                  {DEAL_CARDS.map((d) => (
+                    <DealCard
+                      key={d.key}
+                      image={d.image}
+                      label={t(d.labelKey)}
+                      subtitle={t(d.subKey)}
+                      tint={mode === "dark" ? "#241B33" : "#F0E9FB"}
+                      active={dealType === d.key}
+                      colors={colors}
+                      onPress={() => setDealType(d.key)}
+                    />
+                  ))}
+                </View>
               </Section>
               <Section title={t("filters.propertyType")} colors={colors}>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                <View style={{ gap: 12 }}>
                   {TYPE_CARDS.map((card) => (
-                    <TypeCard
+                    <TypeRow
                       key={card.type}
                       icon={card.icon}
                       label={t(card.labelKey)}
+                      subtitle={t(card.subKey)}
                       tint={card.tint[mode]}
                       active={propertyType === card.type}
                       colors={colors}
+                      mode={mode}
                       onPress={() => setPropertyType(card.type)}
                     />
                   ))}
@@ -742,11 +758,18 @@ export default function AddListingModal() {
               </Section>
               {!isLand && (
                 <Section title={t("filters.buildType")} colors={colors}>
-                  <Segmented
-                    options={BUILD_TYPES.map((b) => ({ key: b.key, label: t(b.labelKey) }))}
-                    value={buildType}
-                    onChange={(k) => setBuildType(k as BuildKey)}
-                  />
+                  <View style={{ flexDirection: "row", gap: 12 }}>
+                    {BUILD_TYPES.map((b) => (
+                      <BuildChip
+                        key={b.key}
+                        ionicon={b.key === "new" ? "business" : "home"}
+                        label={t(b.labelKey)}
+                        active={buildType === b.key}
+                        colors={colors}
+                        onPress={() => setBuildType(b.key)}
+                      />
+                    ))}
+                  </View>
                 </Section>
               )}
             </View>
@@ -1726,16 +1749,20 @@ function Step1Photos({
 }
 
 // --- Shared local form bits ---
-function TypeCard({
-  icon,
+// Deal-type card (step 2) — big clay illustration + label + subtitle; selected
+// gets a violet border, light fill and a check badge.
+function DealCard({
+  image,
   label,
+  subtitle,
   tint,
   active,
   colors,
   onPress,
 }: {
-  icon: number;
+  image: number;
   label: string;
+  subtitle: string;
   tint: string;
   active: boolean;
   colors: Theme;
@@ -1743,19 +1770,18 @@ function TypeCard({
 }) {
   const press = usePressScale(0.96);
   return (
-    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={{ width: "48%" }}>
+    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={{ flex: 1 }}>
       <Animated.View
         style={[
           {
-            aspectRatio: 1.15,
             borderRadius: 20,
             backgroundColor: active ? tint : colors.card,
             borderWidth: 2,
             borderColor: active ? brand.violet : "transparent",
             alignItems: "center",
-            justifyContent: "center",
-            gap: 10,
-            paddingVertical: 16,
+            paddingVertical: 18,
+            paddingHorizontal: 12,
+            gap: 6,
             shadowColor: active ? brand.violet : "#000",
             shadowOpacity: active ? 0.18 : 0.05,
             shadowRadius: active ? 12 : 6,
@@ -1765,10 +1791,136 @@ function TypeCard({
           press.style,
         ]}
       >
-        <Image source={icon} style={{ width: 52, height: 52 }} resizeMode="contain" />
-        <Text numberOfLines={1} style={{ color: active ? brand.violet : colors.text, fontFamily: active ? font.bold : font.medium, fontSize: 14 }}>
-          {label}
-        </Text>
+        <Image source={image} style={{ width: 100, height: 100 }} resizeMode="contain" />
+        <Text style={{ color: active ? brand.violet : colors.text, fontFamily: font.bold, fontSize: 16 }}>{label}</Text>
+        <Text numberOfLines={1} style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12 }}>{subtitle}</Text>
+        {active && (
+          <View
+            style={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              width: 24,
+              height: 24,
+              borderRadius: 12,
+              backgroundColor: brand.violet,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="checkmark" size={15} color="#FFFFFF" />
+          </View>
+        )}
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+// Property-type row (step 2) — clay icon + label + subtitle + chevron-in-circle;
+// selected gets a violet border + light fill.
+function TypeRow({
+  icon,
+  label,
+  subtitle,
+  tint,
+  active,
+  colors,
+  mode,
+  onPress,
+}: {
+  icon: number;
+  label: string;
+  subtitle: string;
+  tint: string;
+  active: boolean;
+  colors: Theme;
+  mode: "light" | "dark";
+  onPress: () => void;
+}) {
+  const press = usePressScale(0.98);
+  return (
+    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View
+        style={[
+          {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+            borderRadius: 18,
+            padding: 12,
+            backgroundColor: active ? tint : colors.card,
+            borderWidth: 2,
+            borderColor: active ? brand.violet : "transparent",
+            shadowColor: active ? brand.violet : "#000",
+            shadowOpacity: active ? 0.15 : 0.04,
+            shadowRadius: active ? 10 : 5,
+            shadowOffset: { width: 0, height: active ? 3 : 2 },
+            elevation: active ? 3 : 1,
+          },
+          press.style,
+        ]}
+      >
+        <Image source={icon} style={{ width: 60, height: 60 }} resizeMode="contain" />
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: active ? brand.violet : colors.text, fontFamily: font.bold, fontSize: 16 }}>{label}</Text>
+          <Text numberOfLines={1} style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13, marginTop: 2 }}>{subtitle}</Text>
+        </View>
+        <View
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 15,
+            backgroundColor: active ? brand.violet : mode === "dark" ? "rgba(255,255,255,0.08)" : "#F2EEFA",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="chevron-forward" size={18} color={active ? "#FFFFFF" : colors.textSecondary} />
+        </View>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+// Build-type chip (step 2) — compact icon + label; active = brand gradient.
+function BuildChip({
+  ionicon,
+  label,
+  active,
+  colors,
+  onPress,
+}: {
+  ionicon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  active: boolean;
+  colors: Theme;
+  onPress: () => void;
+}) {
+  const press = usePressScale(0.97);
+  const inner = (
+    <>
+      <Ionicons name={ionicon} size={18} color={active ? "#FFFFFF" : colors.text} />
+      <Text style={{ color: active ? "#FFFFFF" : colors.text, fontFamily: font.semibold, fontSize: 14 }}>{label}</Text>
+    </>
+  );
+  const base = {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 14,
+  };
+  return (
+    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={{ flex: 1 }}>
+      <Animated.View style={press.style}>
+        {active ? (
+          <LinearGradient colors={brand.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={base}>
+            {inner}
+          </LinearGradient>
+        ) : (
+          <View style={[base, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}>{inner}</View>
+        )}
       </Animated.View>
     </Pressable>
   );

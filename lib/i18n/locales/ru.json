@@ -370,7 +370,13 @@
       "location": "Локация",
       "specs": "Характеристики",
       "contacts": "Контакты"
-    }
+    },
+    "sellSubtitle": "Продать недвижимость",
+    "rentSubtitle": "Сдать в аренду",
+    "typeApartmentSub": "Жилая недвижимость",
+    "typeHouseSub": "Частный дом или вилла",
+    "typeLandSub": "Участок под строительство",
+    "typeObjectSub": "Магазин, офис, склад"
   },
   "search": {
     "resultsCount": "Найдено {{count}}",

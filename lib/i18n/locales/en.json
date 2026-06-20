@@ -370,7 +370,13 @@
       "location": "Location",
       "specs": "Features",
       "contacts": "Contacts"
-    }
+    },
+    "sellSubtitle": "Sell a property",
+    "rentSubtitle": "Put up for rent",
+    "typeApartmentSub": "Residential property",
+    "typeHouseSub": "Private house or villa",
+    "typeLandSub": "Plot for construction",
+    "typeObjectSub": "Shop, office, warehouse"
   },
   "search": {
     "resultsCount": "{{count}} listings found",
