@@ -65,6 +65,8 @@ export default function MapScreen() {
   // guard lets the map-press clear only when it wasn't a pin tap (last ~350ms).
   const lastPinPress = useRef(0);
   const cardY = useRef(new Animated.Value(CARD_HIDDEN)).current;
+  const mapRef = useRef<MapView>(null);
+  const regionRef = useRef<Region | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -100,9 +102,13 @@ export default function MapScreen() {
         </View>
       ) : (
         <MapView
+          ref={mapRef}
           provider={PROVIDER_DEFAULT}
           style={StyleSheet.absoluteFill}
           initialRegion={region}
+          onRegionChangeComplete={(r) => {
+            regionRef.current = r;
+          }}
           onPress={() => {
             if (Date.now() - lastPinPress.current < 350) return; // pin tap — keep selection
             setSelectedId(null);
@@ -118,6 +124,17 @@ export default function MapScreen() {
                 lastPinPress.current = Date.now();
                 setSelectedId(l.id);
                 setCardData(l);
+                // Lift the selected pin above the incoming card (zoom preserved).
+                const r = regionRef.current ?? region;
+                mapRef.current?.animateToRegion(
+                  {
+                    latitude: l.lat - r.latitudeDelta * 0.3,
+                    longitude: l.lng,
+                    latitudeDelta: r.latitudeDelta,
+                    longitudeDelta: r.longitudeDelta,
+                  },
+                  300,
+                );
               }}
             />
           ))}
