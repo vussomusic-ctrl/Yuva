@@ -1605,7 +1605,7 @@ function Step1Photos({
           tint="violet"
           onPress={onAdd}
           style={{
-            height: 190,
+            height: 220,
             alignItems: "center",
             justifyContent: "center",
             borderWidth: 2,
@@ -1613,28 +1613,9 @@ function Step1Photos({
             borderColor: "rgba(139,63,214,0.4)",
           }}
         >
-          <LinearGradient
-            colors={brand.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              width: 88,
-              height: 88,
-              borderRadius: 44,
-              alignItems: "center",
-              justifyContent: "center",
-              shadowColor: brand.magenta,
-              shadowOpacity: 0.4,
-              shadowRadius: 16,
-              shadowOffset: { width: 0, height: 8 },
-            }}
-          >
-            <Ionicons name="camera" size={40} color="#FFFFFF" />
-            <View style={{ position: "absolute", bottom: 6, right: 6 }}>
-              <Ionicons name="add-circle" size={22} color="#FFFFFF" />
-            </View>
-          </LinearGradient>
-          <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 17, marginTop: 14 }}>
+          {/* Bird mascot with a camera (continues the step-2 character) */}
+          <Image source={require("../assets/icons/deals/bird-camera.png")} style={{ width: 130, height: 130 }} resizeMode="contain" />
+          <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 17, marginTop: 10 }}>
             {t("addListing.addPhoto")}
           </Text>
           <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13, marginTop: 4 }}>
