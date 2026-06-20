@@ -264,7 +264,7 @@
       "none": "Yoxdur"
     },
     "whatsappLabel": "WhatsApp (istəyə bağlı)",
-    "whatsappPlaceholder": "+994 50 123 45 67",
+    "whatsappPlaceholder": "(50) 123 45 67",
     "landCharacteristics": "Torpağın xüsusiyyətləri",
     "commercialCharacteristics": "Obyektin xüsusiyyətləri",
     "rentConditions": "Kirayə şərtləri",
@@ -342,7 +342,8 @@
       "school": "Məktəb",
       "sea": "Dəniz",
       "park": "Park"
-    }
+    },
+    "step7Subtitle": "Alıcılar sizinlə necə əlaqə saxlayacaq"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",

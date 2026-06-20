@@ -264,7 +264,7 @@
       "none": "None"
     },
     "whatsappLabel": "WhatsApp (optional)",
-    "whatsappPlaceholder": "+994 50 123 45 67",
+    "whatsappPlaceholder": "(50) 123 45 67",
     "landCharacteristics": "Land characteristics",
     "commercialCharacteristics": "Premises characteristics",
     "rentConditions": "Rent terms",
@@ -342,7 +342,8 @@
       "school": "School",
       "sea": "Sea",
       "park": "Park"
-    }
+    },
+    "step7Subtitle": "How buyers will reach you"
   },
   "search": {
     "resultsCount": "{{count}} listings found",

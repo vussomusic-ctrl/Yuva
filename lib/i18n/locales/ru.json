@@ -264,7 +264,7 @@
       "none": "Нет"
     },
     "whatsappLabel": "WhatsApp (необязательно)",
-    "whatsappPlaceholder": "+994 50 123 45 67",
+    "whatsappPlaceholder": "(50) 123 45 67",
     "landCharacteristics": "Характеристики участка",
     "commercialCharacteristics": "Характеристики помещения",
     "rentConditions": "Условия аренды",
@@ -342,7 +342,8 @@
       "school": "Школа",
       "sea": "Море",
       "park": "Парк"
-    }
+    },
+    "step7Subtitle": "Как с вами свяжутся покупатели"
   },
   "search": {
     "resultsCount": "Найдено {{count}}",

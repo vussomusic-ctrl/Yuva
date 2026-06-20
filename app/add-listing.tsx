@@ -1112,78 +1112,66 @@ export default function AddListingModal() {
           )}
 
           {step === 7 && (
-            <View style={{ gap: 18, paddingTop: 4 }}>
-              <Field label={t("addListing.phoneLabel")} colors={colors}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    height: 48,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    backgroundColor: colors.card,
-                    paddingHorizontal: 14,
-                  }}
-                >
-                  <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 15, marginRight: 6 }}>+994</Text>
-                  <TextInput
-                    value={phoneLocal}
-                    onChangeText={(text) => setPhoneLocal(text.replace(/[^\d]/g, "").replace(/^0+/, "").slice(0, 9))}
-                    placeholder=""
-                    keyboardType="phone-pad"
-                    maxLength={9}
-                    style={{ flex: 1, color: colors.text, fontFamily: font.regular, fontSize: 15 }}
-                  />
+            <View style={{ gap: 18, paddingTop: 16 }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, marginBottom: 2 }}>
+                {t("addListing.step7Subtitle")}
+              </Text>
+
+              {/* Phone — clay card with fixed +994 prefix (input logic unchanged) */}
+              <TintCard tint="violet" style={{ paddingVertical: 12 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <Ionicons name="call" size={32} color={tints.violet.shadow} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 12 }}>
+                      {t("addListing.phoneLabel")}
+                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      <Text style={{ color: colors.textSecondary, fontFamily: font.bold, fontSize: 20, marginRight: 6 }}>+994</Text>
+                      <TextInput
+                        value={phoneLocal}
+                        onChangeText={(text) => setPhoneLocal(text.replace(/[^\d]/g, "").replace(/^0+/, "").slice(0, 9))}
+                        placeholder="(50) 123 45 67"
+                        placeholderTextColor={colors.textSecondary}
+                        keyboardType="phone-pad"
+                        maxLength={9}
+                        style={{ flex: 1, color: colors.text, fontFamily: font.bold, fontSize: 20, padding: 0, backgroundColor: "transparent" }}
+                      />
+                    </View>
+                  </View>
                 </View>
-              </Field>
+              </TintCard>
 
-              <Field label={t("addListing.telegramLabel")} colors={colors}>
-                <Input
-                  colors={colors}
-                  value={telegram}
-                  onChangeText={setTelegram}
-                  placeholder={t("addListing.telegramPlaceholder")}
-                  keyboardType="default"
-                  autoCapitalize="none"
-                />
-              </Field>
+              {/* Telegram / WhatsApp (clay number-style cards) */}
+              <NumCard
+                colors={colors}
+                tint="blue"
+                ionicon="paper-plane"
+                label={t("addListing.telegramLabel")}
+                value={telegram}
+                onChangeText={setTelegram}
+                placeholder={t("addListing.telegramPlaceholder")}
+                keyboardType="default"
+                autoCapitalize="none"
+              />
+              <NumCard
+                colors={colors}
+                tint="green"
+                ionicon="logo-whatsapp"
+                label={t("addListing.whatsappLabel")}
+                value={whatsapp}
+                onChangeText={setWhatsapp}
+                placeholder={t("addListing.whatsappPlaceholder")}
+                keyboardType="phone-pad"
+              />
 
-              <Field label={t("addListing.whatsappLabel")} colors={colors}>
-                <Input
-                  colors={colors}
-                  value={whatsapp}
-                  onChangeText={setWhatsapp}
-                  placeholder={t("addListing.whatsappPlaceholder")}
-                  keyboardType="phone-pad"
-                />
-              </Field>
-
+              {/* Description — clay gradient AI button + textarea (AI flow unchanged) */}
               <Field label={t("addListing.descriptionLabel")} colors={colors}>
-                <Pressable
-                  onPress={() => setGenOpen(true)}
+                <AiGenButton
+                  generating={generating}
                   disabled={!canGenerate || generating}
-                  style={({ pressed }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    paddingVertical: 12,
-                    borderRadius: 12,
-                    borderWidth: 1.5,
-                    borderColor: brand.violet,
-                    opacity: !canGenerate || generating ? 0.45 : pressed ? 0.7 : 1,
-                  })}
-                >
-                  {generating ? (
-                    <ActivityIndicator size="small" color={brand.violet} />
-                  ) : (
-                    <Ionicons name="sparkles-outline" size={18} color={brand.violet} />
-                  )}
-                  <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 15 }}>
-                    {generating ? t("addListing.generating") : t("addListing.generate")}
-                  </Text>
-                </Pressable>
+                  onPress={() => setGenOpen(true)}
+                  t={t}
+                />
                 {!canGenerate && (
                   <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12 }}>
                     {t("addListing.generateHint")}
@@ -1674,6 +1662,7 @@ function NumCard({
   onChangeText,
   placeholder = "0",
   keyboardType = "numeric",
+  autoCapitalize = "sentences",
   style,
 }: {
   colors: Theme;
@@ -1684,7 +1673,8 @@ function NumCard({
   value: string;
   onChangeText: (s: string) => void;
   placeholder?: string;
-  keyboardType?: "numeric" | "default";
+  keyboardType?: "numeric" | "default" | "phone-pad";
+  autoCapitalize?: "none" | "sentences";
   style?: object;
 }) {
   return (
@@ -1703,11 +1693,62 @@ function NumCard({
             placeholder={placeholder}
             placeholderTextColor={colors.textSecondary}
             keyboardType={keyboardType}
+            autoCapitalize={autoCapitalize}
             style={{ color: colors.text, fontFamily: font.bold, fontSize: 20, padding: 0, backgroundColor: "transparent" }}
           />
         </View>
       </View>
     </TintCard>
+  );
+}
+
+// Clay gradient AI button (step 7) — sparkle PNG + press-scale. Visual only;
+// the generation flow (sheet/onGenerate/state) lives in the screen.
+function AiGenButton({
+  generating,
+  disabled,
+  onPress,
+  t,
+}: {
+  generating: boolean;
+  disabled: boolean;
+  onPress: () => void;
+  t: (k: string) => string;
+}) {
+  const press = usePressScale(0.97);
+  return (
+    <Pressable onPress={disabled ? undefined : onPress} disabled={disabled} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={press.style}>
+        <LinearGradient
+          colors={brand.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            paddingVertical: 14,
+            borderRadius: 14,
+            opacity: disabled ? 0.5 : 1,
+            shadowColor: brand.magenta,
+            shadowOpacity: 0.3,
+            shadowRadius: 12,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 5,
+          }}
+        >
+          {generating ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Image source={require("../assets/icons/clay/sparkle.png")} style={{ width: 20, height: 20 }} resizeMode="contain" />
+          )}
+          <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 15 }}>
+            {generating ? t("addListing.generating") : t("addListing.generate")}
+          </Text>
+        </LinearGradient>
+      </Animated.View>
+    </Pressable>
   );
 }
 
