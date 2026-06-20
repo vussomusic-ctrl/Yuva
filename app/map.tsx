@@ -1,16 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { View, Pressable, ActivityIndicator, StyleSheet } from "react-native";
+import { View, Pressable, ActivityIndicator, StyleSheet, Animated, Image, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MapView, { PROVIDER_DEFAULT, Region } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 import { fetchFeed } from "../lib/api/listings";
-import { Listing } from "../lib/mock/listings";
+import { Listing, formatPrice, formatArea } from "../lib/mock/listings";
+import { isLandType } from "../lib/propertyTypes";
+import { buildListingTitle } from "../lib/listingTitle";
+import { useLanguage } from "../lib/i18n/languages";
 import { PriceMarker } from "../components/PriceMarker";
 import { BAKU_CENTER } from "../lib/places";
+
+// Off-screen offset for the slide-in listing card (px below its resting spot).
+const CARD_HIDDEN = 240;
 
 // Fit the camera to all pins: midpoint center + padded span (floor at 0.05 so a
 // tight cluster isn't over-zoomed). 0–1 listings → centred default near Baku.
@@ -47,11 +55,16 @@ export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
+  const { t } = useTranslation();
+  const { current: lang } = useLanguage();
+
   const [listings, setListings] = useState<Listing[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [cardData, setCardData] = useState<Listing | null>(null); // last selected — kept while card slides out
   // iOS fires both the marker's onPress AND the map's onPress on a pin tap; this
   // guard lets the map-press clear only when it wasn't a pin tap (last ~350ms).
   const lastPinPress = useRef(0);
+  const cardY = useRef(new Animated.Value(CARD_HIDDEN)).current;
 
   useEffect(() => {
     let active = true;
@@ -69,6 +82,15 @@ export default function MapScreen() {
 
   const region = useMemo(() => regionForListings(listings ?? []), [listings]);
   const back = () => (router.canGoBack() ? router.back() : router.replace("/home"));
+
+  // Slide the listing card in (selected) / out (cleared). No camera move here.
+  useEffect(() => {
+    Animated.timing(cardY, {
+      toValue: selectedId ? 0 : CARD_HIDDEN,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
+  }, [selectedId, cardY]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -95,6 +117,7 @@ export default function MapScreen() {
               onPress={() => {
                 lastPinPress.current = Date.now();
                 setSelectedId(l.id);
+                setCardData(l);
               }}
             />
           ))}
@@ -124,6 +147,65 @@ export default function MapScreen() {
       >
         <Ionicons name="chevron-back" size={24} color="#1B1B1F" />
       </Pressable>
+
+      {/* Slide-in listing card — content held in cardData so it stays visible while sliding out */}
+      {cardData && (
+        <Animated.View
+          style={{
+            position: "absolute",
+            left: 12,
+            right: 12,
+            bottom: insets.bottom + 12,
+            transform: [{ translateY: cardY }],
+            backgroundColor: colors.card,
+            borderRadius: 20,
+            flexDirection: "row",
+            overflow: "hidden",
+            shadowColor: "#000",
+            shadowOpacity: 0.2,
+            shadowRadius: 14,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 8,
+          }}
+        >
+          <Pressable onPress={() => router.push(`/property/${cardData.id}`)} style={{ flex: 1, flexDirection: "row" }}>
+            <Image source={{ uri: cardData.image }} style={{ width: 100, height: 100 }} resizeMode="cover" />
+            <View style={{ flex: 1, padding: 12, justifyContent: "center", gap: 3 }}>
+              <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 17 }}>
+                {formatPrice(cardData.priceAzn)}
+              </Text>
+              <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.medium, fontSize: 13 }}>
+                {buildListingTitle(cardData, t, lang)}
+              </Text>
+              <Text numberOfLines={1} style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12 }}>
+                {[
+                  !isLandType(cardData.propertyType) ? `${cardData.rooms} ${t("home.roomsUnit")}` : null,
+                  formatArea(cardData, t),
+                ]
+                  .filter(Boolean)
+                  .join("  •  ")}
+              </Text>
+            </View>
+          </Pressable>
+          <Pressable
+            onPress={() => setSelectedId(null)}
+            hitSlop={8}
+            style={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              width: 24,
+              height: 24,
+              borderRadius: 12,
+              backgroundColor: "rgba(20,18,24,0.55)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="close" size={15} color="#FFFFFF" />
+          </Pressable>
+        </Animated.View>
+      )}
     </View>
   );
 }
