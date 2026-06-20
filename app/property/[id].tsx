@@ -42,6 +42,8 @@ import { GestureDetector } from "react-native-gesture-handler";
 import { useDraggableSheet, useSheetScrollGesture, usePressScale } from "../../lib/animations";
 import { Header } from "../my-listings";
 import { buildListingTitle } from "../../lib/listingTitle";
+import { placeById, placeName } from "../../lib/places";
+import { MetroBadge } from "../../components/MetroBadge";
 import { useLanguage } from "../../lib/i18n/languages";
 import { detectLang } from "../../lib/langDetect";
 import { translateDescription } from "../../lib/api/ai";
@@ -246,7 +248,10 @@ export default function PropertyDetailScreen() {
   }
 
   // Title is derived on the fly in the current language (no stored string).
-  const title = buildListingTitle(listing, t, lang);
+  // Region + metro live in the location row below → drop both from the title.
+  const title = buildListingTitle(listing, t, lang, { withMetro: false, withRegion: false });
+  const station = listing.metroId ? placeById(listing.metroId) : undefined; // user-picked metro, never inferred
+  const regionName = placeById(listing.placeId) ? placeName(placeById(listing.placeId)!, lang) : listing.district;
 
   // Translate: show the button only when the description's language differs from
   // the UI language. Tap caches per target language, so toggling is free.
@@ -448,7 +453,15 @@ export default function PropertyDetailScreen() {
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Ionicons name="location-outline" size={15} color="#FFFFFF" />
-            <Text style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 14, textShadowColor: "rgba(0,0,0,0.45)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }}>{listing.district}</Text>
+            <Text style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 14, textShadowColor: "rgba(0,0,0,0.45)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }}>{regionName}</Text>
+            {station && (
+              <>
+                <View style={{ marginLeft: 6 }}>
+                  <MetroBadge size={16} />
+                </View>
+                <Text style={{ marginLeft: 4, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 14, textShadowColor: "rgba(0,0,0,0.45)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }}>{placeName(station, lang)}</Text>
+              </>
+            )}
           </View>
         </View>
       </Animated.View>

@@ -24,34 +24,49 @@ type TitleInput = {
  * detail, My listings, preview). Listings store no `title` string.
  * Empty/N-A fields are dropped (land → no rooms/type; no area → no "m²").
  */
-export function buildListingTitle(f: TitleInput, t: T, lang: Lang): string {
-  const isLand = f.propertyType === "land";
+// Property-type i18n labels (same as the filter chips), used in the title head.
+const TYPE_LABEL: Record<PropertyTypeKey, string> = {
+  apartment: "filters.typeApartment",
+  house: "filters.typeHouse",
+  land: "filters.typeLand",
+  object: "filters.typeObject",
+};
 
-  const parts: string[] = [];
+export function buildListingTitle(f: TitleInput, t: T, lang: Lang, opts?: { withMetro?: boolean; withRegion?: boolean }): string {
+  const isLand = f.propertyType === "land";
+  const isResidential = f.propertyType === "apartment" || f.propertyType === "house";
   const rooms = Number(f.rooms);
-  if (!isLand && rooms > 0) parts.push(t("listingTitle.rooms", { n: rooms }));
-  if (!isLand) parts.push(t(f.buildType === "secondary" ? "listingTitle.secondary" : "listingTitle.newBuild"));
+
+  // Head: rooms (residential only) + property-type label (lowercased), e.g.
+  // "3-комн. квартира" / "земля" / "объект". buildType is NOT shown in the title.
+  const typeLabel = f.propertyType ? t(TYPE_LABEL[f.propertyType]).toLocaleLowerCase(lang) : "";
+  const headBits: string[] = [];
+  if (isResidential && rooms > 0) headBits.push(t("listingTitle.rooms", { n: rooms }));
+  if (typeLabel) headBits.push(typeLabel);
+  const head = headBits.join(" ");
+
   // Area: land → "sot", everything else → m². Never show "0 m²" for land.
+  let areaStr = "";
   if (isLand) {
     const sot = Number(f.landAreaSot);
-    if (sot > 0) parts.push(`${sot} ${t("listingTitle.sotUnit")}`);
+    if (sot > 0) areaStr = `${sot} ${t("listingTitle.sotUnit")}`;
   } else {
     const area = Number(f.areaM2);
-    if (area > 0) parts.push(`${area} ${t("listingTitle.areaUnit")}`);
+    if (area > 0) areaStr = `${area} ${t("listingTitle.areaUnit")}`;
   }
 
-  // Location: metro (with prefix) wins, else region name.
+  // Location: metro (with prefix) wins, else region name. Metro can be suppressed
+  // (withMetro:false) where it's shown separately (e.g. PropertyCard's MetroBadge).
   let location = "";
-  if (f.metroId) {
+  if (f.metroId && opts?.withMetro !== false) {
     const m = placeById(f.metroId);
     if (m) location = `${t("listingTitle.metroPrefix")} ${placeName(m, lang)}`;
   }
-  if (!location && f.placeId) {
+  if (!location && f.placeId && opts?.withRegion !== false) {
     const r = placeById(f.placeId);
     if (r) location = placeName(r, lang);
   }
 
-  const head = parts.join(" ");
-  if (head && location) return `${head}, ${location}`;
-  return head || location;
+  // "3-комн. квартира, 85.3 м², Баку" — segments comma-joined; empties dropped.
+  return [head, areaStr, location].filter(Boolean).join(", ");
 }

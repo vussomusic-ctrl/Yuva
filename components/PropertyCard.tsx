@@ -12,6 +12,7 @@ import { Listing, formatPrice, formatArea, isPromoActive, isRecentlyBumped } fro
 import { isLandType } from "../lib/propertyTypes";
 import { buildListingTitle } from "../lib/listingTitle";
 import { placeById, placeName } from "../lib/places";
+import { MetroBadge } from "./MetroBadge";
 import { useLanguage } from "../lib/i18n/languages";
 import { usePressShrink } from "../lib/animations";
 
@@ -27,15 +28,6 @@ type Props = {
 const NEW_WINDOW_MS = 72 * 60 * 60 * 1000;
 const VIP_RED = "#E5322D";
 const PREMIUM_GOLD = "#E0A526";
-
-// Native metro mark — green circle with a white "M" (no PNG/asset).
-function MetroBadge() {
-  return (
-    <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: "#0F9D58", alignItems: "center", justifyContent: "center" }}>
-      <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 10, lineHeight: 12 }}>M</Text>
-    </View>
-  );
-}
 
 const badgePill = (bg: string) =>
   ({
@@ -54,8 +46,10 @@ export function PropertyCard({ listing, variant = "feed", cardWidth = 260, favor
   const { colors, mode } = useTheme();
   const press = usePressShrink(0.97);
   const carousel = variant === "carousel";
-  const title = buildListingTitle(listing, t, lang);
+  // Region + metro shown in the location row below → drop both from the title.
+  const title = buildListingTitle(listing, t, lang, { withMetro: false, withRegion: false });
   const station = listing.metroId ? placeById(listing.metroId) : undefined; // user-picked metro, never inferred
+  const regionName = placeById(listing.placeId) ? placeName(placeById(listing.placeId)!, lang) : listing.district;
 
   const isNew = (() => {
     const ts = new Date(listing.createdAt).getTime();
@@ -232,7 +226,7 @@ export function PropertyCard({ listing, variant = "feed", cardWidth = 260, favor
                 numberOfLines={1}
                 style={{ flexShrink: 1, marginLeft: 3, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 12, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
               >
-                {listing.district}
+                {regionName}
               </Text>
               {station && (
                 <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 10 }}>

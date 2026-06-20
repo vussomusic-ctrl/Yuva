@@ -9,6 +9,8 @@ import { brand } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
 import { Listing, formatPrice, isPromoActive, isRecentlyBumped } from "../lib/mock/listings";
 import { buildListingTitle } from "../lib/listingTitle";
+import { placeById, placeName } from "../lib/places";
+import { MetroBadge } from "./MetroBadge";
 import { useLanguage } from "../lib/i18n/languages";
 import { usePressShrink } from "../lib/animations";
 
@@ -33,7 +35,10 @@ export function PropertyCardCompact({ listing, favorited, onToggleFavorite, onPr
   const { current: lang } = useLanguage();
   const { colors, mode } = useTheme();
   const press = usePressShrink(0.97);
-  const title = buildListingTitle(listing, t, lang);
+  // Region + metro shown in the location row below → drop both from the title.
+  const title = buildListingTitle(listing, t, lang, { withMetro: false, withRegion: false });
+  const station = listing.metroId ? placeById(listing.metroId) : undefined; // user-picked metro, never inferred
+  const regionName = placeById(listing.placeId) ? placeName(placeById(listing.placeId)!, lang) : listing.district;
 
   const isNew = (() => {
     const ts = new Date(listing.createdAt).getTime();
@@ -136,14 +141,26 @@ export function PropertyCardCompact({ listing, favorited, onToggleFavorite, onPr
             >
               {title}
             </Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginTop: 2 }}>
+            {/* District + metro on ONE row; district shrinks first, metro only when picked */}
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
               <Ionicons name="location-outline" size={11} color="rgba(255,255,255,0.9)" />
               <Text
                 numberOfLines={1}
-                style={{ flex: 1, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 11, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
+                style={{ flexShrink: 1, marginLeft: 3, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 11, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
               >
-                {listing.district}
+                {regionName}
               </Text>
+              {station && (
+                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 8 }}>
+                  <MetroBadge size={13} />
+                  <Text
+                    numberOfLines={1}
+                    style={{ marginLeft: 4, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 11, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
+                  >
+                    {placeName(station, lang)}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
