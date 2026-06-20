@@ -68,5 +68,8 @@ export function buildListingTitle(f: TitleInput, t: T, lang: Lang, opts?: { with
   }
 
   // "3-комн. квартира, 85.3 м², Баку" — segments comma-joined; empties dropped.
-  return [head, areaStr, location].filter(Boolean).join(", ");
+  const title = [head, areaStr, location].filter(Boolean).join(", ");
+  // Capitalize only the first character (land/commercial lead with a lowercased
+  // type label, e.g. "земля" → "Земля"); rest is left intact (m², names…).
+  return title ? title.charAt(0).toUpperCase() + title.slice(1) : title;
 }
