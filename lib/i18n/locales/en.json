@@ -343,7 +343,25 @@
       "sea": "Sea",
       "park": "Park"
     },
-    "step7Subtitle": "How buyers will reach you"
+    "step7Subtitle": "How buyers will reach you",
+    "step8Subtitle": "Review everything before publishing",
+    "err": {
+      "photos": "Add at least one photo",
+      "propertyType": "Select the property type",
+      "priceLowSale": "Price is too low for sale (from 5000 ₼)",
+      "priceLowRent": "Price is too low for rent (from 50 ₼)",
+      "area": "Check the area (10–5000 m²)",
+      "areaLand": "Check the plot size (0.5–10000 sot)",
+      "rooms": "Set rooms (1–30)",
+      "baths": "Check the number of bathrooms (0–15)",
+      "floorGtTotal": "Floor is higher than the building height",
+      "builtYear": "Check the year built",
+      "location": "Set the location or a map point",
+      "phone": "Enter the phone (9 digits)",
+      "telegram": "Telegram: enter @username",
+      "whatsapp": "WhatsApp: at least 9 digits",
+      "fixStep": "Check the data before publishing"
+    }
   },
   "search": {
     "resultsCount": "{{count}} listings found",

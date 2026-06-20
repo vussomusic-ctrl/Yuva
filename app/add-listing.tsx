@@ -45,6 +45,7 @@ import Sortable from "react-native-sortables";
 import { formatPrice, Listing } from "../lib/mock/listings";
 import { createListing, updateListing, fetchListingRow } from "../lib/api/listings";
 import { generateDescription } from "../lib/api/ai";
+import { validateStep, validateAll, ValidationState } from "../lib/validation";
 import { ListingFormInput, PhotoItem, rowToForm, rowToPhotoItems } from "../lib/adapters/listing";
 import { useAuth } from "../lib/auth";
 import { useMapPick } from "../lib/map-pick";
@@ -178,6 +179,7 @@ export default function AddListingModal() {
   const [published, setPublished] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [stepErrors, setStepErrors] = useState<Record<string, string>>({}); // fieldKey → i18n error key
   const [genOpen, setGenOpen] = useState(false); // AI description language sheet
   const [generating, setGenerating] = useState(false);
 
@@ -462,26 +464,55 @@ export default function AddListingModal() {
   };
 
   // --- Validation (gates the Next button per step) ---
-  const phoneOk = phoneLocal.length === 9; // AZ mobile local part = exactly 9 digits
-  const step1Valid = photos.length > 0;
-  const step2Valid = propertyType != null;
-  const step3Valid = Number(price) > 0 && Number(area) > 0 && (isLand || Number(rooms) > 0);
-  const step4Valid = placeId != null || picked != null; // a place OR a map pin
-  const step7Valid = phoneOk;
-  const canNext =
-    step === 1 ? step1Valid
-    : step === 2 ? step2Valid
-    : step === 3 ? step3Valid
-    : step === 4 ? step4Valid
-    : step === 7 ? step7Valid
-    : true; // steps 5/6 (characteristics/amenities) + 8 (preview) — no gate
+  // Validation snapshot — range/sanity rules live in lib/validation.
+  const vstate: ValidationState = {
+    photosCount: photos.length,
+    propertyType,
+    isLand,
+    dealType,
+    hasPlace: placeId != null,
+    hasPin: picked != null,
+    phoneLocal,
+    price,
+    area,
+    rooms,
+    baths,
+    floor,
+    floorTotal,
+    builtYear,
+    telegram,
+    whatsapp,
+  };
+  // Resolve a field's error i18n key → message (or undefined).
+  const fieldErr = (k: string) => (stepErrors[k] ? t(stepErrors[k]) : undefined);
+  // Field-less step errors (photos/type/location) shown in a banner.
+  const bannerKeys = ["photos", "propertyType", "location"].filter((k) => stepErrors[k]);
 
   const close = () => (router.canGoBack() ? router.back() : router.replace("/home"));
-  const goNext = () => step < TOTAL_STEPS && canNext && setStep(step + 1);
-  const goBack = () => step > 1 && setStep(step - 1);
+  const goNext = () => {
+    if (step >= TOTAL_STEPS) return;
+    const { ok, errors } = validateStep(step, vstate);
+    if (!ok) {
+      setStepErrors(errors);
+      return;
+    }
+    setStepErrors({});
+    setStep(step + 1);
+  };
+  const goBack = () => {
+    setStepErrors({});
+    if (step > 1) setStep(step - 1);
+  };
 
   const publish = async () => {
     if (!user || publishing) return;
+    // Final guard: jump to the first invalid step and surface its errors.
+    const { ok, firstBadStep } = validateAll(vstate);
+    if (!ok && firstBadStep != null) {
+      setStepErrors(validateStep(firstBadStep, vstate).errors);
+      setStep(firstBadStep);
+      return;
+    }
     setPublishError(null);
     setPublishing(true);
 
@@ -727,7 +758,8 @@ export default function AddListingModal() {
               </Text>
 
               {/* Hero price card */}
-              <TintCard tint="violet">
+              <View>
+              <TintCard tint="violet" style={fieldErr("price") ? { borderWidth: 1.5, borderColor: colors.danger } : undefined}>
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 13 }}>
@@ -752,6 +784,12 @@ export default function AddListingModal() {
                   <Ionicons name="business" size={56} color={brand.violet} style={{ marginLeft: 8 }} />
                 </View>
               </TintCard>
+              {fieldErr("price") ? (
+                <Text style={{ color: colors.danger, fontFamily: font.medium, fontSize: 12, marginTop: 4, marginLeft: 4 }}>
+                  {fieldErr("price")}
+                </Text>
+              ) : null}
+              </View>
 
               {/* Area — full width clay field-card */}
               <NumCard
@@ -761,6 +799,7 @@ export default function AddListingModal() {
                 label={t("addListing.areaCardLabel")}
                 value={area}
                 onChangeText={setArea}
+                error={fieldErr("area")}
               />
 
               {!isLand && (
@@ -773,6 +812,7 @@ export default function AddListingModal() {
                       label={t("filters.rooms")}
                       value={rooms}
                       onChangeText={setRooms}
+                      error={fieldErr("rooms")}
                       style={{ flex: 1 }}
                     />
                     <NumCard
@@ -782,6 +822,7 @@ export default function AddListingModal() {
                       label={t("filters.baths")}
                       value={baths}
                       onChangeText={setBaths}
+                      error={fieldErr("baths")}
                       style={{ flex: 1 }}
                     />
                   </View>
@@ -793,6 +834,7 @@ export default function AddListingModal() {
                       label={t("filters.floor")}
                       value={floor}
                       onChangeText={setFloor}
+                      error={fieldErr("floor")}
                       style={{ flex: 1 }}
                     />
                     <NumCard
@@ -996,6 +1038,7 @@ export default function AddListingModal() {
                         label={t("addListing.builtYear")}
                         value={builtYear}
                         onChangeText={setBuiltYear}
+                        error={fieldErr("builtYear")}
                         placeholder="2020"
                       />
                     </>
@@ -1162,28 +1205,38 @@ export default function AddListingModal() {
               </Text>
 
               {/* Phone — clay card with fixed +994 prefix (input logic unchanged) */}
-              <TintCard tint="violet" style={{ paddingVertical: 12 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Ionicons name="call" size={32} color={tints.violet.shadow} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 12 }}>
-                      {t("addListing.phoneLabel")}
-                    </Text>
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      <Text style={{ color: colors.textSecondary, fontFamily: font.bold, fontSize: 20, marginRight: 6 }}>+994</Text>
-                      <TextInput
-                        value={phoneLocal}
-                        onChangeText={(text) => setPhoneLocal(text.replace(/[^\d]/g, "").replace(/^0+/, "").slice(0, 9))}
-                        placeholder="(50) 123 45 67"
-                        placeholderTextColor={colors.textSecondary}
-                        keyboardType="phone-pad"
-                        maxLength={9}
-                        style={{ flex: 1, color: colors.text, fontFamily: font.bold, fontSize: 20, padding: 0, backgroundColor: "transparent" }}
-                      />
+              <View>
+                <TintCard
+                  tint="violet"
+                  style={{ paddingVertical: 12, ...(fieldErr("phone") ? { borderWidth: 1.5, borderColor: colors.danger } : null) }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                    <Ionicons name="call" size={32} color={tints.violet.shadow} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 12 }}>
+                        {t("addListing.phoneLabel")}
+                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Text style={{ color: colors.textSecondary, fontFamily: font.bold, fontSize: 20, marginRight: 6 }}>+994</Text>
+                        <TextInput
+                          value={phoneLocal}
+                          onChangeText={(text) => setPhoneLocal(text.replace(/[^\d]/g, "").replace(/^0+/, "").slice(0, 9))}
+                          placeholder="(50) 123 45 67"
+                          placeholderTextColor={colors.textSecondary}
+                          keyboardType="phone-pad"
+                          maxLength={9}
+                          style={{ flex: 1, color: colors.text, fontFamily: font.bold, fontSize: 20, padding: 0, backgroundColor: "transparent" }}
+                        />
+                      </View>
                     </View>
                   </View>
-                </View>
-              </TintCard>
+                </TintCard>
+                {fieldErr("phone") ? (
+                  <Text style={{ color: colors.danger, fontFamily: font.medium, fontSize: 12, marginTop: 4, marginLeft: 4 }}>
+                    {fieldErr("phone")}
+                  </Text>
+                ) : null}
+              </View>
 
               {/* Telegram / WhatsApp (clay number-style cards) */}
               <NumCard
@@ -1196,6 +1249,7 @@ export default function AddListingModal() {
                 placeholder={t("addListing.telegramPlaceholder")}
                 keyboardType="default"
                 autoCapitalize="none"
+                error={fieldErr("telegram")}
               />
               <NumCard
                 colors={colors}
@@ -1206,6 +1260,7 @@ export default function AddListingModal() {
                 onChangeText={setWhatsapp}
                 placeholder={t("addListing.whatsappPlaceholder")}
                 keyboardType="phone-pad"
+                error={fieldErr("whatsapp")}
               />
 
               {/* Description — clay gradient AI button + textarea (AI flow unchanged) */}
@@ -1233,9 +1288,9 @@ export default function AddListingModal() {
           )}
 
           {step === 8 && (
-            <View style={{ gap: 16, paddingTop: 4 }}>
-              <Text style={{ color: colors.textSecondary, fontFamily: font.semibold, fontSize: 14 }}>
-                {t("addListing.reviewTitle")}
+            <View style={{ gap: 16, paddingTop: 16 }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, marginBottom: 2 }}>
+                {t("addListing.step8Subtitle")}
               </Text>
               <PropertyCard
                 listing={previewListing}
@@ -1245,16 +1300,7 @@ export default function AddListingModal() {
                 onPress={() => {}}
               />
 
-              <View
-                style={{
-                  backgroundColor: colors.card,
-                  borderRadius: 16,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  paddingHorizontal: 16,
-                  paddingVertical: 6,
-                }}
-              >
+              <TintCard tint="violet" style={{ paddingHorizontal: 16, paddingVertical: 6 }}>
                 <SummaryRow
                   colors={colors}
                   label={t("filters.dealType")}
@@ -1309,11 +1355,28 @@ export default function AddListingModal() {
                 {whatsapp.trim() !== "" && (
                   <SummaryRow colors={colors} label={t("addListing.whatsappLabel")} value={whatsapp.trim()} />
                 )}
+                {/* Characteristics (steps 5–6) — shown only when filled, UI-language labels */}
+                {isResidential && renovation && (
+                  <SummaryRow colors={colors} label={t("addListing.renovationLabel")} value={t(`addListing.renovationOpts.${renovation}`)} />
+                )}
+                {propertyType === "house" && material && (
+                  <SummaryRow colors={colors} label={t("addListing.materialLabel")} value={t(`addListing.materialOpts.${material}`)} />
+                )}
+                {isResidential && heating && (
+                  <SummaryRow colors={colors} label={t("addListing.heatingLabel")} value={t(`addListing.heatingOpts.${heating}`)} />
+                )}
+                {amenities.length > 0 && (
+                  <SummaryRow
+                    colors={colors}
+                    label={t("addListing.step6Title")}
+                    value={amenities.map((k) => t(`addListing.amenity.${k}`)).join(", ")}
+                  />
+                )}
                 {!isLand && (
                   <SummaryRow colors={colors} label={t("filters.furnished")} value={furnished ? "✓" : "—"} />
                 )}
                 <SummaryRow colors={colors} label={t("filters.mortgage")} value={mortgage ? "✓" : "—"} isLast />
-              </View>
+              </TintCard>
 
               {description.trim() !== "" && (
                 <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, lineHeight: 20 }}>{description.trim()}</Text>
@@ -1341,6 +1404,27 @@ export default function AddListingModal() {
           </View>
         )}
 
+        {/* Step validation banner — for field-less steps (photos / type / location) */}
+        {bannerKeys.length > 0 && (
+          <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                backgroundColor: "#FCE8E8",
+                borderRadius: 12,
+                padding: 12,
+              }}
+            >
+              <Ionicons name="alert-circle" size={20} color="#BA1A1A" />
+              <Text style={{ flex: 1, color: "#8C1D18", fontFamily: font.regular, fontSize: 13 }}>
+                {bannerKeys.map((k) => t(stepErrors[k])).join("\n")}
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Bottom action bar */}
         <View
           style={{
@@ -1356,7 +1440,7 @@ export default function AddListingModal() {
         >
           {step > 1 && <SecondaryButton label={t("addListing.back")} onPress={goBack} disabled={publishing} style={{ flex: 1 }} />}
           {step < TOTAL_STEPS ? (
-            <PrimaryButton label={t("addListing.next")} onPress={goNext} disabled={!canNext} style={{ flex: 2 }} />
+            <PrimaryButton label={t("addListing.next")} onPress={goNext} style={{ flex: 2 }} />
           ) : (
             <PrimaryButton
               label={
@@ -1707,6 +1791,7 @@ function NumCard({
   placeholder = "0",
   keyboardType = "numeric",
   autoCapitalize = "sentences",
+  error,
   style,
 }: {
   colors: Theme;
@@ -1719,30 +1804,39 @@ function NumCard({
   placeholder?: string;
   keyboardType?: "numeric" | "default" | "phone-pad";
   autoCapitalize?: "none" | "sentences";
+  error?: string;
   style?: object;
 }) {
   return (
-    <TintCard tint={tint} style={[{ paddingVertical: 12 }, style]}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-        {icon != null ? (
-          <Image source={icon} style={{ width: 36, height: 36 }} resizeMode="contain" />
-        ) : (
-          <Ionicons name={ionicon!} size={32} color={tints[tint].shadow} />
-        )}
-        <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 12 }}>{label}</Text>
-          <TextInput
-            value={value}
-            onChangeText={onChangeText}
-            placeholder={placeholder}
-            placeholderTextColor={colors.textSecondary}
-            keyboardType={keyboardType}
-            autoCapitalize={autoCapitalize}
-            style={{ color: colors.text, fontFamily: font.bold, fontSize: 20, padding: 0, backgroundColor: "transparent" }}
-          />
+    <View style={style}>
+      <TintCard
+        tint={tint}
+        style={{ paddingVertical: 12, ...(error ? { borderWidth: 1.5, borderColor: colors.danger } : null) }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          {icon != null ? (
+            <Image source={icon} style={{ width: 36, height: 36 }} resizeMode="contain" />
+          ) : (
+            <Ionicons name={ionicon!} size={32} color={tints[tint].shadow} />
+          )}
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 12 }}>{label}</Text>
+            <TextInput
+              value={value}
+              onChangeText={onChangeText}
+              placeholder={placeholder}
+              placeholderTextColor={colors.textSecondary}
+              keyboardType={keyboardType}
+              autoCapitalize={autoCapitalize}
+              style={{ color: colors.text, fontFamily: font.bold, fontSize: 20, padding: 0, backgroundColor: "transparent" }}
+            />
+          </View>
         </View>
-      </View>
-    </TintCard>
+      </TintCard>
+      {error ? (
+        <Text style={{ color: colors.danger, fontFamily: font.medium, fontSize: 12, marginTop: 4, marginLeft: 4 }}>{error}</Text>
+      ) : null}
+    </View>
   );
 }
 

@@ -343,7 +343,25 @@
       "sea": "Dəniz",
       "park": "Park"
     },
-    "step7Subtitle": "Alıcılar sizinlə necə əlaqə saxlayacaq"
+    "step7Subtitle": "Alıcılar sizinlə necə əlaqə saxlayacaq",
+    "step8Subtitle": "Dərc etməzdən əvvəl hər şeyi yoxlayın",
+    "err": {
+      "photos": "Ən azı bir şəkil əlavə edin",
+      "propertyType": "Obyekt növünü seçin",
+      "priceLowSale": "Satış üçün qiymət çox aşağıdır (5000 ₼-dən)",
+      "priceLowRent": "Kirayə üçün qiymət çox aşağıdır (50 ₼-dən)",
+      "area": "Sahəni yoxlayın (10–5000 m²)",
+      "areaLand": "Torpaq sahəsini yoxlayın (0.5–10000 sot)",
+      "rooms": "Otaqları göstərin (1–30)",
+      "baths": "Sanitar qovşaqların sayını yoxlayın (0–15)",
+      "floorGtTotal": "Mərtəbə binanın mərtəbə sayından çoxdur",
+      "builtYear": "Tikilmə ilini yoxlayın",
+      "location": "Yerləşməni və ya xəritə nöqtəsini göstərin",
+      "phone": "Telefonu daxil edin (9 rəqəm)",
+      "telegram": "Telegram: @username göstərin",
+      "whatsapp": "WhatsApp: minimum 9 rəqəm",
+      "fixStep": "Dərc etməzdən əvvəl məlumatları yoxlayın"
+    }
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",
