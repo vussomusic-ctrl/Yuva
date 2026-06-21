@@ -154,7 +154,18 @@
     "theme": "Theme",
     "logout": "Log out",
     "guest": "Guest",
-    "login": "Log in"
+    "login": "Log in",
+    "verifiedAgent": "Verified agent",
+    "statListings": "Listings",
+    "statSaved": "Saved",
+    "statMessages": "Messages",
+    "nActive": "{{n}} active",
+    "nModeration": "{{n}} in review",
+    "messages": "My messages",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "agenciesPartners": "Partner agencies",
+    "title": "Profile"
   },
   "editProfile": {
     "title": "Edit profile",

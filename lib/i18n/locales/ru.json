@@ -154,7 +154,18 @@
     "theme": "Тема",
     "logout": "Выйти из аккаунта",
     "guest": "Гость",
-    "login": "Войти"
+    "login": "Войти",
+    "verifiedAgent": "Проверенный агент",
+    "statListings": "Объявления",
+    "statSaved": "Избранные",
+    "statMessages": "Сообщения",
+    "nActive": "{{n}} активных",
+    "nModeration": "{{n}} на модерации",
+    "messages": "Мои сообщения",
+    "themeLight": "Светлая",
+    "themeDark": "Тёмная",
+    "agenciesPartners": "Агентства-партнёры",
+    "title": "Профиль"
   },
   "editProfile": {
     "title": "Изменить профиль",

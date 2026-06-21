@@ -154,7 +154,18 @@
     "theme": "Tema",
     "logout": "Hesabdan çıx",
     "guest": "Qonaq",
-    "login": "Daxil ol"
+    "login": "Daxil ol",
+    "verifiedAgent": "Təsdiqlənmiş agent",
+    "statListings": "Elanlar",
+    "statSaved": "Seçilmişlər",
+    "statMessages": "Mesajlar",
+    "nActive": "{{n}} aktiv",
+    "nModeration": "{{n}} moderasiyada",
+    "messages": "Mesajlarım",
+    "themeLight": "İşıqlı",
+    "themeDark": "Qaranlıq",
+    "agenciesPartners": "Tərəfdaş agentliklər",
+    "title": "Profil"
   },
   "editProfile": {
     "title": "Profili redaktə et",

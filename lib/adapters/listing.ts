@@ -80,6 +80,7 @@ export type ListingRow = {
   prepayment: number | null;
   premium: boolean;
   promo_tier: "none" | "vip" | "premium";
+  status: "active" | "sold" | "archived" | "moderation";
   promoted_until: string | null;
   bumps_remaining: number;
   last_bumped_at: string | null;
@@ -174,6 +175,7 @@ export function rowToListing(row: ListingRow): Listing {
     district: row.district ?? "",
     premium: row.premium,
     promoTier: row.promo_tier ?? "none",
+    status: row.status,
     promotedUntil: row.promoted_until ?? undefined,
     bumpsRemaining: row.bumps_remaining ?? 0,
     lastBumpedAt: row.last_bumped_at ?? undefined,

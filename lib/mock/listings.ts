@@ -28,6 +28,7 @@ export type Listing = {
   district: string;
   premium: boolean;
   promoTier: PromoTier;
+  status?: "active" | "sold" | "archived" | "moderation"; // optional — from DB row; absent on mock/manual objects
   promotedUntil?: string; // ISO; set while VIP/Premium is active
   bumpsRemaining: number; // purchased boost balance
   lastBumpedAt?: string; // ISO; last manual bump (search freshness)
