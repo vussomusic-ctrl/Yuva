@@ -1772,7 +1772,7 @@ function DealCard({
           press.style,
         ]}
       >
-        <Image source={image} style={{ width: 100, height: 100 }} resizeMode="contain" />
+        <Image source={image} style={{ width: 136, height: 136 }} resizeMode="contain" />
         <Text style={{ color: active ? brand.violet : colors.text, fontFamily: font.bold, fontSize: 16 }}>{label}</Text>
         <Text numberOfLines={1} style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12 }}>{subtitle}</Text>
         {active && (
