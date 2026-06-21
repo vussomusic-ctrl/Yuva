@@ -443,7 +443,12 @@
     "unpin": "Открепить",
     "delete": "Удалить",
     "deleteConfirmTitle": "Удалить диалог?",
-    "deleteConfirmMsg": "Диалог исчезнет только у вас"
+    "deleteConfirmMsg": "Диалог исчезнет только у вас",
+    "searchPlaceholder": "Поиск по сообщениям",
+    "myObjects": "Мои объекты",
+    "allObjects": "Все объекты",
+    "dialogsCount": "{{n}} диалог.",
+    "noResults": "Ничего не найдено"
   },
   "myListings": {
     "title": "Мои объявления",

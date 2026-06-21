@@ -443,7 +443,12 @@
     "unpin": "Unpin",
     "delete": "Delete",
     "deleteConfirmTitle": "Delete conversation?",
-    "deleteConfirmMsg": "The conversation is removed only for you"
+    "deleteConfirmMsg": "The conversation is removed only for you",
+    "searchPlaceholder": "Search messages",
+    "myObjects": "My objects",
+    "allObjects": "All objects",
+    "dialogsCount": "{{n}} chats",
+    "noResults": "Nothing found"
   },
   "myListings": {
     "title": "My listings",

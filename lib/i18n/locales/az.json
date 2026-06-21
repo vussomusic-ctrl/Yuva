@@ -443,7 +443,12 @@
     "unpin": "Sabitləməni ləğv et",
     "delete": "Sil",
     "deleteConfirmTitle": "Söhbəti sil?",
-    "deleteConfirmMsg": "Söhbət yalnız sizdə silinəcək"
+    "deleteConfirmMsg": "Söhbət yalnız sizdə silinəcək",
+    "searchPlaceholder": "Mesajlarda axtarış",
+    "myObjects": "Mənim obyektlərim",
+    "allObjects": "Bütün obyektlər",
+    "dialogsCount": "{{n}} dialoq",
+    "noResults": "Heç nə tapılmadı"
   },
   "myListings": {
     "title": "Mənim elanlarım",

@@ -4,6 +4,7 @@
 
 import { supabase } from "../supabase";
 import { fetchListingsByIds } from "./listings";
+import type { PropertyTypeKey } from "../propertyTypes";
 import type { UserRole } from "../auth";
 
 export type Message = {
@@ -23,10 +24,11 @@ export type ConversationListItem = {
   lastAt: string; // ISO; falls back to the conversation's created_at
   unreadCount: number;
   listingId: string | null;
-  // Compact listing subtitle (which property this chat is about). null when the
+  // Compact listing info (which property this chat is about). null when the
   // conversation has no listing_id or the listing was removed → row shows
-  // "listing unavailable" instead.
-  listing: { district: string; priceAzn: number } | null;
+  // "listing unavailable" instead. image/propertyType/rooms power the
+  // "My objects" rail cards (cover photo + derived title).
+  listing: { district: string; priceAzn: number; image: string; propertyType: PropertyTypeKey; rooms: number } | null;
   isPinned: boolean; // my-side pin (sorts above unpinned)
   iAmBuyer: boolean; // which side I am → which *_hidden_at/*_pinned column is mine
 };
@@ -186,10 +188,14 @@ export async function getMyConversations(): Promise<ConversationListItem[]> {
   const listingIds = Array.from(
     new Set(convs.map((c) => c.listing_id).filter((x): x is string => x != null)),
   );
-  const listingMap = new Map<string, { district: string; priceAzn: number }>();
+  const listingMap = new Map<
+    string,
+    { district: string; priceAzn: number; image: string; propertyType: PropertyTypeKey; rooms: number }
+  >();
   if (listingIds.length > 0) {
     const listings = await fetchListingsByIds(listingIds);
-    for (const l of listings) listingMap.set(l.id, { district: l.district, priceAzn: l.priceAzn });
+    for (const l of listings)
+      listingMap.set(l.id, { district: l.district, priceAzn: l.priceAzn, image: l.image, propertyType: l.propertyType, rooms: l.rooms });
   }
 
   const items: ConversationListItem[] = convs.flatMap((c) => {
