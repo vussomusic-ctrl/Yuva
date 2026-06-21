@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, Image, Pressable, Alert, TextInput, StyleSheet } from "react-native";
-import Animated, { useAnimatedScrollHandler, withSpring } from "react-native-reanimated";
+import { View, Text, Image, Pressable, Alert, TextInput, StyleSheet, ScrollView } from "react-native";
+import Animated, { FadeIn, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,6 +25,10 @@ import {
   Message,
 } from "../../lib/api/chats";
 import { formatPrice } from "../../lib/mock/listings";
+import { buildListingTitle } from "../../lib/listingTitle";
+import { placeById, placeName } from "../../lib/places";
+import { useLanguage } from "../../lib/i18n/languages";
+import type { PropertyTypeKey } from "../../lib/propertyTypes";
 
 const formatListTime = (iso: string) => {
   const d = new Date(iso);
@@ -54,6 +58,13 @@ const avatarTint = (name: string) => {
   return AVATAR_TINTS[h % AVATAR_TINTS.length];
 };
 
+// Fallback object-card icon when the listing has no cover photo.
+const typeIcon = (pt: PropertyTypeKey): keyof typeof Ionicons.glyphMap =>
+  pt === "house" ? "home-outline" : pt === "land" ? "leaf-outline" : pt === "object" ? "storefront-outline" : "business-outline";
+
+// One of my listings + how many chats it has (for the "My objects" rail).
+type ObjectGroup = { listingId: string; listing: NonNullable<ConversationListItem["listing"]>; count: number };
+
 export default function ChatListScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
@@ -66,20 +77,50 @@ export default function ChatListScreen() {
   const [list, setList] = useState<ConversationListItem[] | null>(null);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState(""); // local search filter (no server round-trip)
+  const [selectedListingId, setSelectedListingId] = useState<string | null>(null); // "My objects" filter
+  const [objectsCollapsed, setObjectsCollapsed] = useState(false); // collapse the objects rail (visual only)
 
-  // Visible rows: original (already sorted) list filtered by the search query
-  // over peer name / listing district / last message. Order is preserved.
+  // My listings that have chats (I'm the seller) → grouped with a count, for the
+  // rail. Client-side over the already-loaded list; listings with no info skipped.
+  const myObjects = useMemo<ObjectGroup[]>(() => {
+    if (!list) return [];
+    const m = new Map<string, ObjectGroup>();
+    for (const c of list) {
+      if (c.iAmBuyer || !c.listingId || !c.listing) continue;
+      const cur = m.get(c.listingId);
+      if (cur) cur.count += 1;
+      else m.set(c.listingId, { listingId: c.listingId, listing: c.listing, count: 1 });
+    }
+    return Array.from(m.values());
+  }, [list]);
+
+  // If the selected object is gone (listing removed / no longer mine) → clear.
+  useEffect(() => {
+    if (selectedListingId && !myObjects.some((o) => o.listingId === selectedListingId)) {
+      setSelectedListingId(null);
+    }
+  }, [myObjects, selectedListingId]);
+
+  // Object filter changes (select / reset) — just swap the data. Smoothness comes
+  // from each row's FadeIn entering animation (no whole-list opacity pulse).
+  const selectObject = useCallback((id: string | null) => setSelectedListingId(id), []);
+
+  // Visible rows: original (already sorted) list, filtered by the selected object
+  // (if any) and the search query (peer name / district / last message). Order kept.
   const visible = useMemo(() => {
     if (!list) return [];
+    let arr = selectedListingId ? list.filter((c) => c.listingId === selectedListingId) : list;
     const q = query.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter(
-      (c) =>
-        c.peerName.toLowerCase().includes(q) ||
-        (c.listing?.district ?? "").toLowerCase().includes(q) ||
-        c.lastBody.toLowerCase().includes(q),
-    );
-  }, [list, query]);
+    if (q) {
+      arr = arr.filter(
+        (c) =>
+          c.peerName.toLowerCase().includes(q) ||
+          (c.listing?.district ?? "").toLowerCase().includes(q) ||
+          c.lastBody.toLowerCase().includes(q),
+      );
+    }
+    return arr;
+  }, [list, query, selectedListingId]);
 
   // Mirror of `list` for the realtime handler — lets it decide patch-vs-refetch
   // synchronously without depending on (and re-subscribing per) list changes.
@@ -173,13 +214,26 @@ export default function ChatListScreen() {
           scrollEventThrottle={16}
           contentContainerStyle={{ paddingBottom: insets.bottom + 96, flexGrow: 1, paddingTop: 2 }}
           ListHeaderComponent={
-            <SearchBar colors={colors} value={query} onChange={setQuery} placeholder={t("messages.searchPlaceholder")} />
+            <>
+              <SearchBar colors={colors} value={query} onChange={setQuery} placeholder={t("messages.searchPlaceholder")} />
+              {myObjects.length > 0 && (
+                <MyObjectsRail
+                  colors={colors}
+                  t={t}
+                  objects={myObjects}
+                  selectedId={selectedListingId}
+                  onSelect={selectObject}
+                  collapsed={objectsCollapsed}
+                  onToggleCollapsed={() => setObjectsCollapsed((v) => !v)}
+                />
+              )}
+            </>
           }
           ItemSeparatorComponent={() => (
             <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 86 }} />
           )}
           ListEmptyComponent={
-            query.trim() ? (
+            query.trim() || selectedListingId ? (
               <View style={{ alignItems: "center", paddingTop: 48 }}>
                 <Text style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 15 }}>{t("messages.noResults")}</Text>
               </View>
@@ -192,17 +246,186 @@ export default function ChatListScreen() {
             )
           }
           renderItem={({ item }) => (
-            <ChatRow
-              colors={colors}
-              item={item}
-              t={t}
-              onPress={() => router.push(`/chat/${item.id}`)}
-              onAfterChange={load}
-            />
+            <Animated.View entering={FadeIn.duration(180)}>
+              <ChatRow
+                colors={colors}
+                item={item}
+                t={t}
+                onPress={() => router.push(`/chat/${item.id}`)}
+                onAfterChange={load}
+              />
+            </Animated.View>
           )}
         />
       )}
     </SafeAreaView>
+  );
+}
+
+// Horizontal rail of my listings (each with its chat count). Tapping a card
+// filters the list to that object; tapping again / "All objects" clears it.
+const RAIL_HEIGHT = 162; // ObjectCard (146²) + vertical padding for card shadows
+
+function MyObjectsRail({
+  colors,
+  t,
+  objects,
+  selectedId,
+  onSelect,
+  collapsed,
+  onToggleCollapsed,
+}: {
+  colors: Theme;
+  t: (k: string, opts?: Record<string, unknown>) => string;
+  objects: ObjectGroup[];
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+}) {
+  // Smoothly collapse only the rail (height + opacity); header stays put.
+  const progress = useSharedValue(collapsed ? 0 : 1);
+  useEffect(() => {
+    progress.value = withTiming(collapsed ? 0 : 1, { duration: 250 });
+  }, [collapsed, progress]);
+  const railStyle = useAnimatedStyle(() => ({ height: progress.value * RAIL_HEIGHT, opacity: progress.value }));
+
+  return (
+    <View style={{ marginBottom: 8 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, marginBottom: 8 }}>
+        {/* Title + chevron toggles collapse */}
+        <Pressable onPress={onToggleCollapsed} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 17 }}>{t("messages.myObjects")}</Text>
+          <Ionicons name={collapsed ? "chevron-forward" : "chevron-down"} size={18} color={brand.violet} />
+        </Pressable>
+        {/* Reset filter — stays visible even while collapsed, so you can clear without expanding */}
+        {selectedId && (
+          <Pressable onPress={() => onSelect(null)} hitSlop={8}>
+            <Text style={{ color: brand.violet, fontFamily: font.semibold, fontSize: 14 }}>{t("messages.reset")}</Text>
+          </Pressable>
+        )}
+      </View>
+      <Animated.View style={[{ overflow: "hidden" }, railStyle]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8, gap: 12 }}>
+          {objects.map((o) => (
+            <ObjectCard
+              key={o.listingId}
+              colors={colors}
+              t={t}
+              item={o}
+              active={selectedId === o.listingId}
+              onPress={() => onSelect(selectedId === o.listingId ? null : o.listingId)}
+            />
+          ))}
+        </ScrollView>
+      </Animated.View>
+    </View>
+  );
+}
+
+// Compact object card — Home-style "info over photo" (price + title + district),
+// plus a chat-count pill. Tap filters the list (not navigation). Selected = violet.
+function ObjectCard({
+  colors,
+  t,
+  item,
+  active,
+  onPress,
+}: {
+  colors: Theme;
+  t: (k: string, opts?: Record<string, unknown>) => string;
+  item: ObjectGroup;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const { current: lang } = useLanguage();
+  const l = item.listing;
+  const title = buildListingTitle(l, t, lang, { withMetro: false, withRegion: false });
+  const regionName = placeById(l.placeId) ? placeName(placeById(l.placeId)!, lang) : l.district;
+
+  return (
+    <Pressable onPress={onPress} style={{ width: 146 }}>
+      <View
+        style={{
+          aspectRatio: 1,
+          borderRadius: 16,
+          backgroundColor: colors.border,
+          borderWidth: 2,
+          borderColor: active ? brand.violet : "transparent",
+          shadowColor: "#000",
+          shadowOpacity: active ? 0.14 : 0.06,
+          shadowRadius: active ? 10 : 6,
+          shadowOffset: { width: 0, height: 3 },
+          elevation: active ? 3 : 1,
+        }}
+      >
+        <View style={{ flex: 1, borderRadius: 14, overflow: "hidden", backgroundColor: colors.border }}>
+          {l.image ? (
+            <Image source={{ uri: l.image }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+          ) : (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name={typeIcon(l.propertyType)} size={28} color={colors.textSecondary} />
+            </View>
+          )}
+
+          {/* Chat-count pill — top-right */}
+          <LinearGradient
+            colors={brand.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 3,
+              paddingHorizontal: 7,
+              paddingVertical: 3,
+              borderRadius: 999,
+            }}
+          >
+            <Ionicons name="chatbubble" size={10} color="#FFFFFF" />
+            <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 10 }}>{item.count}</Text>
+          </LinearGradient>
+
+          {/* Bottom darkening for white info text */}
+          <LinearGradient
+            pointerEvents="none"
+            colors={["transparent", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.75)"]}
+            locations={[0, 0.5, 1]}
+            style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "65%" }}
+          />
+
+          {/* Info — price + title + district in white, over the gradient */}
+          <View pointerEvents="none" style={{ position: "absolute", left: 10, right: 10, bottom: 10 }}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 16, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 4 }}
+            >
+              {formatPrice(l.priceAzn)}
+            </Text>
+            <Text
+              numberOfLines={1}
+              style={{ color: "rgba(255,255,255,0.95)", fontFamily: font.medium, fontSize: 11.5, marginTop: 2, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
+            >
+              {title}
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+              <Ionicons name="location-outline" size={10} color="rgba(255,255,255,0.9)" />
+              <Text
+                numberOfLines={1}
+                style={{ flexShrink: 1, marginLeft: 3, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 11, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 3 }}
+              >
+                {regionName}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </Pressable>
   );
 }
 

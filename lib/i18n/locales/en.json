@@ -448,7 +448,8 @@
     "myObjects": "My objects",
     "allObjects": "All objects",
     "dialogsCount": "{{n}} chats",
-    "noResults": "Nothing found"
+    "noResults": "Nothing found",
+    "reset": "Reset"
   },
   "myListings": {
     "title": "My listings",

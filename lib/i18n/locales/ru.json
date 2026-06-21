@@ -448,7 +448,8 @@
     "myObjects": "Мои объекты",
     "allObjects": "Все объекты",
     "dialogsCount": "{{n}} диалог.",
-    "noResults": "Ничего не найдено"
+    "noResults": "Ничего не найдено",
+    "reset": "Сбросить"
   },
   "myListings": {
     "title": "Мои объявления",

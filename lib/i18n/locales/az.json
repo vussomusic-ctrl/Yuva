@@ -448,7 +448,8 @@
     "myObjects": "Mənim obyektlərim",
     "allObjects": "Bütün obyektlər",
     "dialogsCount": "{{n}} dialoq",
-    "noResults": "Heç nə tapılmadı"
+    "noResults": "Heç nə tapılmadı",
+    "reset": "Sıfırla"
   },
   "myListings": {
     "title": "Mənim elanlarım",
