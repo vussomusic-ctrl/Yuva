@@ -594,5 +594,23 @@
     "areaUnit": "m²",
     "sotUnit": "sot",
     "metroPrefix": "m."
+  },
+  "security": {
+    "title": "Təhlükəsizlik",
+    "changePassword": "Şifrəni dəyiş",
+    "newPassword": "Yeni şifrə",
+    "confirmPassword": "Şifrəni təkrarla",
+    "pwTooShort": "Şifrə çox qısadır (min. 6)",
+    "pwMismatch": "Şifrələr uyğun gəlmir",
+    "pwChanged": "Şifrə dəyişdirildi",
+    "resetTitle": "Şifrənin sıfırlanması",
+    "resetHint": "Keçid {{email}} ünvanına gələcək",
+    "resetSend": "Keçid göndər",
+    "resetSent": "Məktub göndərildi",
+    "signOutAll": "Bütün cihazlardan çıx",
+    "signOutAllConfirm": "Bütün cihazlardan çıxılsın? Yenidən daxil olmalı olacaqsınız.",
+    "signOutAllBtn": "Çıx",
+    "currentPassword": "Cari şifrə",
+    "wrongCurrentPw": "Cari şifrə yanlışdır"
   }
 }

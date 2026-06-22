@@ -604,5 +604,23 @@
     "areaUnit": "м²",
     "sotUnit": "сот",
     "metroPrefix": "м."
+  },
+  "security": {
+    "title": "Безопасность",
+    "changePassword": "Сменить пароль",
+    "newPassword": "Новый пароль",
+    "confirmPassword": "Повтор пароля",
+    "pwTooShort": "Пароль слишком короткий (мин. 6)",
+    "pwMismatch": "Пароли не совпадают",
+    "pwChanged": "Пароль изменён",
+    "resetTitle": "Сброс пароля",
+    "resetHint": "Ссылка придёт на {{email}}",
+    "resetSend": "Отправить ссылку",
+    "resetSent": "Письмо отправлено",
+    "signOutAll": "Выйти со всех устройств",
+    "signOutAllConfirm": "Выйти со всех устройств? Придётся войти заново.",
+    "signOutAllBtn": "Выйти",
+    "currentPassword": "Текущий пароль",
+    "wrongCurrentPw": "Неверный текущий пароль"
   }
 }

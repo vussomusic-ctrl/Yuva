@@ -61,7 +61,7 @@ export default function SettingsScreen() {
           <Card colors={colors}>
             <Row colors={colors} ionicon="person" color={brand.violet} label={t("settings.editProfile")} onPress={() => router.push("/edit-profile")} />
             <Row colors={colors} ionicon="call" color={brand.blue} label={t("settings.editContact")} onPress={comingSoon} />
-            <Row colors={colors} ionicon="lock-closed" color={brand.magenta} label={t("settings.security")} onPress={comingSoon} />
+            <Row colors={colors} ionicon="lock-closed" color={brand.magenta} label={t("settings.security")} onPress={() => router.push("/security")} />
             <Row colors={colors} ionicon="trash" color={colors.danger} label={t("settings.deleteAccount")} danger onPress={comingSoon} isLast />
           </Card>
         ) : (

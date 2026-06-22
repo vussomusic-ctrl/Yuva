@@ -45,6 +45,10 @@ type AuthContextValue = {
   signUp: (input: SignUpInput) => Promise<AuthResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
+  verifyPassword: (password: string) => Promise<AuthResult>;
+  changePassword: (password: string) => Promise<AuthResult>;
+  sendPasswordReset: () => Promise<AuthResult>;
+  signOutEverywhere: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
 
@@ -113,7 +117,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next);
       if (next?.user) loadProfile(next.user.id);
-      else setProfile(null);
+      else {
+        setProfile(null);
+        // Session ended (incl. a global sign-out triggered from another device)
+        // → tear down all realtime channels so none survive the socket drop.
+        supabase.removeAllChannels();
+      }
     });
 
     return () => {
@@ -154,7 +163,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    supabase.removeAllChannels(); // unsubscribe realtime while the socket is still alive
     await supabase.auth.signOut();
+  };
+
+  // Re-check the current password (re-auth) before a sensitive change. Same
+  // user → the refreshed session is harmless (no logout).
+  const verifyPassword: AuthContextValue["verifyPassword"] = async (password) => {
+    const email = session?.user?.email;
+    if (!email) return { error: "no email" };
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message ?? null };
+  };
+
+  // Change the current user's password (logged-in; no email step).
+  const changePassword: AuthContextValue["changePassword"] = async (password) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error: error?.message ?? null };
+  };
+
+  // Email a password-reset link to the current account's email.
+  const sendPasswordReset: AuthContextValue["sendPasswordReset"] = async () => {
+    const email = session?.user?.email;
+    if (!email) return { error: "no email" };
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    return { error: error?.message ?? null };
+  };
+
+  // Revoke every session (sign out on all devices). onAuthStateChange clears state.
+  const signOutEverywhere = async () => {
+    supabase.removeAllChannels(); // unsubscribe realtime before the global socket teardown
+    await supabase.auth.signOut({ scope: "global" });
   };
 
   const refreshProfile = async () => {
@@ -171,6 +210,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signIn,
         signOut,
+        verifyPassword,
+        changePassword,
+        sendPasswordReset,
+        signOutEverywhere,
         refreshProfile,
       }}
     >

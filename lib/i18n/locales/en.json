@@ -594,5 +594,23 @@
     "areaUnit": "m²",
     "sotUnit": "sot",
     "metroPrefix": "m."
+  },
+  "security": {
+    "title": "Security",
+    "changePassword": "Change password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "pwTooShort": "Password too short (min. 6)",
+    "pwMismatch": "Passwords do not match",
+    "pwChanged": "Password changed",
+    "resetTitle": "Password reset",
+    "resetHint": "A link will be sent to {{email}}",
+    "resetSend": "Send link",
+    "resetSent": "Email sent",
+    "signOutAll": "Sign out everywhere",
+    "signOutAllConfirm": "Sign out on all devices? You will need to log in again.",
+    "signOutAllBtn": "Sign out",
+    "currentPassword": "Current password",
+    "wrongCurrentPw": "Wrong current password"
   }
 }
