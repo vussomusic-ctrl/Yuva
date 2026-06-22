@@ -1,4 +1,7 @@
 import { useTranslation } from "react-i18next";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import { LANGUAGE_KEY } from "./index";
 
 export type LangCode = "az" | "ru" | "en";
 
@@ -20,7 +23,10 @@ export function useLanguage() {
     LANGUAGES.find((l) => l.code === i18n.language)?.code ?? "az";
 
   const setLanguage = (code: LangCode) => {
-    if (code !== current) i18n.changeLanguage(code);
+    if (code !== current) {
+      i18n.changeLanguage(code);
+      AsyncStorage.setItem(LANGUAGE_KEY, code).catch(() => {}); // persist across launches
+    }
   };
 
   const cycleLanguage = () => {

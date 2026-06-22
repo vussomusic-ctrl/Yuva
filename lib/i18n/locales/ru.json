@@ -31,7 +31,7 @@
     "start": "Начать"
   },
   "welcome": {
-    "subtitle": "Эксклюзивная недвижимость для взыскательных клиентов.",
+    "subtitle": "Найдём место, которое станет вашим гнездом",
     "createAccount": "Создать аккаунт",
     "login": "Войти",
     "or": "или",
@@ -40,7 +40,15 @@
     "terms": "Условиями использования",
     "legalAnd": " и ",
     "privacy": "Политикой конфиденциальности",
-    "legalEnd": "."
+    "legalEnd": ".",
+    "loginByPhone": "Войти по номеру телефона",
+    "loginApple": "Войти через Apple",
+    "loginGoogle": "Войти через Google",
+    "orDivider": "или",
+    "register": "Регистрация",
+    "loginByEmail": "Войти по email",
+    "continueGuest": "Продолжить как гость",
+    "comingSoon": "Скоро будет доступно"
   },
   "createAccount": {
     "title": "Создать аккаунт",

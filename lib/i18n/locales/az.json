@@ -31,7 +31,7 @@
     "start": "Başla"
   },
   "welcome": {
-    "subtitle": "Tələbkar müştərilər üçün eksklüziv daşınmaz əmlak.",
+    "subtitle": "Tapdığımız ev sizin yuvanız olsun",
     "createAccount": "Hesab yarat",
     "login": "Daxil ol",
     "or": "və ya",
@@ -40,7 +40,15 @@
     "terms": "İstifadə Şərtləri",
     "legalAnd": " və ",
     "privacy": "Məxfilik Siyasəti",
-    "legalEnd": " ilə razılaşırsınız."
+    "legalEnd": " ilə razılaşırsınız.",
+    "loginByPhone": "Telefon nömrəsi ilə daxil ol",
+    "loginApple": "Apple ilə daxil ol",
+    "loginGoogle": "Google ilə daxil ol",
+    "orDivider": "və ya",
+    "register": "Qeydiyyat",
+    "loginByEmail": "E-poçt ilə daxil ol",
+    "continueGuest": "Qonaq kimi davam et",
+    "comingSoon": "Tezliklə"
   },
   "createAccount": {
     "title": "Hesab yarat",

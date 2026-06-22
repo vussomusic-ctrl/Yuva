@@ -31,7 +31,7 @@
     "start": "Get started"
   },
   "welcome": {
-    "subtitle": "Exclusive real estate for discerning clients.",
+    "subtitle": "Let's find a place that becomes your nest",
     "createAccount": "Create account",
     "login": "Log in",
     "or": "or",
@@ -40,7 +40,15 @@
     "terms": "Terms of Use",
     "legalAnd": " and ",
     "privacy": "Privacy Policy",
-    "legalEnd": "."
+    "legalEnd": ".",
+    "loginByPhone": "Sign in with phone",
+    "loginApple": "Sign in with Apple",
+    "loginGoogle": "Sign in with Google",
+    "orDivider": "or",
+    "register": "Sign up",
+    "loginByEmail": "Sign in with email",
+    "continueGuest": "Continue as guest",
+    "comingSoon": "Coming soon"
   },
   "createAccount": {
     "title": "Create account",
