@@ -538,7 +538,11 @@
     "version": "Versiya",
     "terms": "İstifadə şərtləri",
     "privacy": "Məxfilik siyasəti",
-    "support": "Dəstək ilə əlaqə"
+    "support": "Dəstək ilə əlaqə",
+    "security": "Təhlükəsizlik",
+    "agenciesSubtitle": "Təsdiqlənmiş agentliklər kataloqu",
+    "comingSoon": "Tezliklə",
+    "app": "Tətbiq"
   },
   "mapPicker": {
     "title": "Yeri seçin",

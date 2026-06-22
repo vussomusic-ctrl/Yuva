@@ -538,7 +538,11 @@
     "version": "Version",
     "terms": "Terms of Use",
     "privacy": "Privacy Policy",
-    "support": "Contact support"
+    "support": "Contact support",
+    "security": "Security",
+    "agenciesSubtitle": "Catalog of verified agencies",
+    "comingSoon": "Coming soon",
+    "app": "App"
   },
   "mapPicker": {
     "title": "Choose location",
