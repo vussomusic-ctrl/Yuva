@@ -227,3 +227,35 @@ export function useSheetScrollGesture(
 
   return { pan };
 }
+
+/**
+ * Pull-to-stretch for a banner/hero: drag down to stretch its height (rubber-band,
+ * finger moves faster than the banner), release to spring back to baseHeight.
+ * Attach `pan` via GestureDetector and `heroStyle` to the stretchable View.
+ */
+export function usePullStretch(baseHeight: number) {
+  const stretch = useSharedValue(0);
+
+  const pan = Gesture.Pan()
+    .onUpdate((e) => {
+      // down only, tight resistance (banner tracks the finger closely)
+      if (e.translationY > 0) {
+        stretch.value = e.translationY * 0.9;
+      }
+    })
+    .onEnd(() => {
+      // snappy spring back to the original height
+      stretch.value = withSpring(0, { damping: 30, stiffness: 300 });
+    });
+
+  const heroStyle = useAnimatedStyle(() => ({
+    height: baseHeight + stretch.value,
+  }));
+
+  // Image grows with the hero so no purple strip shows at the bottom.
+  const imageStyle = useAnimatedStyle(() => ({
+    height: 250 + stretch.value,
+  }));
+
+  return { pan, heroStyle, imageStyle };
+}
