@@ -44,6 +44,8 @@ type AuthContextValue = {
   loading: boolean;
   signUp: (input: SignUpInput) => Promise<AuthResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
+  signInWithPhone: (phone: string, data?: { full_name?: string; email?: string; role?: string }) => Promise<AuthResult>;
+  verifyPhoneOtp: (phone: string, token: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
   verifyPassword: (password: string) => Promise<AuthResult>;
   changePassword: (password: string) => Promise<AuthResult>;
@@ -162,6 +164,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   };
 
+  // Phone OTP: request a code (Supabase generates it → Send SMS Hook → 1sms).
+  // `data` (registration: full_name/email/role) → raw_user_meta_data for a NEW
+  // user; the handle_new_user trigger writes it into profiles. Ignored on login.
+  const signInWithPhone: AuthContextValue["signInWithPhone"] = async (phone, data) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      phone,
+      options: data ? { data } : undefined,
+    });
+    return { error: error?.message ?? null };
+  };
+
+  // Verify the SMS code → Supabase mints the session (onAuthStateChange catches it).
+  const verifyPhoneOtp: AuthContextValue["verifyPhoneOtp"] = async (phone, token) => {
+    const { error } = await supabase.auth.verifyOtp({ phone, token, type: "sms" });
+    return { error: error?.message ?? null };
+  };
+
   const signOut = async () => {
     supabase.removeAllChannels(); // unsubscribe realtime while the socket is still alive
     await supabase.auth.signOut();
@@ -209,6 +228,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signUp,
         signIn,
+        signInWithPhone,
+        verifyPhoneOtp,
         signOut,
         verifyPassword,
         changePassword,

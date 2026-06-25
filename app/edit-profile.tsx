@@ -91,7 +91,7 @@ export default function EditProfileScreen() {
         <EmptyState
           image={require("../assets/auth/bird-lock.png")}
           title={t("editProfile.guestPrompt")}
-          cta={{ label: t("profile.login"), onPress: () => router.replace("/login") }}
+          cta={{ label: t("profile.login"), onPress: () => router.replace("/phone-login") }}
         />
       </SafeAreaView>
     );

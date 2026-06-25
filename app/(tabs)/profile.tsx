@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
-import { View, Text, Image, Pressable, Switch } from "react-native";
+import { View, Text, Image, Pressable, Switch, ViewStyle } from "react-native";
 import Animated, { useAnimatedScrollHandler, withSpring } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import Constants from "expo-constants";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useScrollCtx } from "../../lib/scrollContext";
@@ -24,6 +25,12 @@ export default function ProfileScreen() {
   const { current, currentName, languages, setLanguage } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
   const { session, profile, signOut } = useAuth();
+
+  // Notification preferences — local only for now (Supabase later). Moved from Settings.
+  const [newMatches, setNewMatches] = useState(true);
+  const [priceDrop, setPriceDrop] = useState(true);
+  const [messages, setMessages] = useState(true);
+  const version = Constants.expoConfig?.version ?? "1.0.0";
   const { scrollY } = useScrollCtx();
   const scrollHandler = useAnimatedScrollHandler((e) => {
     scrollY.value = e.contentOffset.y;
@@ -181,9 +188,52 @@ export default function ProfileScreen() {
           </Card>
         )}
 
+        {/* Notifications (moved from Settings) — toggles in Profile MenuRow style */}
+        {loggedIn && (
+          <>
+            <SectionLabel colors={colors} text={t("settings.notifications")} />
+            <Card colors={colors} style={{ marginTop: 0 }}>
+            <MenuRow
+              colors={colors}
+              ionicon="notifications"
+              color={brand.violet}
+              label={t("settings.notifNewMatches")}
+              right={
+                <Switch value={newMatches} onValueChange={setNewMatches} trackColor={{ false: colors.border, true: brand.violet }} thumbColor="#FFFFFF" ios_backgroundColor={colors.border} />
+              }
+            />
+            <MenuRow
+              colors={colors}
+              ionicon="trending-down"
+              color={brand.orange}
+              label={t("settings.notifPriceDrop")}
+              right={
+                <Switch value={priceDrop} onValueChange={setPriceDrop} trackColor={{ false: colors.border, true: brand.violet }} thumbColor="#FFFFFF" ios_backgroundColor={colors.border} />
+              }
+            />
+            <MenuRow
+              colors={colors}
+              ionicon="chatbubbles"
+              color={brand.blue}
+              label={t("settings.notifMessages")}
+              isLast
+              right={
+                <Switch value={messages} onValueChange={setMessages} trackColor={{ false: colors.border, true: brand.violet }} thumbColor="#FFFFFF" ios_backgroundColor={colors.border} />
+              }
+            />
+            </Card>
+          </>
+        )}
+
+        {/* Admin (moved from Settings) — admins only */}
+        {profile?.isAdmin && (
+          <Card colors={colors}>
+            <MenuRow colors={colors} ionicon="business" color={brand.violet} label={t("settings.manageAgencies")} onPress={() => router.push("/admin/agencies")} isLast />
+          </Card>
+        )}
+
         {/* 6. Secondary */}
         <Card colors={colors}>
-          <MenuRow colors={colors} ionicon="settings-sharp" color={brand.violet} label={t("profile.settings")} onPress={() => router.push("/settings")} />
           <MenuRow
             colors={colors}
             ionicon="language"
@@ -234,7 +284,7 @@ export default function ProfileScreen() {
             </Pressable>
           ) : (
             <Pressable
-              onPress={() => router.replace("/login")}
+              onPress={() => router.replace("/phone-login")}
               style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 14, padding: 16, opacity: pressed ? 0.6 : 1 })}
             >
               <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: brand.violet + "22", alignItems: "center", justifyContent: "center" }}>
@@ -243,6 +293,21 @@ export default function ProfileScreen() {
               <Text style={{ color: brand.violet, fontFamily: font.semibold, fontSize: 16 }}>{t("profile.login")}</Text>
             </Pressable>
           )}
+        </Card>
+
+        {/* App / about (moved from Settings) — version + legal links */}
+        <SectionLabel colors={colors} text={t("settings.app")} />
+        <Card colors={colors} style={{ marginTop: 0 }}>
+          <MenuRow
+            colors={colors}
+            ionicon="information-circle"
+            color={brand.violet}
+            label={t("settings.version")}
+            right={<Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>{version}</Text>}
+          />
+          <MenuRow colors={colors} ionicon="document-text" color={brand.blue} label={t("settings.terms")} />
+          <MenuRow colors={colors} ionicon="shield-checkmark" color={brand.violet} label={t("settings.privacy")} />
+          <MenuRow colors={colors} ionicon="help-buoy" color={brand.orange} label={t("settings.support")} isLast />
         </Card>
       </Animated.ScrollView>
 
@@ -284,18 +349,40 @@ export default function ProfileScreen() {
   );
 }
 
-function Card({ colors, children }: { colors: Theme; children: React.ReactNode }) {
+function SectionLabel({ colors, text }: { colors: Theme; text: string }) {
+  return (
+    <Text
+      style={{
+        color: colors.textSecondary,
+        fontFamily: font.bold,
+        fontSize: 12,
+        letterSpacing: 0.5,
+        textTransform: "uppercase",
+        marginTop: 16,
+        marginBottom: 6, // small — label hugs its own card below
+        marginHorizontal: 20, // ≈ card left edge (16) + 4, iOS-style section header
+      }}
+    >
+      {text}
+    </Text>
+  );
+}
+
+function Card({ colors, children, style }: { colors: Theme; children: React.ReactNode; style?: ViewStyle }) {
   return (
     <View
-      style={{
-        marginHorizontal: 16,
-        marginTop: 16,
-        backgroundColor: colors.card,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: colors.border,
-        overflow: "hidden",
-      }}
+      style={[
+        {
+          marginHorizontal: 16,
+          marginTop: 16,
+          backgroundColor: colors.card,
+          borderRadius: 20,
+          borderWidth: 1,
+          borderColor: colors.border,
+          overflow: "hidden",
+        },
+        style,
+      ]}
     >
       {children}
     </View>

@@ -308,7 +308,7 @@ export default function PropertyDetailScreen() {
 
   const onMessage = async () => {
     if (!user) {
-      router.push("/login");
+      router.push("/phone-login");
       return;
     }
     if (creatingChat) return;

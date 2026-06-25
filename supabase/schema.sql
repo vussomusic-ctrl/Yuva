@@ -28,6 +28,7 @@ create table if not exists public.profiles (
   full_name   text,
   avatar_url  text,
   phone       text,                       -- +994…
+  email       text,                       -- entered at phone-registration (email/pw users keep theirs in auth.users)
   role        text not null default 'user' check (role in ('user', 'agent')),
   verified    boolean not null default false,
   is_admin    boolean not null default false,  -- in-app agency admin (Vusal)
@@ -90,11 +91,12 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, full_name, phone, role)
+  insert into public.profiles (id, full_name, phone, email, role)
   values (
     new.id,
     new.raw_user_meta_data ->> 'full_name',
-    new.raw_user_meta_data ->> 'phone',
+    coalesce(new.raw_user_meta_data ->> 'phone', new.phone),
+    new.raw_user_meta_data ->> 'email',
     coalesce(new.raw_user_meta_data ->> 'role', 'user')
   )
   on conflict (id) do nothing;

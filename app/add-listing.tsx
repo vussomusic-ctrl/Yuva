@@ -117,7 +117,7 @@ export default function AddListingModal() {
 
   // Publishing requires an account (owner_id + RLS). Send guests to login.
   useEffect(() => {
-    if (!user) router.replace("/login");
+    if (!user) router.replace("/phone-login");
   }, [user, router]);
 
   // Edit prefill gate: don't render the form (and never let Save fire) until

@@ -88,7 +88,6 @@ export default function PhoneRegisterScreen() {
     });
     setSubmitting(false);
     if (error) {
-      console.log("OTP_ERROR_RAW:", error); // temporary — read the real Supabase message
       setAuthError(t(authErrorKey(error)));
       return;
     }

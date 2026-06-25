@@ -163,7 +163,7 @@ export default function NotificationsScreen() {
           <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 14, textAlign: "center" }}>
             {t("notifications.guestPrompt")}
           </Text>
-          <GradientButton label={t("profile.login")} onPress={() => router.replace("/login")} />
+          <GradientButton label={t("profile.login")} onPress={() => router.replace("/phone-login")} />
         </View>
       ) : loading ? (
         <LoadingState colors={colors} />

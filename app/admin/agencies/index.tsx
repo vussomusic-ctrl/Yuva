@@ -54,7 +54,7 @@ export default function AdminAgenciesScreen() {
       <Header
         colors={colors}
         title={t("settings.manageAgencies")}
-        onBack={() => (router.canGoBack() ? router.back() : router.replace("/settings"))}
+        onBack={() => (router.canGoBack() ? router.back() : router.replace("/profile"))}
       />
 
       {loading ? (

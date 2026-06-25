@@ -466,7 +466,7 @@ function SearchBar({
           placeholder={placeholder}
           placeholderTextColor={colors.textSecondary}
           returnKeyType="search"
-          style={{ flex: 1, color: colors.text, fontFamily: font.regular, fontSize: 15, padding: 0 }}
+          style={{ flex: 1, color: colors.text, fontFamily: font.regular, fontSize: 15, padding: 0, letterSpacing: 0 }}
         />
         {value.length > 0 && (
           <Pressable onPress={() => onChange("")} hitSlop={8}>

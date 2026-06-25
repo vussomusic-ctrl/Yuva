@@ -35,8 +35,10 @@ function useAuthRedirect() {
       top === undefined ||
       top === "onboarding" ||
       top === "welcome" ||
-      top === "login" ||
-      top === "create-account";
+      top === "create-account" ||
+      top === "phone-login" ||
+      top === "phone-register" ||
+      top === "verify-otp";
     if (session && inAuthFlow) router.replace("/home");
   }, [session, loading, segments, router]);
 }
@@ -56,8 +58,10 @@ function RootInner() {
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="welcome" />
-        <Stack.Screen name="login" />
         <Stack.Screen name="create-account" />
+        <Stack.Screen name="phone-login" />
+        <Stack.Screen name="phone-register" />
+        <Stack.Screen name="verify-otp" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="property/[id]" />
         <Stack.Screen name="map" />
@@ -69,8 +73,6 @@ function RootInner() {
         <Stack.Screen name="my-listings" />
         <Stack.Screen name="saved" />
         <Stack.Screen name="notifications" />
-        <Stack.Screen name="settings" />
-        <Stack.Screen name="security" />
         <Stack.Screen name="promote/[id]" options={{ presentation: "modal" }} />
         <Stack.Screen name="edit-profile" options={{ presentation: "modal" }} />
         <Stack.Screen name="add-listing" options={{ presentation: "modal" }} />
