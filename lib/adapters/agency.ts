@@ -23,6 +23,7 @@ export type Agency = {
   description: string | null;
   isPartner: boolean;
   createdAt: string;
+  listingsCount: number;
 };
 
 export function rowToAgency(row: AgencyRow): Agency {
@@ -36,5 +37,14 @@ export function rowToAgency(row: AgencyRow): Agency {
     description: row.description ?? null,
     isPartner: row.is_partner,
     createdAt: row.created_at,
+    listingsCount: 0, // unknown from a plain agencies row; set by the count RPC
   };
+}
+
+// Row from the partner_agencies_with_counts() RPC — agency columns + the
+// aggregate. Postgres bigint may arrive as number or string, so coerce.
+export type AgencyWithCountRow = AgencyRow & { listings_count: number | string };
+
+export function rowWithCountToAgency(row: AgencyWithCountRow): Agency {
+  return { ...rowToAgency(row), listingsCount: Number(row.listings_count) || 0 };
 }

@@ -493,7 +493,11 @@
     "empty": "No partner agencies yet",
     "emptyTitle": "No agencies yet",
     "emptyAgency": "This agency has no agents or listings yet",
-    "about": "About"
+    "about": "About",
+    "subtitle": "Verified real estate agencies",
+    "searchPlaceholder": "Search agencies",
+    "listingsCount_one": "{{count}} listing",
+    "listingsCount_other": "{{count}} listings"
   },
   "admin": {
     "create": "Create",

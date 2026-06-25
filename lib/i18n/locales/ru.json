@@ -493,7 +493,12 @@
     "empty": "Партнёрских агентств пока нет",
     "emptyTitle": "Агентств пока нет",
     "emptyAgency": "У агентства пока нет агентов и объявлений",
-    "about": "О компании"
+    "about": "О компании",
+    "subtitle": "Проверенные агентства недвижимости",
+    "searchPlaceholder": "Поиск агентства",
+    "listingsCount_one": "{{count}} объект",
+    "listingsCount_few": "{{count}} объекта",
+    "listingsCount_many": "{{count}} объектов"
   },
   "admin": {
     "create": "Создать",

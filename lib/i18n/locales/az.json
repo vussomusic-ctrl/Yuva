@@ -493,7 +493,11 @@
     "empty": "Hələ tərəfdaş agentlik yoxdur",
     "emptyTitle": "Agentliklər tapılmadı",
     "emptyAgency": "Agentliyin hələ agenti və elanı yoxdur",
-    "about": "Şirkət haqqında"
+    "about": "Şirkət haqqında",
+    "subtitle": "Yoxlanılmış daşınmaz əmlak agentlikləri",
+    "searchPlaceholder": "Agentlik axtar",
+    "listingsCount_one": "{{count}} elan",
+    "listingsCount_other": "{{count}} elan"
   },
   "admin": {
     "create": "Yarat",

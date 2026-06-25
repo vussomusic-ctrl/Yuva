@@ -2,7 +2,7 @@
 // via the adapters; screens never see snake_case. Reads throw on error.
 
 import { supabase } from "../supabase";
-import { Agency, AgencyRow, rowToAgency } from "../adapters/agency";
+import { Agency, AgencyRow, rowToAgency, AgencyWithCountRow, rowWithCountToAgency } from "../adapters/agency";
 import { Listing } from "../mock/listings";
 import { ListingRow, rowToListing } from "../adapters/listing";
 
@@ -14,15 +14,11 @@ export type AgencyAgent = {
   verified: boolean;
 };
 
-/** Partner agencies for the catalog, alphabetical. */
+/** Partner agencies for the catalog (+ active-listings count), via one RPC. */
 export async function fetchPartnerAgencies(): Promise<Agency[]> {
-  const { data, error } = await supabase
-    .from("agencies")
-    .select("*")
-    .eq("is_partner", true)
-    .order("name", { ascending: true });
+  const { data, error } = await supabase.rpc("partner_agencies_with_counts");
   if (error) throw error;
-  return (data as AgencyRow[]).map(rowToAgency);
+  return (data as AgencyWithCountRow[]).map(rowWithCountToAgency);
 }
 
 /** One agency by id, or null if not found. */
