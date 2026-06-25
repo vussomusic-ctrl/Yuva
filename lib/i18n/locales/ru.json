@@ -72,7 +72,8 @@
     "errEmail": "Введите корректный email",
     "errPhone": "Введите корректный номер телефона",
     "errPassword": "Введите пароль",
-    "success": "Готово! Регистрацию подключим к Supabase позже."
+    "success": "Готово! Регистрацию подключим к Supabase позже.",
+    "emailOptional": "Email (необязательно)"
   },
   "auth": {
     "loginTitle": "Войти",

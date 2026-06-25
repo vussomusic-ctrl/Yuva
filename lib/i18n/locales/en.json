@@ -72,7 +72,8 @@
     "errEmail": "Enter a valid email",
     "errPhone": "Enter a valid phone number",
     "errPassword": "Enter a password",
-    "success": "All set! We'll connect sign-up to Supabase later."
+    "success": "All set! We'll connect sign-up to Supabase later.",
+    "emailOptional": "Email (optional)"
   },
   "auth": {
     "loginTitle": "Log in",

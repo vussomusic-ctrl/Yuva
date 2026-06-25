@@ -184,7 +184,10 @@ export default function ProfileScreen() {
         {loggedIn && (
           <Card colors={colors}>
             <MenuRow colors={colors} ionicon="heart" color={brand.magenta} label={t("profile.saved")} onPress={() => router.push("/saved")} />
-            <MenuRow colors={colors} ionicon="business" color={brand.violet} label={t("profile.agenciesPartners")} onPress={() => router.push("/agencies")} isLast />
+            <MenuRow colors={colors} ionicon="business" color={brand.violet} label={t("profile.agenciesPartners")} onPress={() => router.push("/agencies")} isLast={!profile?.isAdmin} />
+            {profile?.isAdmin && (
+              <MenuRow colors={colors} ionicon="shield-checkmark" color={brand.violet} label={t("settings.manageAgencies")} onPress={() => router.push("/admin/agencies")} isLast />
+            )}
           </Card>
         )}
 
@@ -223,13 +226,6 @@ export default function ProfileScreen() {
             />
             </Card>
           </>
-        )}
-
-        {/* Admin (moved from Settings) — admins only */}
-        {profile?.isAdmin && (
-          <Card colors={colors}>
-            <MenuRow colors={colors} ionicon="business" color={brand.violet} label={t("settings.manageAgencies")} onPress={() => router.push("/admin/agencies")} isLast />
-          </Card>
         )}
 
         {/* 6. Secondary */}

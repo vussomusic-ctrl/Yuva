@@ -72,7 +72,8 @@
     "errEmail": "Düzgün e-poçt daxil edin",
     "errPhone": "Düzgün telefon nömrəsi daxil edin",
     "errPassword": "Şifrəni daxil edin",
-    "success": "Hazırdır! Qeydiyyatı sonra Supabase ilə qoşacağıq."
+    "success": "Hazırdır! Qeydiyyatı sonra Supabase ilə qoşacağıq.",
+    "emailOptional": "Email (istəyə bağlı)"
   },
   "auth": {
     "loginTitle": "Daxil ol",

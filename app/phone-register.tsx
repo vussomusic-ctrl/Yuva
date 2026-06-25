@@ -70,7 +70,7 @@ export default function PhoneRegisterScreen() {
   const onSubmit = async () => {
     const next: typeof errors = {};
     if (!name.trim()) next.name = t("createAccount.errName");
-    if (!EMAIL_RE.test(email.trim())) next.email = t("createAccount.errEmail");
+    if (email.trim() && !EMAIL_RE.test(email.trim())) next.email = t("createAccount.errEmail"); // optional — validate only if filled
     if (!isValidAzPhone(phone)) next.phone = t("createAccount.errPhone"); // exactly 9 national digits
 
     setErrors(next);
@@ -83,7 +83,7 @@ export default function PhoneRegisterScreen() {
     const raw = azRawPhone(phone); // clean E.164 for auth (mask is display-only)
     const { error } = await signInWithPhone(raw, {
       full_name: name.trim(),
-      email: email.trim(),
+      email: email.trim() || undefined,
       role: "user",
     });
     setSubmitting(false);
@@ -146,7 +146,7 @@ export default function PhoneRegisterScreen() {
               />
               <Field
                 icon="mail-outline"
-                placeholder={t("createAccount.emailPlaceholder")}
+                placeholder={t("createAccount.emailOptional")}
                 value={email}
                 onChangeText={(v) => {
                   setEmail(v);
