@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 import { View, Text, Image, Pressable, ScrollView, Linking } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -8,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { font } from "../../lib/theme/typography";
-import { Header } from "../my-listings";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { PropertyCard } from "../../components/PropertyCard";
 import { useFavorites } from "../../lib/favorites";
@@ -29,6 +30,7 @@ export default function AgencyDetailScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
 
   const [agency, setAgency] = useState<Agency | null>(null);
@@ -54,13 +56,11 @@ export default function AgencyDetailScreen() {
 
   const loading = !loaded && !error;
 
+  const onBack = () => (router.canGoBack() ? router.back() : router.replace("/agencies"));
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
-      <Header
-        colors={colors}
-        title={agency?.name ?? t("agencies.title")}
-        onBack={() => (router.canGoBack() ? router.back() : router.replace("/agencies"))}
-      />
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <StatusBar style="light" />
 
       {loading ? (
         <LoadingState colors={colors} />
@@ -68,34 +68,46 @@ export default function AgencyDetailScreen() {
         <ErrorState colors={colors} onRetry={load} />
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-          {/* Agency header: logo + name + contacts (only filled ones) */}
-          <View style={{ alignItems: "center", paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, gap: 12 }}>
+          {/* FB-style cover — full width, bleeds under the status bar */}
+          {agency.coverUrl ? (
+            <Image source={{ uri: agency.coverUrl }} style={{ width: "100%", height: 180, backgroundColor: colors.card }} resizeMode="cover" />
+          ) : (
+            <LinearGradient colors={brand.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: "100%", height: 180 }} />
+          )}
+
+          {/* Logo overlapping the cover bottom-left + name + contacts (left-aligned) */}
+          <View style={{ paddingHorizontal: 16 }}>
             {agency.logoUrl ? (
               <Image
                 source={{ uri: agency.logoUrl }}
-                style={{ width: 96, height: 96, borderRadius: 20, backgroundColor: colors.card }}
+                style={{ width: 88, height: 88, borderRadius: 20, marginTop: -44, borderWidth: 3, borderColor: colors.bg, backgroundColor: colors.card }}
               />
             ) : (
               <View
                 style={{
-                  width: 96,
-                  height: 96,
+                  width: 88,
+                  height: 88,
                   borderRadius: 20,
+                  marginTop: -44,
+                  borderWidth: 3,
+                  borderColor: colors.bg,
                   backgroundColor: brand.violet,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 40 }}>
+                <Text style={{ color: "#FFFFFF", fontFamily: font.extrabold, fontSize: 36 }}>
                   {agency.name.charAt(0).toUpperCase()}
                 </Text>
               </View>
             )}
-            <Text style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 22, textAlign: "center" }}>
+
+            <Text style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 22, marginTop: 12 }}>
               {agency.name}
             </Text>
+
             {(agency.phone || agency.email || agency.website) && (
-              <View style={{ flexDirection: "row", gap: 10 }}>
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 {agency.phone && (
                   <ContactButton icon="call" onPress={() => Linking.openURL(`tel:${agency.phone}`).catch(() => {})} />
                 )}
@@ -186,7 +198,18 @@ export default function AgencyDetailScreen() {
           )}
         </ScrollView>
       )}
-    </SafeAreaView>
+
+      {/* Back — overlay on the cover, always visible */}
+      <Pressable
+        onPress={onBack}
+        hitSlop={12}
+        style={({ pressed }) => ({ position: "absolute", top: insets.top + 6, left: 12, opacity: pressed ? 0.6 : 1 })}
+      >
+        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.35)", alignItems: "center", justifyContent: "center" }}>
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        </View>
+      </Pressable>
+    </View>
   );
 }
 

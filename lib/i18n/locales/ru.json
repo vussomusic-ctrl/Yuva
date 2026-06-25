@@ -538,7 +538,8 @@
     "searchPlaceholder": "Поиск по имени или телефону",
     "inOtherAgency": "В другом агентстве",
     "alreadyHere": "Уже в агентстве",
-    "descriptionLabel": "Описание / О компании"
+    "descriptionLabel": "Описание / О компании",
+    "changeCover": "Изменить обложку"
   },
   "notifications": {
     "title": "Уведомления",

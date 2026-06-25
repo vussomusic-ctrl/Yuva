@@ -17,6 +17,7 @@ import { fetchAgencyById, fetchAgencyAgents, AgencyAgent } from "../../../lib/ap
 import {
   updateAgency,
   uploadAgencyLogo,
+  uploadAgencyCover,
   setAgentAgency,
   searchProfiles,
   SearchedProfile,
@@ -35,6 +36,8 @@ export default function AdminAgencyEditScreen() {
   const [description, setDescription] = useState("");
   const [isPartner, setIsPartner] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   const [agents, setAgents] = useState<AgencyAgent[]>([]);
   const [query, setQuery] = useState("");
@@ -66,6 +69,7 @@ export default function AdminAgencyEditScreen() {
           setDescription(ag.description ?? "");
           setIsPartner(ag.isPartner);
           setLogoUrl(ag.logoUrl);
+          setCoverUrl(ag.coverUrl);
         }
         setAgents(ags);
         setLoaded(!!ag);
@@ -120,6 +124,36 @@ export default function AdminAgencyEditScreen() {
     }
   };
 
+  const pickCover = async () => {
+    if (!id || uploadingCover) return;
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert(t("addListing.photoPermission"));
+      return;
+    }
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsMultipleSelection: false,
+      quality: 1,
+    });
+    if (res.canceled || !res.assets?.[0]) return;
+    setUploadingCover(true);
+    try {
+      const a = res.assets[0];
+      const ctx = ImageManipulator.manipulate(a.uri);
+      if (a.width > 1200) ctx.resize({ width: 1200 }); // wide cover, height auto
+      const img = await ctx.renderAsync();
+      const out = await img.saveAsync({ format: SaveFormat.JPEG, compress: 0.7, base64: true });
+      const url = await uploadAgencyCover(id, out.base64 ?? "");
+      await updateAgency(id, { coverUrl: url });
+      setCoverUrl(url);
+    } catch {
+      Alert.alert(t("editProfile.errSave"));
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
   const onChangeQuery = (text: string) => {
     setQuery(text);
     if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -171,6 +205,20 @@ export default function AdminAgencyEditScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 18 }}
         >
+          {/* Cover */}
+          <View style={{ gap: 10 }}>
+            {coverUrl ? (
+              <Image source={{ uri: coverUrl }} style={{ width: "100%", height: 120, borderRadius: 12, backgroundColor: colors.card }} resizeMode="cover" />
+            ) : (
+              <View style={{ width: "100%", height: 120, borderRadius: 12, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="image-outline" size={32} color={colors.textSecondary} />
+              </View>
+            )}
+            <Pressable onPress={pickCover} disabled={uploadingCover} hitSlop={8} style={({ pressed }) => ({ alignSelf: "center", opacity: uploadingCover ? 0.5 : pressed ? 0.6 : 1 })}>
+              <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 14 }}>{t("admin.changeCover")}</Text>
+            </Pressable>
+          </View>
+
           {/* Logo */}
           <View style={{ alignItems: "center", gap: 10 }}>
             {logoUrl ? (

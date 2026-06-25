@@ -38,6 +38,7 @@ export type AgencyUpdate = {
   website?: string | null;
   description?: string | null;
   logoUrl?: string | null;
+  coverUrl?: string | null;
   isPartner?: boolean;
 };
 
@@ -50,6 +51,7 @@ export async function updateAgency(id: string, fields: AgencyUpdate): Promise<vo
   if (fields.website !== undefined) payload.website = fields.website;
   if (fields.description !== undefined) payload.description = fields.description;
   if (fields.logoUrl !== undefined) payload.logo_url = fields.logoUrl;
+  if (fields.coverUrl !== undefined) payload.cover_url = fields.coverUrl;
   if (fields.isPartner !== undefined) payload.is_partner = fields.isPartner;
   const { error } = await supabase.from("agencies").update(payload).eq("id", id);
   if (error) throw error;
@@ -58,6 +60,16 @@ export async function updateAgency(id: string, fields: AgencyUpdate): Promise<vo
 /** Upload a compressed logo JPEG (base64) → public URL. Path {agencyId}/{ts}.jpg. */
 export async function uploadAgencyLogo(agencyId: string, base64: string): Promise<string> {
   const path = `${agencyId}/${Date.now()}.jpg`;
+  const { error } = await supabase.storage
+    .from(AGENCY_LOGOS_BUCKET)
+    .upload(path, decode(base64), { contentType: "image/jpeg", upsert: false });
+  if (error) throw error;
+  return supabase.storage.from(AGENCY_LOGOS_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+/** Upload a compressed cover JPEG (base64) → public URL. Path {agencyId}/cover-{ts}.jpg. */
+export async function uploadAgencyCover(agencyId: string, base64: string): Promise<string> {
+  const path = `${agencyId}/cover-${Date.now()}.jpg`;
   const { error } = await supabase.storage
     .from(AGENCY_LOGOS_BUCKET)
     .upload(path, decode(base64), { contentType: "image/jpeg", upsert: false });

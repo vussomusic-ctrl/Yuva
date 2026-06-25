@@ -5,6 +5,7 @@ export type AgencyRow = {
   id: string;
   name: string;
   logo_url: string | null;
+  cover_url: string | null;
   phone: string | null;
   email: string | null;
   website: string | null;
@@ -17,6 +18,7 @@ export type Agency = {
   id: string;
   name: string;
   logoUrl: string | null;
+  coverUrl: string | null;
   phone: string | null;
   email: string | null;
   website: string | null;
@@ -31,6 +33,7 @@ export function rowToAgency(row: AgencyRow): Agency {
     id: row.id,
     name: row.name,
     logoUrl: row.logo_url ?? null,
+    coverUrl: row.cover_url ?? null,
     phone: row.phone ?? null,
     email: row.email ?? null,
     website: row.website ?? null,

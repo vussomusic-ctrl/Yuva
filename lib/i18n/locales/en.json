@@ -537,7 +537,8 @@
     "searchPlaceholder": "Search by name or phone",
     "inOtherAgency": "In another agency",
     "alreadyHere": "Already in agency",
-    "descriptionLabel": "Description / About"
+    "descriptionLabel": "Description / About",
+    "changeCover": "Change cover"
   },
   "notifications": {
     "title": "Notifications",

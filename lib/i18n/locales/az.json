@@ -537,7 +537,8 @@
     "searchPlaceholder": "Ad və ya telefonla axtar",
     "inOtherAgency": "Başqa agentlikdə",
     "alreadyHere": "Artıq agentlikdə",
-    "descriptionLabel": "Təsvir / Şirkət haqqında"
+    "descriptionLabel": "Təsvir / Şirkət haqqında",
+    "changeCover": "Üz qabığını dəyiş"
   },
   "notifications": {
     "title": "Bildirişlər",
