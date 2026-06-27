@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, Pressable, Image, StyleSheet, useWindowDimensions } from "react-native";
+import { View, Text, Pressable, Image, TextInput, StyleSheet, useWindowDimensions } from "react-native";
 import Animated, {
   useAnimatedScrollHandler,
   useAnimatedRef,
@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
+import { font } from "../../lib/theme/typography";
 import { SearchBar } from "../../components/SearchBar";
 import { DEALS } from "../../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../../lib/propertyTypes";
@@ -61,19 +62,33 @@ export default function SearchScreen() {
   const [typeSheetOpen, setTypeSheetOpen] = useState(false);
   const [roomsSheetOpen, setRoomsSheetOpen] = useState(false);
   const [buildSheetOpen, setBuildSheetOpen] = useState(false);
+  const [priceSheetOpen, setPriceSheetOpen] = useState(false);
+  const [areaSheetOpen, setAreaSheetOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null); // tapped map pin
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
-  const { filters, setDealType, setPropertyTypes, setRooms, setBuildType, activeCount } = useFilters();
+  const { filters, setDealType, setPropertyTypes, setRooms, setBuildType, setPriceRange, setAreaRange, activeCount } = useFilters();
   const { user } = useAuth();
 
-  // Multi-select sheets work on a local draft, committed on "Show" / cleared on
-  // "Clear". Re-sync the draft from the live filters each time a sheet opens.
+  // Multi-select / range sheets work on a local draft, committed on "Show" /
+  // cleared on "Clear". Re-sync the draft from the live filters when a sheet opens.
   const [localTypes, setLocalTypes] = useState<PropertyTypeKey[]>(filters.propertyTypes);
   const [localRooms, setLocalRooms] = useState<string[]>(filters.rooms);
+  const [localPriceMin, setLocalPriceMin] = useState(filters.priceMin);
+  const [localPriceMax, setLocalPriceMax] = useState(filters.priceMax);
+  const [localAreaMin, setLocalAreaMin] = useState(filters.areaMin);
+  const [localAreaMax, setLocalAreaMax] = useState(filters.areaMax);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (typeSheetOpen) setLocalTypes(filters.propertyTypes); }, [typeSheetOpen]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (roomsSheetOpen) setLocalRooms(filters.rooms); }, [roomsSheetOpen]);
+  useEffect(() => {
+    if (priceSheetOpen) { setLocalPriceMin(filters.priceMin); setLocalPriceMax(filters.priceMax); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [priceSheetOpen]);
+  useEffect(() => {
+    if (areaSheetOpen) { setLocalAreaMin(filters.areaMin); setLocalAreaMax(filters.areaMax); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [areaSheetOpen]);
 
   // Feed from Supabase (same active set as Home), refetched on focus.
   const [feed, setFeed] = useState<Listing[] | null>(null);
@@ -357,6 +372,8 @@ export default function SearchScreen() {
         <FilterChipsRow
           onPressDeal={() => setDealSheetOpen(true)}
           onPressType={() => setTypeSheetOpen(true)}
+          onPressPrice={() => setPriceSheetOpen(true)}
+          onPressArea={() => setAreaSheetOpen(true)}
           onPressRooms={() => setRoomsSheetOpen(true)}
           onPressBuild={() => setBuildSheetOpen(true)}
         />
@@ -538,6 +555,118 @@ export default function SearchScreen() {
           );
         })}
       </BottomSheet>
+
+      {/* Price range picker */}
+      <BottomSheet visible={priceSheetOpen} onClose={() => setPriceSheetOpen(false)}>
+        <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", textAlign: "center", paddingTop: 6, paddingBottom: 8 }}>
+          {t("filters.price")}
+        </Text>
+        <RangeRow
+          colors={colors}
+          minVal={localPriceMin}
+          maxVal={localPriceMax}
+          onMin={setLocalPriceMin}
+          onMax={setLocalPriceMax}
+          minPlaceholder={t("filters.min")}
+          maxPlaceholder={t("filters.max")}
+        />
+        <FilterActions
+          colors={colors}
+          clearLabel={t("filters.clear")}
+          applyLabel={t("filters.apply")}
+          onClear={() => {
+            setLocalPriceMin("");
+            setLocalPriceMax("");
+          }}
+          onApply={() => {
+            setPriceRange(localPriceMin, localPriceMax);
+            setPriceSheetOpen(false);
+          }}
+        />
+      </BottomSheet>
+
+      {/* Area range picker */}
+      <BottomSheet visible={areaSheetOpen} onClose={() => setAreaSheetOpen(false)}>
+        <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", textAlign: "center", paddingTop: 6, paddingBottom: 8 }}>
+          {t("filters.area")}
+        </Text>
+        <RangeRow
+          colors={colors}
+          minVal={localAreaMin}
+          maxVal={localAreaMax}
+          onMin={setLocalAreaMin}
+          onMax={setLocalAreaMax}
+          minPlaceholder={t("filters.min")}
+          maxPlaceholder={t("filters.max")}
+        />
+        <FilterActions
+          colors={colors}
+          clearLabel={t("filters.clear")}
+          applyLabel={t("filters.apply")}
+          onClear={() => {
+            setLocalAreaMin("");
+            setLocalAreaMax("");
+          }}
+          onApply={() => {
+            setAreaRange(localAreaMin, localAreaMax);
+            setAreaSheetOpen(false);
+          }}
+        />
+      </BottomSheet>
+    </View>
+  );
+}
+
+// Two number inputs (From – To) for the range picker sheets.
+function RangeRow({
+  colors,
+  minVal,
+  maxVal,
+  onMin,
+  onMax,
+  minPlaceholder,
+  maxPlaceholder,
+}: {
+  colors: Theme;
+  minVal: string;
+  maxVal: string;
+  onMin: (v: string) => void;
+  onMax: (v: string) => void;
+  minPlaceholder: string;
+  maxPlaceholder: string;
+}) {
+  const inputStyle = {
+    flex: 1,
+    height: 50,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    paddingHorizontal: 14,
+    fontFamily: font.regular,
+    fontSize: 16,
+    color: colors.text,
+    letterSpacing: 0,
+  } as const;
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 20, paddingTop: 6, paddingBottom: 4 }}>
+      <TextInput
+        style={inputStyle}
+        keyboardType="number-pad"
+        placeholder={minPlaceholder}
+        placeholderTextColor={colors.textSecondary}
+        value={minVal}
+        onChangeText={(v) => onMin(v.replace(/[^0-9]/g, ""))}
+      />
+      <Text style={{ color: colors.textSecondary, fontSize: 18 }}>–</Text>
+      <TextInput
+        style={inputStyle}
+        keyboardType="number-pad"
+        placeholder={maxPlaceholder}
+        placeholderTextColor={colors.textSecondary}
+        value={maxVal}
+        onChangeText={(v) => onMax(v.replace(/[^0-9]/g, ""))}
+      />
     </View>
   );
 }

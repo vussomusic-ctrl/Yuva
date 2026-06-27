@@ -3,6 +3,7 @@ import { Modal, View, Pressable, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  useAnimatedKeyboard,
   withSpring,
   withTiming,
   runOnJS,
@@ -67,7 +68,12 @@ export function BottomSheet({ visible, onClose, children }: Props) {
       }
     });
 
-  const panelStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
+  // Lift the panel above the keyboard when an input inside it is focused
+  // (no-op when no keyboard is shown → safe for every consumer).
+  const keyboard = useAnimatedKeyboard();
+  const panelStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value - keyboard.height.value }],
+  }));
   const backdropStyle = useAnimatedStyle(() => ({
     // Fades with the panel: full when open (ty=0), gone when off-screen (ty=sheetH).
     opacity: interpolate(translateY.value, [0, sheetH.value || FALLBACK_H], [1, 0], Extrapolation.CLAMP),

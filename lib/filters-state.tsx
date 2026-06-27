@@ -132,6 +132,8 @@ type FiltersContextValue = {
   setRooms: (rooms: string[]) => void;
   toggleRoom: (room: string) => void;
   setBuildType: (b: BuildKey | null) => void;
+  setPriceRange: (min: string, max: string) => void;
+  setAreaRange: (min: string, max: string) => void;
   clear: () => void; // reset narrowing filters, keep the current deal type
   activeCount: number;
 };
@@ -144,6 +146,8 @@ const FiltersContext = createContext<FiltersContextValue>({
   setRooms: () => {},
   toggleRoom: () => {},
   setBuildType: () => {},
+  setPriceRange: () => {},
+  setAreaRange: () => {},
   clear: () => {},
   activeCount: 0,
 });
@@ -170,6 +174,8 @@ export function FiltersProvider({ children }: { children: React.ReactNode }) {
     [],
   );
   const setBuildType = useCallback((b: BuildKey | null) => setFilters((cur) => ({ ...cur, buildType: b })), []);
+  const setPriceRange = useCallback((min: string, max: string) => setFilters((cur) => ({ ...cur, priceMin: min, priceMax: max })), []);
+  const setAreaRange = useCallback((min: string, max: string) => setFilters((cur) => ({ ...cur, areaMin: min, areaMax: max })), []);
   const clear = useCallback(
     () => setFilters((cur) => ({ ...DEFAULT_FILTERS, dealType: cur.dealType })),
     [],
@@ -184,10 +190,12 @@ export function FiltersProvider({ children }: { children: React.ReactNode }) {
       setRooms,
       toggleRoom,
       setBuildType,
+      setPriceRange,
+      setAreaRange,
       clear,
       activeCount: activeFilterCount(filters),
     }),
-    [filters, apply, setDealType, setPropertyTypes, setRooms, toggleRoom, setBuildType, clear],
+    [filters, apply, setDealType, setPropertyTypes, setRooms, toggleRoom, setBuildType, setPriceRange, setAreaRange, clear],
   );
 
   return <FiltersContext.Provider value={value}>{children}</FiltersContext.Provider>;

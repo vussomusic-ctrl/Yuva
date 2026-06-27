@@ -13,19 +13,35 @@ import { usePressShrink } from "../lib/animations";
 type Props = {
   onPressDeal?: () => void;
   onPressType?: () => void;
+  onPressPrice?: () => void;
+  onPressArea?: () => void;
   onPressRooms?: () => void;
   onPressBuild?: () => void;
 };
 
+// "10000–50000 ₼" / "от 10000 ₼" / "до 50000 ₼" / fallback label.
+function rangeLabel(min: string, max: string, unit: string, fromWord: string, toWord: string, fallback: string): string {
+  if (min && max) return `${min}–${max} ${unit}`;
+  if (min) return `${fromWord} ${min} ${unit}`;
+  if (max) return `${toWord} ${max} ${unit}`;
+  return fallback;
+}
+
 const ROOM_ORDER = (r: string) => (r === "5+" ? 5 : Number(r)); // numeric sort, "5+" last
 
 /** Horizontal quick-filter chips under the deal segment. Reads/writes useFilters. */
-export function FilterChipsRow({ onPressDeal, onPressType, onPressRooms, onPressBuild }: Props) {
+export function FilterChipsRow({ onPressDeal, onPressType, onPressPrice, onPressArea, onPressRooms, onPressBuild }: Props) {
   const { t } = useTranslation();
   const { filters } = useFilters();
 
   // Deal chip: a deal type is ALWAYS chosen → always "active", shows the value.
   const dealLabel = t(filters.dealType === "rent" ? "home.dealRent" : "home.dealSale");
+
+  // Price / area range chips.
+  const priceActive = !!(filters.priceMin || filters.priceMax);
+  const priceLabel = rangeLabel(filters.priceMin, filters.priceMax, "₼", t("filters.min"), t("filters.max"), t("filters.price"));
+  const areaActive = !!(filters.areaMin || filters.areaMax);
+  const areaLabel = rangeLabel(filters.areaMin, filters.areaMax, "m²", t("filters.min"), t("filters.max"), t("filters.area"));
 
   // Type chip summary: 0 → label; 1 → name; >1 → "first, +n-1".
   const typeActive = filters.propertyTypes.length > 0;
@@ -56,6 +72,8 @@ export function FilterChipsRow({ onPressDeal, onPressType, onPressRooms, onPress
     >
       <Chip label={dealLabel} active onPress={onPressDeal} />
       <Chip label={typeLabel} active={typeActive} onPress={onPressType} />
+      <Chip label={priceLabel} active={priceActive} onPress={onPressPrice} />
+      <Chip label={areaLabel} active={areaActive} onPress={onPressArea} />
       <Chip label={roomsLabel} active={roomsActive} onPress={onPressRooms} />
       <Chip label={buildLabel} active={buildActive} onPress={onPressBuild} />
     </ScrollView>
