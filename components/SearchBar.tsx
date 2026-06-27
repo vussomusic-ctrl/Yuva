@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
+import { font } from "../lib/theme/typography";
 
 type Props = {
   value: string;
@@ -38,7 +39,7 @@ export function SearchBar({ value, onChangeText, onPressFilter, placeholder, fil
         onChangeText={onChangeText}
         placeholder={placeholder ?? t("home.searchPlaceholder")}
         placeholderTextColor={colors.textSecondary}
-        style={{ flex: 1, marginHorizontal: 8, color: colors.text, fontSize: 14 }}
+        style={{ flex: 1, marginHorizontal: 8, color: colors.text, fontFamily: font.regular, fontSize: 14, letterSpacing: 0 }}
       />
       <View style={{ width: 1, height: 24, backgroundColor: colors.border, marginRight: 10 }} />
       <Pressable hitSlop={8} onPress={onPressFilter}>
