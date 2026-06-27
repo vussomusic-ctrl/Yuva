@@ -431,7 +431,8 @@
     "timeJustNow": "indicə",
     "timeHoursAgo": "{{count}} saat əvvəl",
     "timeDaysAgo": "{{count}} gün əvvəl",
-    "viewedBadge": "Baxılıb"
+    "viewedBadge": "Baxılıb",
+    "roomsShort": "otaq"
   },
   "filters": {
     "title": "Filtrlər",

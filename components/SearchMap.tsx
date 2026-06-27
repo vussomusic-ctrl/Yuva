@@ -1,19 +1,18 @@
-import { useEffect, useState } from "react";
-import { View, Text, Pressable, Image, StyleSheet } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
-import { Listing, formatPrice, formatArea } from "../lib/mock/listings";
+import { Listing } from "../lib/mock/listings";
 import { BAKU_CENTER } from "../lib/places";
-import { buildListingTitle } from "../lib/listingTitle";
-import { useLanguage } from "../lib/i18n/languages";
 
 type Props = {
   listings: Listing[];
-  onOpen: (id: string) => void;
+  selectedId: string | null; // controlled by the parent (sheet shows the selected card)
+  onSelectListing: (id: string | null) => void; // pin tap → id; empty-map tap → null
 };
 
 // Compact pin label: 245000 → "245k ₼", 1400 → "1400 ₼".
@@ -27,18 +26,18 @@ const INITIAL_REGION = {
 };
 
 /**
- * Search — Map (native). Shows price pins for the SAME filtered set as the list.
- * Tap a pin → bottom preview card → tap it → Property Detail.
- * (Clustering left for later — react-native-maps-clustering isn't bundled with
- * the SDK; a handful of pins render fine without it.)
+ * Search — Map (native). Price pins for the SAME filtered set as the list.
+ * Controlled: the parent owns `selectedId` and renders the selected card in the
+ * draggable sheet (no preview card here — it would sit under the sheet).
  */
-export function SearchMap({ listings, onOpen }: Props) {
+export function SearchMap({ listings, selectedId, onSelectListing }: Props) {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const { current: lang } = useLanguage();
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = listings.find((l) => l.id === selectedId) ?? null;
+  // A custom Marker tap falls through and ALSO triggers MapView.onPress (a phantom
+  // empty-map tap that would instantly clear the selection). This flag swallows
+  // that follow-up press for a short window after a real pin tap.
+  const justSelectedRef = useRef(false);
 
   // Let custom markers render their views, then freeze them for performance.
   const [tracking, setTracking] = useState(true);
@@ -54,7 +53,10 @@ export function SearchMap({ listings, onOpen }: Props) {
         provider={PROVIDER_DEFAULT}
         style={{ flex: 1 }}
         initialRegion={INITIAL_REGION}
-        onPress={() => setSelectedId(null)}
+        onPress={() => {
+          if (justSelectedRef.current) return; // phantom press right after a pin tap
+          onSelectListing(null);
+        }}
       >
         {listings.map((l) => {
           const active = l.id === selectedId;
@@ -62,7 +64,11 @@ export function SearchMap({ listings, onOpen }: Props) {
             <Marker
               key={l.id}
               coordinate={{ latitude: l.lat, longitude: l.lng }}
-              onPress={() => setSelectedId(l.id)}
+              onPress={() => {
+                justSelectedRef.current = true;
+                onSelectListing(l.id);
+                setTimeout(() => { justSelectedRef.current = false; }, 300);
+              }}
               tracksViewChanges={tracking}
               anchor={{ x: 0.5, y: 1 }}
             >
@@ -112,49 +118,6 @@ export function SearchMap({ listings, onOpen }: Props) {
               </Text>
             </View>
           </View>
-        </View>
-      )}
-
-      {/* Selected listing preview (mini card) → Property Detail */}
-      {selected && (
-        <View style={{ position: "absolute", left: 12, right: 12, bottom: 16 }}>
-          <Pressable
-            onPress={() => onOpen(selected.id)}
-            style={({ pressed }) => ({
-              flexDirection: "row",
-              backgroundColor: colors.card,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.border,
-              overflow: "hidden",
-              opacity: pressed ? 0.95 : 1,
-              shadowColor: "#000",
-              shadowOpacity: 0.2,
-              shadowRadius: 12,
-              shadowOffset: { width: 0, height: 4 },
-              elevation: 6,
-            })}
-          >
-            <Image source={{ uri: selected.image }} style={{ width: 96, height: 96 }} resizeMode="cover" />
-            <View style={{ flex: 1, padding: 12, gap: 4, justifyContent: "center" }}>
-              <Text style={{ color: colors.text, fontSize: 16, fontWeight: "800" }}>
-                {formatPrice(selected.priceAzn)}
-              </Text>
-              <Text numberOfLines={1} style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>
-                {buildListingTitle(selected, t, lang)}
-              </Text>
-              <Text numberOfLines={1} style={{ color: colors.textSecondary, fontSize: 13 }}>
-                {formatArea(selected, t)} · {selected.rooms} {t("home.roomsUnit")}
-              </Text>
-            </View>
-            <Pressable
-              onPress={() => setSelectedId(null)}
-              hitSlop={8}
-              style={{ position: "absolute", top: 8, right: 8, width: 24, height: 24, borderRadius: 12, backgroundColor: "rgba(20,18,24,0.55)", alignItems: "center", justifyContent: "center" }}
-            >
-              <Ionicons name="close" size={15} color="#FFFFFF" />
-            </Pressable>
-          </Pressable>
         </View>
       )}
     </View>

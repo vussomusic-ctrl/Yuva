@@ -431,7 +431,8 @@
     "timeJustNow": "just now",
     "timeHoursAgo": "{{count}}h ago",
     "timeDaysAgo": "{{count}}d ago",
-    "viewedBadge": "Viewed"
+    "viewedBadge": "Viewed",
+    "roomsShort": "rm"
   },
   "filters": {
     "title": "Filters",

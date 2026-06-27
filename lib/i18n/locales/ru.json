@@ -431,7 +431,8 @@
     "timeJustNow": "только что",
     "timeHoursAgo": "{{count}} ч назад",
     "timeDaysAgo": "{{count}} дн назад",
-    "viewedBadge": "Просмотрено"
+    "viewedBadge": "Просмотрено",
+    "roomsShort": "комн."
   },
   "filters": {
     "title": "Фильтры",

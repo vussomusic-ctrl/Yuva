@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, Pressable } from "react-native";
-import Animated, { useAnimatedScrollHandler, withSpring } from "react-native-reanimated";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, Text, Pressable, Image, StyleSheet, useWindowDimensions } from "react-native";
+import Animated, {
+  useAnimatedScrollHandler,
+  useAnimatedRef,
+  useAnimatedReaction,
+  useSharedValue,
+  runOnJS,
+  withSpring,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { GestureDetector } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useScrollCtx } from "../../lib/scrollContext";
 import { useTranslation } from "react-i18next";
 
@@ -11,19 +19,20 @@ import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { SearchBar } from "../../components/SearchBar";
 import { DealTypeChips } from "../../components/DealTypeChips";
-import { SegmentedControl } from "../../components/SegmentedControl";
+import { FilterChipsRow } from "../../components/FilterChipsRow";
 import { PropertyCardRow } from "../../components/PropertyCardRow";
 import { SearchMap } from "../../components/SearchMap";
 import { BottomSheet } from "../../components/BottomSheet";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { useFavorites } from "../../lib/favorites";
 import { useFilters, filterListings } from "../../lib/filters-state";
-import { Listing, isPromoActive } from "../../lib/mock/listings";
+import { Listing, isPromoActive, formatPrice, formatArea } from "../../lib/mock/listings";
 import { fetchFeed } from "../../lib/api/listings";
 import { fetchViewedIds } from "../../lib/api/listingViews";
 import { useAuth } from "../../lib/auth";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { useLanguage } from "../../lib/i18n/languages";
+import { useDraggableSheet, useSheetScrollGesture } from "../../lib/animations";
 
 type SortKey = "default" | "priceAsc" | "priceDesc" | "newest";
 
@@ -36,22 +45,16 @@ const SORTS: { key: SortKey; labelKey: string }[] = [
 
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
   const { t } = useTranslation();
   const { current: lang } = useLanguage();
   const { colors } = useTheme();
   const router = useRouter();
-  const params = useLocalSearchParams<{ view?: string }>();
 
   const [query, setQuery] = useState("");
-  const [view, setView] = useState<"list" | "map">(params.view === "map" ? "map" : "list");
-
-  // Re-honor view=map on every navigation (the tab stays mounted, so the useState
-  // initializer above only runs once — this catches subsequent "open map" taps).
-  useEffect(() => {
-    if (params.view === "map") setView("map");
-  }, [params.view]);
   const [sort, setSort] = useState<SortKey>("default");
   const [sortOpen, setSortOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null); // tapped map pin
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
   const { filters, setDealType, activeCount } = useFilters();
   const { user } = useAuth();
@@ -80,7 +83,6 @@ export default function SearchScreen() {
   }, [user?.id]);
 
   const { scrollY } = useScrollCtx();
-  const scrollHandler = useAnimatedScrollHandler((e) => { scrollY.value = e.contentOffset.y; });
   useFocusEffect(useCallback(() => { scrollY.value = withSpring(0, { damping: 18, stiffness: 120 }); load(); loadViewed(); }, [load, loadViewed, scrollY]));
   const loading = feed === null && !error;
 
@@ -133,84 +135,211 @@ export default function SearchScreen() {
 
   const sortLabel = t(SORTS.find((s) => s.key === sort)!.labelKey);
 
+  // ── Draggable sheet (3 snap points). translateY of a top:0 sheet:
+  //   collapsed — peek ~120px (handle + count + sort); the map owns the screen.
+  //   mid       — ~46% down (default on open).
+  //   expanded  — stops just below the top overlay so search/chips stay visible.
+  const OVERLAY_H = insets.top + 176; // search + deal chips + filter chips block
+  // Floating glass tab bar reach above the screen bottom (pill ~58 + bottom:8 + center "+").
+  const TAB_BAR_SPACE = insets.bottom + 96;
+  // Collapsed peek must show the handle + a full selected card ABOVE the tab bar.
+  const collapsedY = Math.round(height - TAB_BAR_SPACE - 150);
+  const expandedY = OVERLAY_H;
+  const midY = Math.round(height * 0.46);
+  const { pan: sheetPan, sheetStyle, translateY: sheetTranslateY } = useDraggableSheet(collapsedY, expandedY, midY);
+
+  // Selecting a pin collapses the sheet to show just that card; clearing the
+  // selection (and first open) returns it to the mid list view.
+  const selectedListing = selectedId ? results.find((l) => l.id === selectedId) ?? null : null;
+  useEffect(() => {
+    sheetTranslateY.value = withSpring(selectedId ? collapsedY : midY, { damping: 24, stiffness: 220, overshootClamping: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId]);
+
+  // Content scroll inside the sheet, coordinated with the drag (as on detail).
+  const sheetScrollY = useSharedValue(0);
+  const onSheetScroll = useAnimatedScrollHandler((e) => {
+    sheetScrollY.value = e.contentOffset.y;
+    // Feed the tab bar's scrollY ONLY while the sheet is expanded (list mode) → it
+    // collapses on scroll like other screens. Otherwise (map mode) keep it full.
+    scrollY.value = sheetTranslateY.value <= expandedY + 8 ? e.contentOffset.y : 0;
+  });
+  const listRef = useAnimatedRef<Animated.FlatList<Listing>>();
+  const { pan: contentPan } = useSheetScrollGesture(sheetTranslateY, collapsedY, expandedY, midY, sheetScrollY, listRef);
+  const [scrollEnabled, setScrollEnabled] = useState(false);
+  useAnimatedReaction(
+    () => sheetTranslateY.value,
+    (ty) => {
+      runOnJS(setScrollEnabled)(ty <= expandedY + 8);
+      // Left expanded (map/mid mode) → reset the tab bar to full immediately.
+      if (ty > expandedY + 8) scrollY.value = 0;
+    },
+    [expandedY],
+  );
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
-      {/* Contextual header: search + filters (no logo) */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12, gap: 12 }}>
-        <SearchBar
-          value={query}
-          onChangeText={setQuery}
-          onPressFilter={() => router.push("/filters")}
-          filterBadge={activeCount}
-        />
-        <SegmentedControl
-          items={[
-            { key: "list", labelKey: "search.viewList" },
-            { key: "map", labelKey: "search.viewMap" },
-          ]}
-          value={view}
-          onChange={(k) => setView(k as "list" | "map")}
-        />
+    <View style={{ flex: 1, backgroundColor: colors.bg }} pointerEvents="box-none">
+      {/* Map background — full screen, under everything */}
+      <View style={StyleSheet.absoluteFill}>
+        <SearchMap listings={results} selectedId={selectedId} onSelectListing={setSelectedId} />
       </View>
 
-      <DealTypeChips value={filters.dealType} onChange={setDealType} />
-
-      {/* Sort control (view-only, applies on top of filters) */}
-      <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 16, paddingTop: 12 }}>
-        <Pressable
-          onPress={() => setSortOpen(true)}
-          hitSlop={8}
-          style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 6, opacity: pressed ? 0.6 : 1 })}
+      {/* Draggable sheet — the results list. The outer frame is top:0 + ~2 screens
+          tall (so the body never gaps at the bottom); it's box-none + transparent so
+          the empty area the translateY leaves above the body never eats map taps. */}
+      <Animated.View
+        pointerEvents="box-none"
+        style={[
+          {
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: height + collapsedY,
+          },
+          sheetStyle,
+        ]}
+      >
+        {/* Visible body — opaque; only this catches taps (everything above it is map). */}
+        <View
+          pointerEvents="auto"
+          style={{
+            flex: 1,
+            backgroundColor: colors.bg,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: -4 },
+            shadowOpacity: 0.12,
+            shadowRadius: 12,
+            elevation: 8,
+          }}
         >
-          <Ionicons name="swap-vertical-outline" size={18} color={brand.violet} />
-          <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>
-            {t("search.sort")}: <Text style={{ color: brand.violet }}>{sortLabel}</Text>
-          </Text>
-        </Pressable>
-      </View>
+        {/* Handle — drag target */}
+        <GestureDetector gesture={sheetPan}>
+          <View style={{ paddingTop: 10, paddingBottom: 8 }}>
+            <View style={{ alignSelf: "center", width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+          </View>
+        </GestureDetector>
 
-      {loading ? (
-        <LoadingState colors={colors} />
-      ) : error ? (
-        <ErrorState colors={colors} onRetry={load} />
-      ) : view === "map" ? (
-        <SearchMap listings={results} onOpen={(id) => router.push(`/property/${id}`)} />
-      ) : (
-        <Animated.FlatList
-          style={{ flex: 1, marginTop: 12 }}
-          data={results}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          onScroll={scrollHandler}
-          scrollEventThrottle={16}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 96, flexGrow: 1 }}
-          ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-          ListHeaderComponent={
-            results.length > 0 ? (
-              <Text style={{ color: colors.textSecondary, fontSize: 14, fontWeight: "600", marginBottom: 16 }}>
-                {t("search.resultsCount", { count: results.length })}
-              </Text>
-            ) : null
-          }
-          ListEmptyComponent={
-            <Placeholder
-              colors={colors}
-              icon="search-outline"
-              title={t("search.emptyTitle")}
-              desc={t("search.emptyDesc")}
-            />
-          }
-          renderItem={({ item }) => (
-            <PropertyCardRow
-              listing={item}
-              viewed={viewedIds.has(item.id)}
-              favorited={isFavorite(item.id)}
-              onToggleFavorite={() => toggleFavorite(item.id)}
-              onPress={() => router.push(`/property/${item.id}`)}
-            />
-          )}
-        />
-      )}
+        {selectedListing ? (
+          /* Selected pin → single preview card (sheet collapsed) */
+          <View style={{ paddingHorizontal: 16, paddingTop: 4 }}>
+            <Pressable
+              onPress={() => router.push(`/property/${selectedListing.id}`)}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                backgroundColor: colors.card,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: colors.border,
+                overflow: "hidden",
+                opacity: pressed ? 0.95 : 1,
+              })}
+            >
+              <Image source={{ uri: selectedListing.image }} style={{ width: 110, height: 104 }} resizeMode="cover" />
+              <View style={{ flex: 1, padding: 12, gap: 4, justifyContent: "center" }}>
+                <Text numberOfLines={1} style={{ color: colors.text, fontSize: 17, fontWeight: "800" }}>
+                  {formatPrice(selectedListing.priceAzn)}
+                </Text>
+                <Text numberOfLines={1} style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>
+                  {buildListingTitle(selectedListing, t, lang)}
+                </Text>
+                <Text numberOfLines={1} style={{ color: colors.textSecondary, fontSize: 13 }}>
+                  {[formatArea(selectedListing, t), selectedListing.rooms > 0 ? `${selectedListing.rooms} ${t("home.roomsUnit")}` : null]
+                    .filter(Boolean)
+                    .join("  ·  ")}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setSelectedId(null)}
+                hitSlop={8}
+                style={{ position: "absolute", top: 8, right: 8, width: 26, height: 26, borderRadius: 13, backgroundColor: "rgba(20,18,24,0.55)", alignItems: "center", justifyContent: "center" }}
+              >
+                <Ionicons name="close" size={16} color="#FFFFFF" />
+              </Pressable>
+            </Pressable>
+          </View>
+        ) : loading ? (
+          <LoadingState colors={colors} />
+        ) : error ? (
+          <ErrorState colors={colors} onRetry={load} />
+        ) : (
+          <>
+            <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700", paddingHorizontal: 16, paddingBottom: 8 }}>
+              {t("search.resultsCount", { count: results.length })}
+            </Text>
+            {/* Sort — tappable (outside the drag gesture) */}
+            <Pressable
+              onPress={() => setSortOpen(true)}
+              hitSlop={8}
+              style={({ pressed }) => ({ position: "absolute", top: 22, right: 16, flexDirection: "row", alignItems: "center", gap: 5, opacity: pressed ? 0.6 : 1 })}
+            >
+              <Ionicons name="swap-vertical-outline" size={17} color={brand.violet} />
+              <Text style={{ color: brand.violet, fontSize: 13, fontWeight: "600" }}>{sortLabel}</Text>
+            </Pressable>
+
+            <GestureDetector gesture={contentPan}>
+              <Animated.FlatList
+                ref={listRef}
+                scrollEnabled={scrollEnabled}
+                onScroll={onSheetScroll}
+                scrollEventThrottle={16}
+                data={results}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                style={{ maxHeight: height - expandedY }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: TAB_BAR_SPACE + 24, flexGrow: 1 }}
+                ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+                ListEmptyComponent={
+                  <Placeholder colors={colors} icon="search-outline" title={t("search.emptyTitle")} desc={t("search.emptyDesc")} />
+                }
+                renderItem={({ item }) => (
+                  <PropertyCardRow
+                    listing={item}
+                    viewed={viewedIds.has(item.id)}
+                    favorited={isFavorite(item.id)}
+                    onToggleFavorite={() => toggleFavorite(item.id)}
+                    onPress={() => router.push(`/property/${item.id}`)}
+                  />
+                )}
+              />
+            </GestureDetector>
+          </>
+        )}
+        </View>
+      </Animated.View>
+
+      {/* Top overlay — search + deal chips + filter chips, over the map */}
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          paddingTop: insets.top + 8,
+          paddingBottom: 10,
+          gap: 12,
+          backgroundColor: colors.bg,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+          elevation: 4,
+        }}
+      >
+        <View style={{ paddingHorizontal: 16 }}>
+          <SearchBar
+            value={query}
+            onChangeText={setQuery}
+            onPressFilter={() => router.push("/filters")}
+            filterBadge={activeCount}
+          />
+        </View>
+        <DealTypeChips value={filters.dealType} onChange={setDealType} />
+        <FilterChipsRow onPressType={() => {}} onPressRooms={() => {}} onPressBuild={() => {}} />
+      </View>
 
       {/* Sort picker */}
       <BottomSheet visible={sortOpen} onClose={() => setSortOpen(false)}>
@@ -233,7 +362,7 @@ export default function SearchScreen() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 paddingHorizontal: 20,
-                paddingVertical: 16,
+                paddingVertical: 12,
                 borderTopWidth: i === 0 ? 1 : 0,
                 borderBottomWidth: 1,
                 borderColor: colors.border,
@@ -248,7 +377,7 @@ export default function SearchScreen() {
           );
         })}
       </BottomSheet>
-    </SafeAreaView>
+    </View>
   );
 }
 

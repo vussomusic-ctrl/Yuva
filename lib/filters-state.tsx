@@ -127,6 +127,11 @@ type FiltersContextValue = {
   filters: Filters;
   apply: (f: Filters) => void; // replace the whole set (from the Filters modal)
   setDealType: (d: DealKey) => void; // quick toggle from the Search deal chips
+  // Granular setters for the Search quick-filter chips (same source of truth).
+  setPropertyTypes: (types: PropertyTypeKey[]) => void;
+  setRooms: (rooms: string[]) => void;
+  toggleRoom: (room: string) => void;
+  setBuildType: (b: BuildKey | null) => void;
   clear: () => void; // reset narrowing filters, keep the current deal type
   activeCount: number;
 };
@@ -135,6 +140,10 @@ const FiltersContext = createContext<FiltersContextValue>({
   filters: DEFAULT_FILTERS,
   apply: () => {},
   setDealType: () => {},
+  setPropertyTypes: () => {},
+  setRooms: () => {},
+  toggleRoom: () => {},
+  setBuildType: () => {},
   clear: () => {},
   activeCount: 0,
 });
@@ -147,14 +156,38 @@ export function FiltersProvider({ children }: { children: React.ReactNode }) {
     (d: DealKey) => setFilters((cur) => ({ ...cur, dealType: d })),
     [],
   );
+  const setPropertyTypes = useCallback(
+    (types: PropertyTypeKey[]) => setFilters((cur) => ({ ...cur, propertyTypes: types })),
+    [],
+  );
+  const setRooms = useCallback((rooms: string[]) => setFilters((cur) => ({ ...cur, rooms })), []);
+  const toggleRoom = useCallback(
+    (room: string) =>
+      setFilters((cur) => ({
+        ...cur,
+        rooms: cur.rooms.includes(room) ? cur.rooms.filter((r) => r !== room) : [...cur.rooms, room],
+      })),
+    [],
+  );
+  const setBuildType = useCallback((b: BuildKey | null) => setFilters((cur) => ({ ...cur, buildType: b })), []);
   const clear = useCallback(
     () => setFilters((cur) => ({ ...DEFAULT_FILTERS, dealType: cur.dealType })),
     [],
   );
 
   const value = useMemo<FiltersContextValue>(
-    () => ({ filters, apply, setDealType, clear, activeCount: activeFilterCount(filters) }),
-    [filters, apply, setDealType, clear],
+    () => ({
+      filters,
+      apply,
+      setDealType,
+      setPropertyTypes,
+      setRooms,
+      toggleRoom,
+      setBuildType,
+      clear,
+      activeCount: activeFilterCount(filters),
+    }),
+    [filters, apply, setDealType, setPropertyTypes, setRooms, toggleRoom, setBuildType, clear],
   );
 
   return <FiltersContext.Provider value={value}>{children}</FiltersContext.Provider>;
