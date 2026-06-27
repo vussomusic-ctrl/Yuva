@@ -18,7 +18,10 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { SearchBar } from "../../components/SearchBar";
-import { DealTypeChips } from "../../components/DealTypeChips";
+import { DEALS } from "../../lib/dealTypes";
+import { PROPERTY_TYPES, PropertyTypeKey } from "../../lib/propertyTypes";
+import { BUILD_TYPES } from "../../lib/buildTypes";
+import { ROOMS } from "../../lib/roomTypes";
 import { FilterChipsRow } from "../../components/FilterChipsRow";
 import { PropertyCardRow } from "../../components/PropertyCardRow";
 import { SearchMap } from "../../components/SearchMap";
@@ -54,10 +57,23 @@ export default function SearchScreen() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("default");
   const [sortOpen, setSortOpen] = useState(false);
+  const [dealSheetOpen, setDealSheetOpen] = useState(false); // deal-type picker sheet
+  const [typeSheetOpen, setTypeSheetOpen] = useState(false);
+  const [roomsSheetOpen, setRoomsSheetOpen] = useState(false);
+  const [buildSheetOpen, setBuildSheetOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null); // tapped map pin
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
-  const { filters, setDealType, activeCount } = useFilters();
+  const { filters, setDealType, setPropertyTypes, setRooms, setBuildType, activeCount } = useFilters();
   const { user } = useAuth();
+
+  // Multi-select sheets work on a local draft, committed on "Show" / cleared on
+  // "Clear". Re-sync the draft from the live filters each time a sheet opens.
+  const [localTypes, setLocalTypes] = useState<PropertyTypeKey[]>(filters.propertyTypes);
+  const [localRooms, setLocalRooms] = useState<string[]>(filters.rooms);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (typeSheetOpen) setLocalTypes(filters.propertyTypes); }, [typeSheetOpen]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (roomsSheetOpen) setLocalRooms(filters.rooms); }, [roomsSheetOpen]);
 
   // Feed from Supabase (same active set as Home), refetched on focus.
   const [feed, setFeed] = useState<Listing[] | null>(null);
@@ -139,12 +155,13 @@ export default function SearchScreen() {
   //   collapsed — peek ~120px (handle + count + sort); the map owns the screen.
   //   mid       — ~46% down (default on open).
   //   expanded  — stops just below the top overlay so search/chips stay visible.
-  const OVERLAY_H = insets.top + 176; // search + deal chips + filter chips block
+  // Measured top-overlay height (search + chips). Fallback until first layout.
+  const [overlayH, setOverlayH] = useState(insets.top + 176);
   // Floating glass tab bar reach above the screen bottom (pill ~58 + bottom:8 + center "+").
   const TAB_BAR_SPACE = insets.bottom + 96;
   // Collapsed peek must show the handle + a full selected card ABOVE the tab bar.
   const collapsedY = Math.round(height - TAB_BAR_SPACE - 150);
-  const expandedY = OVERLAY_H;
+  const expandedY = overlayH - 8; // sheet top tucks just under the chips → no map strip
   const midY = Math.round(height * 0.46);
   const { pan: sheetPan, sheetStyle, translateY: sheetTranslateY } = useDraggableSheet(collapsedY, expandedY, midY);
 
@@ -290,7 +307,6 @@ export default function SearchScreen() {
                 showsVerticalScrollIndicator={false}
                 style={{ maxHeight: height - expandedY }}
                 contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: TAB_BAR_SPACE + 24, flexGrow: 1 }}
-                ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
                 ListEmptyComponent={
                   <Placeholder colors={colors} icon="search-outline" title={t("search.emptyTitle")} desc={t("search.emptyDesc")} />
                 }
@@ -313,6 +329,7 @@ export default function SearchScreen() {
       {/* Top overlay — search + deal chips + filter chips, over the map */}
       <View
         pointerEvents="box-none"
+        onLayout={(e) => setOverlayH(e.nativeEvent.layout.height)}
         style={{
           position: "absolute",
           top: 0,
@@ -337,8 +354,12 @@ export default function SearchScreen() {
             filterBadge={activeCount}
           />
         </View>
-        <DealTypeChips value={filters.dealType} onChange={setDealType} />
-        <FilterChipsRow onPressType={() => {}} onPressRooms={() => {}} onPressBuild={() => {}} />
+        <FilterChipsRow
+          onPressDeal={() => setDealSheetOpen(true)}
+          onPressType={() => setTypeSheetOpen(true)}
+          onPressRooms={() => setRoomsSheetOpen(true)}
+          onPressBuild={() => setBuildSheetOpen(true)}
+        />
       </View>
 
       {/* Sort picker */}
@@ -377,6 +398,191 @@ export default function SearchScreen() {
           );
         })}
       </BottomSheet>
+
+      {/* Deal-type picker */}
+      <BottomSheet visible={dealSheetOpen} onClose={() => setDealSheetOpen(false)}>
+        <Text
+          style={{ color: colors.text, fontSize: 17, fontWeight: "700", textAlign: "center", paddingTop: 6, paddingBottom: 8 }}
+        >
+          {t("filters.dealType")}
+        </Text>
+        {DEALS.map((d, i) => {
+          const active = d.key === filters.dealType;
+          return (
+            <Pressable
+              key={d.key}
+              onPress={() => {
+                setDealType(d.key);
+                setDealSheetOpen(false);
+              }}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                paddingVertical: 12,
+                borderTopWidth: i === 0 ? 1 : 0,
+                borderBottomWidth: 1,
+                borderColor: colors.border,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Text style={{ color: active ? brand.violet : colors.text, fontSize: 16, fontWeight: active ? "700" : "500" }}>
+                {t(d.labelKey)}
+              </Text>
+              {active && <Ionicons name="checkmark-circle" size={22} color={brand.violet} />}
+            </Pressable>
+          );
+        })}
+      </BottomSheet>
+
+      {/* Property type picker (multi — local draft, committed on "Show") */}
+      <BottomSheet visible={typeSheetOpen} onClose={() => setTypeSheetOpen(false)}>
+        <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", textAlign: "center", paddingTop: 6, paddingBottom: 8 }}>
+          {t("filters.propertyType")}
+        </Text>
+        {PROPERTY_TYPES.map((p, i) => {
+          const on = localTypes.includes(p.key);
+          return (
+            <Pressable
+              key={p.key}
+              onPress={() => setLocalTypes((cur) => (on ? cur.filter((k) => k !== p.key) : [...cur, p.key]))}
+              style={({ pressed }) => ({ ...optionRow(i === 0, colors), opacity: pressed ? 0.6 : 1 })}
+            >
+              <Text style={{ color: on ? brand.violet : colors.text, fontSize: 16, fontWeight: on ? "700" : "500" }}>{t(p.labelKey)}</Text>
+              <Ionicons name={on ? "checkmark-circle" : "ellipse-outline"} size={22} color={on ? brand.violet : colors.textSecondary} />
+            </Pressable>
+          );
+        })}
+        <FilterActions
+          colors={colors}
+          clearLabel={t("filters.clear")}
+          applyLabel={t("filters.apply")}
+          onClear={() => setLocalTypes([])}
+          onApply={() => {
+            setPropertyTypes(localTypes);
+            setTypeSheetOpen(false);
+          }}
+        />
+      </BottomSheet>
+
+      {/* Rooms picker (multi — pills) */}
+      <BottomSheet visible={roomsSheetOpen} onClose={() => setRoomsSheetOpen(false)}>
+        <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", textAlign: "center", paddingTop: 6, paddingBottom: 8 }}>
+          {t("filters.rooms")}
+        </Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 20, paddingTop: 4, paddingBottom: 4 }}>
+          {ROOMS.map((r) => {
+            const on = localRooms.includes(r);
+            return (
+              <Pressable
+                key={r}
+                onPress={() => setLocalRooms((cur) => (on ? cur.filter((x) => x !== r) : [...cur, r]))}
+                style={{
+                  paddingHorizontal: 18,
+                  paddingVertical: 10,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  backgroundColor: on ? brand.violet : colors.card,
+                  borderColor: on ? brand.violet : colors.border,
+                }}
+              >
+                <Text style={{ color: on ? "#FFFFFF" : colors.text, fontSize: 15, fontWeight: "600" }}>{r}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <FilterActions
+          colors={colors}
+          clearLabel={t("filters.clear")}
+          applyLabel={t("filters.apply")}
+          onClear={() => setLocalRooms([])}
+          onApply={() => {
+            setRooms(localRooms);
+            setRoomsSheetOpen(false);
+          }}
+        />
+      </BottomSheet>
+
+      {/* Build type picker (single — applies immediately, like the deal sheet) */}
+      <BottomSheet visible={buildSheetOpen} onClose={() => setBuildSheetOpen(false)}>
+        <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", textAlign: "center", paddingTop: 6, paddingBottom: 8 }}>
+          {t("filters.buildType")}
+        </Text>
+        <Pressable
+          onPress={() => {
+            setBuildType(null);
+            setBuildSheetOpen(false);
+          }}
+          style={({ pressed }) => ({ ...optionRow(true, colors), opacity: pressed ? 0.6 : 1 })}
+        >
+          <Text style={{ color: filters.buildType == null ? brand.violet : colors.text, fontSize: 16, fontWeight: filters.buildType == null ? "700" : "500" }}>
+            {t("filters.any")}
+          </Text>
+          {filters.buildType == null && <Ionicons name="checkmark-circle" size={22} color={brand.violet} />}
+        </Pressable>
+        {BUILD_TYPES.map((b) => {
+          const active = filters.buildType === b.key;
+          return (
+            <Pressable
+              key={b.key}
+              onPress={() => {
+                setBuildType(b.key);
+                setBuildSheetOpen(false);
+              }}
+              style={({ pressed }) => ({ ...optionRow(false, colors), opacity: pressed ? 0.6 : 1 })}
+            >
+              <Text style={{ color: active ? brand.violet : colors.text, fontSize: 16, fontWeight: active ? "700" : "500" }}>{t(b.labelKey)}</Text>
+              {active && <Ionicons name="checkmark-circle" size={22} color={brand.violet} />}
+            </Pressable>
+          );
+        })}
+      </BottomSheet>
+    </View>
+  );
+}
+
+// Shared option-row style for the single-select picker sheets.
+const optionRow = (first: boolean, colors: Theme) =>
+  ({
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderTopWidth: first ? 1 : 0,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  }) as const;
+
+// Clear / Show button row for the multi-select sheets.
+function FilterActions({
+  colors,
+  onClear,
+  onApply,
+  clearLabel,
+  applyLabel,
+}: {
+  colors: Theme;
+  onClear: () => void;
+  onApply: () => void;
+  clearLabel: string;
+  applyLabel: string;
+}) {
+  return (
+    <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 20, paddingTop: 14 }}>
+      <Pressable
+        onPress={onClear}
+        style={({ pressed }) => ({ flex: 1, height: 50, borderRadius: 14, borderWidth: 1, borderColor: brand.violet, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.6 : 1 })}
+      >
+        <Text style={{ color: brand.violet, fontSize: 16, fontWeight: "700" }}>{clearLabel}</Text>
+      </Pressable>
+      <Pressable
+        onPress={onApply}
+        style={({ pressed }) => ({ flex: 2, height: 50, borderRadius: 14, backgroundColor: brand.violet, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.85 : 1 })}
+      >
+        <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "700" }}>{applyLabel}</Text>
+      </Pressable>
     </View>
   );
 }

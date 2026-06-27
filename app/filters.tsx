@@ -14,11 +14,11 @@ import { LocationFilterSheet } from "../components/LocationFilterSheet";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
 import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
+import { ROOMS } from "../lib/roomTypes";
 import { placeById, placeName } from "../lib/places";
 import { useLanguage } from "../lib/i18n/languages";
 import { useFilters, DEFAULT_FILTERS } from "../lib/filters-state";
 
-const ROOMS = ["1", "2", "3", "4", "5+"];
 const BATHS = ["1", "2", "3", "4+"];
 
 const toggleIn = (arr: string[], v: string) =>

@@ -11,6 +11,7 @@ import { PROPERTY_TYPES } from "../lib/propertyTypes";
 import { usePressShrink } from "../lib/animations";
 
 type Props = {
+  onPressDeal?: () => void;
   onPressType?: () => void;
   onPressRooms?: () => void;
   onPressBuild?: () => void;
@@ -19,9 +20,12 @@ type Props = {
 const ROOM_ORDER = (r: string) => (r === "5+" ? 5 : Number(r)); // numeric sort, "5+" last
 
 /** Horizontal quick-filter chips under the deal segment. Reads/writes useFilters. */
-export function FilterChipsRow({ onPressType, onPressRooms, onPressBuild }: Props) {
+export function FilterChipsRow({ onPressDeal, onPressType, onPressRooms, onPressBuild }: Props) {
   const { t } = useTranslation();
   const { filters } = useFilters();
+
+  // Deal chip: a deal type is ALWAYS chosen → always "active", shows the value.
+  const dealLabel = t(filters.dealType === "rent" ? "home.dealRent" : "home.dealSale");
 
   // Type chip summary: 0 → label; 1 → name; >1 → "first, +n-1".
   const typeActive = filters.propertyTypes.length > 0;
@@ -50,6 +54,7 @@ export function FilterChipsRow({ onPressType, onPressRooms, onPressBuild }: Prop
       style={{ flexGrow: 0 }} // size to content height — a horizontal ScrollView otherwise expands vertically in a column parent
       contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingTop: 12 }}
     >
+      <Chip label={dealLabel} active onPress={onPressDeal} />
       <Chip label={typeLabel} active={typeActive} onPress={onPressType} />
       <Chip label={roomsLabel} active={roomsActive} onPress={onPressRooms} />
       <Chip label={buildLabel} active={buildActive} onPress={onPressBuild} />

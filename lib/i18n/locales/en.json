@@ -457,7 +457,8 @@
     "furnished": "Furnished",
     "mortgage": "Mortgage",
     "min": "Min",
-    "max": "Max"
+    "max": "Max",
+    "any": "Any"
   },
   "location": {
     "label": "Location",
