@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import Animated, { useAnimatedScrollHandler, withSpring } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,7 +12,7 @@ import { brand, Theme } from "../../lib/theme/colors";
 import { SearchBar } from "../../components/SearchBar";
 import { DealTypeChips } from "../../components/DealTypeChips";
 import { SegmentedControl } from "../../components/SegmentedControl";
-import { PropertyCard } from "../../components/PropertyCard";
+import { PropertyCardRow } from "../../components/PropertyCardRow";
 import { SearchMap } from "../../components/SearchMap";
 import { BottomSheet } from "../../components/BottomSheet";
 import { LoadingState, ErrorState } from "../../components/ListState";
@@ -20,6 +20,8 @@ import { useFavorites } from "../../lib/favorites";
 import { useFilters, filterListings } from "../../lib/filters-state";
 import { Listing, isPromoActive } from "../../lib/mock/listings";
 import { fetchFeed } from "../../lib/api/listings";
+import { fetchViewedIds } from "../../lib/api/listingViews";
+import { useAuth } from "../../lib/auth";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { useLanguage } from "../../lib/i18n/languages";
 
@@ -52,6 +54,7 @@ export default function SearchScreen() {
   const [sortOpen, setSortOpen] = useState(false);
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
   const { filters, setDealType, activeCount } = useFilters();
+  const { user } = useAuth();
 
   // Feed from Supabase (same active set as Home), refetched on focus.
   const [feed, setFeed] = useState<Listing[] | null>(null);
@@ -62,18 +65,36 @@ export default function SearchScreen() {
       .then(setFeed)
       .catch(() => setError(true));
   }, []);
+
+  // Listings the user already opened → "Viewed" badge. Loaded with the feed on
+  // focus, so returning from a listing already shows the badge. Guests: empty.
+  const [viewedIds, setViewedIds] = useState<Set<string>>(new Set());
+  const loadViewed = useCallback(() => {
+    if (!user?.id) {
+      setViewedIds(new Set());
+      return;
+    }
+    fetchViewedIds(user.id)
+      .then((ids) => setViewedIds(new Set(ids)))
+      .catch(() => {}); // a failed read must never break search → no badges
+  }, [user?.id]);
+
   const { scrollY } = useScrollCtx();
   const scrollHandler = useAnimatedScrollHandler((e) => { scrollY.value = e.contentOffset.y; });
-  useFocusEffect(useCallback(() => { scrollY.value = withSpring(0, { damping: 18, stiffness: 120 }); load(); }, [load, scrollY]));
+  useFocusEffect(useCallback(() => { scrollY.value = withSpring(0, { damping: 18, stiffness: 120 }); load(); loadViewed(); }, [load, loadViewed, scrollY]));
   const loading = feed === null && !error;
 
-  // Stable per-load rotation for the Premium/VIP bands so paid listings share
-  // exposure (random order) without jumping on every re-render. Reshuffles only
-  // when the feed itself reloads.
+  // Stable rotation for the Premium/VIP bands so paid listings share exposure.
+  // Each id gets ONE random value (kept in a ref) and reuses it across refetches —
+  // so returning from a listing (which refetches the feed) never reshuffles the
+  // already-shown order. Only genuinely new ids get a fresh random.
+  const rotationRef = useRef<Record<string, number>>({});
   const rotation = useMemo(() => {
-    const m: Record<string, number> = {};
-    for (const l of feed ?? []) m[l.id] = Math.random();
-    return m;
+    const map = rotationRef.current;
+    for (const l of feed ?? []) {
+      if (map[l.id] === undefined) map[l.id] = Math.random();
+    }
+    return map;
   }, [feed]);
 
   const results = useMemo(() => {
@@ -180,9 +201,9 @@ export default function SearchScreen() {
             />
           }
           renderItem={({ item }) => (
-            <PropertyCard
+            <PropertyCardRow
               listing={item}
-              variant="feed"
+              viewed={viewedIds.has(item.id)}
               favorited={isFavorite(item.id)}
               onToggleFavorite={() => toggleFavorite(item.id)}
               onPress={() => router.push(`/property/${item.id}`)}

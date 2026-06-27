@@ -331,6 +331,24 @@ create policy "favorites_own"
   with check (user_id = auth.uid());
 
 -- =============================================================================
+-- listing_views — per-user история просмотров (метка «Вы смотрели»)
+-- =============================================================================
+create table if not exists public.listing_views (
+  user_id     uuid not null references public.profiles (id) on delete cascade,
+  listing_id  uuid not null references public.listings (id) on delete cascade,
+  viewed_at   timestamptz not null default now(),
+  primary key (user_id, listing_id)
+);
+
+alter table public.listing_views enable row level security;
+
+drop policy if exists "listing_views_own" on public.listing_views;
+create policy "listing_views_own"
+  on public.listing_views for all
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+-- =============================================================================
 -- conversations
 -- =============================================================================
 create table if not exists public.conversations (

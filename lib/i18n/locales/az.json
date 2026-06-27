@@ -427,7 +427,11 @@
     "sortDefault": "Defolt",
     "sortPriceAsc": "Əvvəlcə ucuz",
     "sortPriceDesc": "Əvvəlcə bahalı",
-    "sortNewest": "Əvvəlcə yeni"
+    "sortNewest": "Əvvəlcə yeni",
+    "timeJustNow": "indicə",
+    "timeHoursAgo": "{{count}} saat əvvəl",
+    "timeDaysAgo": "{{count}} gün əvvəl",
+    "viewedBadge": "Baxılıb"
   },
   "filters": {
     "title": "Filtrlər",

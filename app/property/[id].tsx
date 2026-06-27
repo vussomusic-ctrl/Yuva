@@ -29,6 +29,7 @@ import { isLandType } from "../../lib/propertyTypes";
 import { pluralSuffix } from "../../lib/i18n/plural";
 import { fetchListingDetail } from "../../lib/api/listings";
 import { addViewed } from "../../lib/recentlyViewed";
+import { recordView } from "../../lib/api/listingViews";
 import { bumpListing } from "../../lib/api/promo";
 import { useFavorites } from "../../lib/favorites";
 import { useAuth } from "../../lib/auth";
@@ -229,6 +230,14 @@ export default function PropertyDetailScreen() {
   useEffect(() => {
     if (id) addViewed(id);
   }, [id]);
+
+  // Server-side per-user view history (the "You viewed" mark). Logged-in only;
+  // fire-and-forget — a failed write must never block or break the screen.
+  useEffect(() => {
+    if (id && user?.id) {
+      recordView(user.id, id).catch((e) => console.warn("recordView failed", e));
+    }
+  }, [user?.id, id]);
 
   if (status !== "ok" || !listing) {
     return (

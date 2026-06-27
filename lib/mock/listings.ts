@@ -75,6 +75,10 @@ export type Listing = {
   createdAt: string;
   lat: number;
   lng: number;
+  // Owner's agency (carried from the embedded row for list cards). is_partner = "verified".
+  agencyName?: string | null;
+  agencyVerified?: boolean;
+  agencyLogo?: string | null;
 };
 
 export type Agent = {

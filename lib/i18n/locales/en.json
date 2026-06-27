@@ -427,7 +427,11 @@
     "sortDefault": "Default",
     "sortPriceAsc": "Price: low to high",
     "sortPriceDesc": "Price: high to low",
-    "sortNewest": "Newest first"
+    "sortNewest": "Newest first",
+    "timeJustNow": "just now",
+    "timeHoursAgo": "{{count}}h ago",
+    "timeDaysAgo": "{{count}}d ago",
+    "viewedBadge": "Viewed"
   },
   "filters": {
     "title": "Filters",

@@ -427,7 +427,11 @@
     "sortDefault": "По умолчанию",
     "sortPriceAsc": "Дешевле → дороже",
     "sortPriceDesc": "Дороже → дешевле",
-    "sortNewest": "Сначала новые"
+    "sortNewest": "Сначала новые",
+    "timeJustNow": "только что",
+    "timeHoursAgo": "{{count}} ч назад",
+    "timeDaysAgo": "{{count}} дн назад",
+    "viewedBadge": "Просмотрено"
   },
   "filters": {
     "title": "Фильтры",

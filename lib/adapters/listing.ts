@@ -221,6 +221,10 @@ export function rowToListing(row: ListingRow): Listing {
     createdAt: row.created_at,
     lat: row.lat ?? 0,
     lng: row.lng ?? 0,
+    // Agency (from the embedded owner row; already fetched in LIST_SELECT).
+    agencyName: row.owner?.agency?.name ?? null,
+    agencyVerified: row.owner?.agency?.is_partner ?? false,
+    agencyLogo: row.owner?.agency?.logo_url ?? null,
   };
   return l;
 }
