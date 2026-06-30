@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { View, Text, Pressable, ScrollView, TextInput, Switch } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { View, Text, Pressable, ScrollView, TextInput, Image } from "react-native";
+import Animated from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,14 +11,34 @@ import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
 import { Segmented } from "../components/Segmented";
+import { RangeSlider } from "../components/RangeSlider";
+import { ClayToggle } from "../components/ClayToggle";
 import { LocationFilterSheet } from "../components/LocationFilterSheet";
+import { usePressShrink } from "../lib/animations";
+
+// Clay section icons (premium brand look, same set as the detail screen).
+const CLAY = {
+  sparkle: require("../assets/icons/clay/sparkle.png"),
+  house: require("../assets/icons/clay/house.png"),
+  building: require("../assets/icons/clay/building.png"),
+  bed: require("../assets/icons/clay/bed.png"),
+  bathtub: require("../assets/icons/clay/bathtub.png"),
+  ruler: require("../assets/icons/clay/ruler.png"),
+  stairs: require("../assets/icons/clay/stairs.png"),
+  pin: require("../assets/icons/clay/pin.png"),
+  sofa: require("../assets/icons/clay/sofa.png"),
+  mortgage: require("../assets/icons/clay/mortgage.png"),
+};
+const SOFT_BORDER = "rgba(0,0,0,0.10)";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
 import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
 import { ROOMS } from "../lib/roomTypes";
 import { placeById, placeName } from "../lib/places";
 import { useLanguage } from "../lib/i18n/languages";
-import { useFilters, DEFAULT_FILTERS } from "../lib/filters-state";
+import { useFilters, DEFAULT_FILTERS, filterListings } from "../lib/filters-state";
+import { fetchFeed } from "../lib/api/listings";
+import { Listing } from "../lib/mock/listings";
 
 const BATHS = ["1", "2", "3", "4+"];
 
@@ -49,6 +70,40 @@ export default function FiltersModal() {
   const [furnished, setFurnished] = useState(filters.furnished);
   const [mortgage, setMortgage] = useState(filters.mortgage);
   const [locOpen, setLocOpen] = useState(false);
+
+  // Feed for dynamic slider bounds (Bayut-style): min/max + histogram come from
+  // listings matching every DISCRETE filter (price/area ranges cleared), so they
+  // shrink as the search narrows.
+  const [feed, setFeed] = useState<Listing[]>([]);
+  useEffect(() => {
+    fetchFeed().then(setFeed).catch(() => {});
+  }, []);
+
+  const rangeSubset = useMemo(
+    () =>
+      filterListings(feed, {
+        dealType,
+        propertyTypes: propertyTypes as PropertyTypeKey[],
+        buildType,
+        priceMin: "",
+        priceMax: "",
+        rooms,
+        baths,
+        areaMin: "",
+        areaMax: "",
+        regions,
+        metro,
+        floorMin,
+        floorMax,
+        furnished,
+        mortgage,
+      }),
+    // ranges intentionally excluded → dragging a slider never moves its own bounds
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [feed, dealType, propertyTypes, buildType, rooms, baths, regions, metro, floorMin, floorMax, furnished, mortgage],
+  );
+  const priceBounds = useMemo(() => boundsOf(rangeSubset.map((l) => l.priceAzn).filter((v) => v > 0), 100000, 25000000), [rangeSubset]);
+  const areaBounds = useMemo(() => boundsOf(rangeSubset.map((l) => l.areaM2).filter((v) => v > 0), 5, 1000), [rangeSubset]);
 
   const locCount = regions.length + metro.length;
   const locSummary =
@@ -124,7 +179,9 @@ export default function FiltersModal() {
           style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16 }}
         >
           <Pressable onPress={close} hitSlop={10} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-            <Ionicons name="close" size={26} color={colors.text} />
+            <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: colors.card, borderWidth: 1, borderColor: SOFT_BORDER, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="close" size={22} color={colors.text} />
+            </View>
           </Pressable>
           <Pressable onPress={clearAll} hitSlop={10} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
             <Text style={{ color: brand.violet, fontFamily: font.semibold, fontSize: 15 }}>{t("filters.clear")}</Text>
@@ -137,7 +194,7 @@ export default function FiltersModal() {
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, gap: 24 }}
       >
         {/* Deal type */}
-        <Section title={t("filters.dealType")} colors={colors}>
+        <Section title={t("filters.dealType")} icon={CLAY.sparkle} colors={colors}>
           <Segmented
             options={DEALS.map((d) => ({ key: d.key, label: t(d.labelKey) }))}
             value={dealType}
@@ -146,7 +203,7 @@ export default function FiltersModal() {
         </Section>
 
         {/* Property type */}
-        <Section title={t("filters.propertyType")} colors={colors}>
+        <Section title={t("filters.propertyType")} icon={CLAY.house} colors={colors}>
           <ChipWrap>
             {PROPERTY_TYPES.map((p) => (
               <FilterChip
@@ -161,7 +218,7 @@ export default function FiltersModal() {
         </Section>
 
         {/* Building type (single-select; tap active to reset to "any") */}
-        <Section title={t("filters.buildType")} colors={colors}>
+        <Section title={t("filters.buildType")} icon={CLAY.building} colors={colors}>
           <ChipWrap>
             {BUILD_TYPES.map((b) => (
               <FilterChip
@@ -176,7 +233,25 @@ export default function FiltersModal() {
         </Section>
 
         {/* Price */}
-        <Section title={t("filters.price")} colors={colors}>
+        <Section title={t("filters.price")} icon={CLAY.sparkle} colors={colors}>
+          <RangeSlider
+            min={priceBounds.min}
+            max={priceBounds.max}
+            valueMin={Number(priceMin) || priceBounds.min}
+            valueMax={Number(priceMax) || priceBounds.max}
+            onChange={(lo, hi) => {
+              setPriceMin(lo > priceBounds.min ? String(lo) : "");
+              setPriceMax(hi < priceBounds.max ? String(hi) : "");
+            }}
+            onLiveChange={(lo, hi) => {
+              setPriceMin(lo > priceBounds.min ? String(lo) : "");
+              setPriceMax(hi < priceBounds.max ? String(hi) : "");
+            }}
+            step={100000}
+            histogram={priceBounds.histogram}
+            formatLabel={(v) => `${v.toLocaleString()} ₼`}
+          />
+          <View style={{ height: 12 }} />
           <RangeRow
             colors={colors}
             minVal={priceMin}
@@ -189,7 +264,7 @@ export default function FiltersModal() {
         </Section>
 
         {/* Rooms */}
-        <Section title={t("filters.rooms")} colors={colors}>
+        <Section title={t("filters.rooms")} icon={CLAY.bed} colors={colors}>
           <ChipWrap>
             {ROOMS.map((r) => (
               <FilterChip
@@ -204,7 +279,7 @@ export default function FiltersModal() {
         </Section>
 
         {/* Bathrooms */}
-        <Section title={t("filters.baths")} colors={colors}>
+        <Section title={t("filters.baths")} icon={CLAY.bathtub} colors={colors}>
           <ChipWrap>
             {BATHS.map((b) => (
               <FilterChip
@@ -219,7 +294,25 @@ export default function FiltersModal() {
         </Section>
 
         {/* Area */}
-        <Section title={t("filters.area")} colors={colors}>
+        <Section title={t("filters.area")} icon={CLAY.ruler} colors={colors}>
+          <RangeSlider
+            min={areaBounds.min}
+            max={areaBounds.max}
+            valueMin={Number(areaMin) || areaBounds.min}
+            valueMax={Number(areaMax) || areaBounds.max}
+            onChange={(lo, hi) => {
+              setAreaMin(lo > areaBounds.min ? String(lo) : "");
+              setAreaMax(hi < areaBounds.max ? String(hi) : "");
+            }}
+            onLiveChange={(lo, hi) => {
+              setAreaMin(lo > areaBounds.min ? String(lo) : "");
+              setAreaMax(hi < areaBounds.max ? String(hi) : "");
+            }}
+            step={5}
+            histogram={areaBounds.histogram}
+            formatLabel={(v) => `${v.toLocaleString()} m²`}
+          />
+          <View style={{ height: 12 }} />
           <RangeRow
             colors={colors}
             minVal={areaMin}
@@ -232,14 +325,14 @@ export default function FiltersModal() {
         </Section>
 
         {/* Location — opener + summary chips (cascading sheet) */}
-        <Section title={t("location.label")} colors={colors}>
+        <Section title={t("location.label")} icon={CLAY.pin} colors={colors}>
           <Pressable
             onPress={() => setLocOpen(true)}
             style={({ pressed }) => ({
               minHeight: 48,
               borderRadius: 12,
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: SOFT_BORDER,
               backgroundColor: colors.card,
               paddingHorizontal: 14,
               flexDirection: "row",
@@ -249,9 +342,10 @@ export default function FiltersModal() {
               opacity: pressed ? 0.7 : 1,
             })}
           >
+            <Image source={CLAY.pin} style={{ width: 20, height: 20 }} resizeMode="contain" />
             <Text
               numberOfLines={1}
-              style={{ flex: 1, color: locCount ? colors.text : colors.textSecondary, fontFamily: font.regular, fontSize: 15 }}
+              style={{ flex: 1, color: locCount ? colors.text : colors.textSecondary, fontFamily: font.medium, fontSize: 15 }}
             >
               {locSummary}
             </Text>
@@ -290,7 +384,7 @@ export default function FiltersModal() {
         </Section>
 
         {/* Floor */}
-        <Section title={t("filters.floor")} colors={colors}>
+        <Section title={t("filters.floor")} icon={CLAY.stairs} colors={colors}>
           <RangeRow
             colors={colors}
             minVal={floorMin}
@@ -305,12 +399,14 @@ export default function FiltersModal() {
         {/* Toggles */}
         <ToggleRow
           colors={colors}
+          iconSource={CLAY.sofa}
           label={t("filters.furnished")}
           value={furnished}
           onValueChange={setFurnished}
         />
         <ToggleRow
           colors={colors}
+          iconSource={CLAY.mortgage}
           label={t("filters.mortgage")}
           value={mortgage}
           onValueChange={setMortgage}
@@ -390,10 +486,13 @@ function LocChip({
   );
 }
 
-function Section({ title, colors, children }: { title: string; colors: Theme; children: React.ReactNode }) {
+function Section({ title, icon, colors, children }: { title: string; icon?: number; colors: Theme; children: React.ReactNode }) {
   return (
     <View style={{ gap: 12 }}>
-      <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{title}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        {icon != null && <Image source={icon} style={{ width: 22, height: 22 }} resizeMode="contain" />}
+        <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{title}</Text>
+      </View>
       {children}
     </View>
   );
@@ -414,21 +513,43 @@ function FilterChip({
   onPress: () => void;
   colors: Theme;
 }) {
+  const press = usePressShrink(0.96);
   return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        paddingHorizontal: 16,
-        paddingVertical: 9,
-        borderRadius: 999,
-        backgroundColor: active ? brand.violet : colors.card,
-        borderWidth: 1,
-        borderColor: active ? brand.violet : colors.border,
-      }}
-    >
-      <Text style={{ color: active ? "#FFFFFF" : colors.text, fontFamily: font.semibold, fontSize: 13 }}>{label}</Text>
+    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View
+        style={[
+          {
+            paddingHorizontal: 16,
+            paddingVertical: 9,
+            borderRadius: 11,
+            backgroundColor: active ? brand.violet : colors.card,
+            borderWidth: 1,
+            borderColor: active ? brand.violet : SOFT_BORDER,
+          },
+          press.style,
+        ]}
+      >
+        <Text style={{ color: active ? "#FFFFFF" : colors.text, fontFamily: font.medium, fontSize: 14 }}>{label}</Text>
+      </Animated.View>
     </Pressable>
   );
+}
+
+// Slider bounds + 20-bin histogram from a set of values; bounds rounded to `step`
+// (lo down, hi up). Empty set → [0, fallbackMax] with no histogram.
+function boundsOf(values: number[], step: number, fallbackMax: number): { min: number; max: number; histogram: number[] } {
+  if (!values.length) return { min: 0, max: fallbackMax, histogram: [] };
+  let lo = Math.floor(Math.min(...values) / step) * step;
+  let hi = Math.ceil(Math.max(...values) / step) * step;
+  if (lo === hi) hi = lo + step; // never collapse the slider
+  const BINS = 20;
+  const bw = (hi - lo) / BINS;
+  const histogram = Array(BINS).fill(0);
+  for (const v of values) {
+    const i = Math.min(BINS - 1, Math.max(0, Math.floor((v - lo) / bw)));
+    histogram[i]++;
+  }
+  return { min: lo, max: hi, histogram };
 }
 
 function RangeRow({
@@ -453,7 +574,7 @@ function RangeRow({
     height: 48,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: SOFT_BORDER,
     backgroundColor: colors.card,
     paddingHorizontal: 14,
     justifyContent: "center" as const,
@@ -467,7 +588,7 @@ function RangeRow({
           placeholder={minPh}
           keyboardType="numeric"
           placeholderTextColor={colors.textSecondary}
-          style={{ color: colors.text, fontFamily: font.regular, fontSize: 15 }}
+          style={{ color: colors.text, fontFamily: font.medium, fontSize: 15 }}
         />
       </View>
       <View style={box}>
@@ -477,7 +598,7 @@ function RangeRow({
           placeholder={maxPh}
           keyboardType="numeric"
           placeholderTextColor={colors.textSecondary}
-          style={{ color: colors.text, fontFamily: font.regular, fontSize: 15 }}
+          style={{ color: colors.text, fontFamily: font.medium, fontSize: 15 }}
         />
       </View>
     </View>
@@ -486,25 +607,36 @@ function RangeRow({
 
 function ToggleRow({
   colors,
+  iconSource,
   label,
   value,
   onValueChange,
 }: {
   colors: Theme;
+  iconSource?: number; // clay icon (require)
   label: string;
   value: boolean;
   onValueChange: (v: boolean) => void;
 }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-      <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 16 }}>{label}</Text>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{ false: colors.border, true: brand.violet }}
-        thumbColor="#FFFFFF"
-        ios_backgroundColor={colors.border}
-      />
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: colors.card,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: SOFT_BORDER,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+      }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
+        {iconSource != null && <Image source={iconSource} style={{ width: 52, height: 52, marginVertical: -8 }} resizeMode="contain" />}
+        <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 16 }}>{label}</Text>
+      </View>
+      <ClayToggle value={value} onValueChange={onValueChange} />
     </View>
   );
 }
