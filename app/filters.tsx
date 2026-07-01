@@ -14,6 +14,7 @@ import { Segmented } from "../components/Segmented";
 import { RangeSlider } from "../components/RangeSlider";
 import { ClayToggle } from "../components/ClayToggle";
 import { LocationFilterSheet } from "../components/LocationFilterSheet";
+import { AmenitiesFilterSheet } from "../components/AmenitiesFilterSheet";
 import { usePressShrink } from "../lib/animations";
 
 // Clay section icons (premium brand look, same set as the detail screen).
@@ -72,6 +73,8 @@ export default function FiltersModal() {
   const [furnished, setFurnished] = useState(filters.furnished);
   const [mortgage, setMortgage] = useState(filters.mortgage);
   const [locOpen, setLocOpen] = useState(false);
+  const [amenities, setAmenities] = useState<string[]>(filters.amenities);
+  const [amenOpen, setAmenOpen] = useState(false);
 
   // Feed for dynamic slider bounds (Bayut-style): min/max + histogram come from
   // listings matching every DISCRETE filter (price/area ranges cleared), so they
@@ -99,10 +102,11 @@ export default function FiltersModal() {
         floorMax,
         furnished,
         mortgage,
+        amenities,
       }),
     // ranges intentionally excluded → dragging a slider never moves its own bounds
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [feed, dealType, propertyTypes, buildType, rooms, baths, regions, metro, floorMin, floorMax, furnished, mortgage],
+    [feed, dealType, propertyTypes, buildType, rooms, baths, regions, metro, floorMin, floorMax, furnished, mortgage, amenities],
   );
   const priceBounds = useMemo(() => boundsOf(rangeSubset.map((l) => l.priceAzn).filter((v) => v > 0), 100000, 25000000), [rangeSubset]);
   // Только земля → границы/гистограмма по соткам (landAreaSot); иначе по м² (areaM2)
@@ -143,6 +147,7 @@ export default function FiltersModal() {
       floorMax,
       furnished,
       mortgage,
+      amenities,
     });
     close();
   };
@@ -164,6 +169,7 @@ export default function FiltersModal() {
     setFloorMax("");
     setFurnished(false);
     setMortgage(false);
+    setAmenities([]);
     apply({ ...DEFAULT_FILTERS, dealType });
   };
 
@@ -405,6 +411,35 @@ export default function FiltersModal() {
           />
         </Section>
 
+        {/* Amenities — opener + sheet */}
+        <Section title={t("filters.amenities")} icon={CLAY.sparkle} iconSize={32} colors={colors}>
+          <Pressable
+            onPress={() => setAmenOpen(true)}
+            style={({ pressed }) => ({
+              minHeight: 48,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: SOFT_BORDER,
+              backgroundColor: colors.card,
+              paddingHorizontal: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Image source={CLAY.sparkle} style={{ width: 20, height: 20 }} resizeMode="contain" />
+            <Text
+              numberOfLines={1}
+              style={{ flex: 1, color: amenities.length ? colors.text : colors.textSecondary, fontFamily: font.medium, fontSize: 15 }}
+            >
+              {amenities.length ? `${t("filters.selectedCount")}: ${amenities.length}` : t("filters.anyPlural")}
+            </Text>
+            <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
+          </Pressable>
+        </Section>
+
         {/* Toggles */}
         <ToggleRow
           colors={colors}
@@ -455,6 +490,13 @@ export default function FiltersModal() {
           setMetro(m);
         }}
         lang={lang}
+      />
+
+      <AmenitiesFilterSheet
+        visible={amenOpen}
+        onClose={() => setAmenOpen(false)}
+        selected={amenities}
+        onApply={(keys) => setAmenities(keys)}
       />
     </SafeAreaView>
   );

@@ -46,6 +46,7 @@ import { createListing, updateListing, fetchListingRow } from "../lib/api/listin
 import { generateDescription } from "../lib/api/ai";
 import { validateStep, validateAll, ValidationState } from "../lib/validation";
 import { amenityLabel } from "../lib/amenityLabel";
+import { AMENITY_GROUPS } from "../lib/amenities";
 import { ListingFormInput, PhotoItem, rowToForm, rowToPhotoItems } from "../lib/adapters/listing";
 import { useAuth } from "../lib/auth";
 import { useMapPick } from "../lib/map-pick";
@@ -66,43 +67,6 @@ const DEAL_CARDS: { key: DealKey; image: number; labelKey: string; subKey: strin
   { key: "rent", image: require("../assets/icons/deals/deal-rent.png"), labelKey: "home.dealRent", subKey: "addListing.rentSubtitle" },
 ];
 
-// Amenities (step 6) — multi-select, grouped. `key` is stored in amenities[];
-// icons are static requires from assets/icons/amenities.
-const AMENITY_GROUPS: { titleKey: string; items: { key: string; labelKey: string; icon: number }[] }[] = [
-  {
-    titleKey: "addListing.amenInHouse",
-    items: [
-      { key: "concierge", labelKey: "addListing.amenity.concierge", icon: require("../assets/icons/amenities/concierge.png") },
-      { key: "security", labelKey: "addListing.amenity.security", icon: require("../assets/icons/amenities/shield.png") },
-      { key: "fence", labelKey: "addListing.amenity.fence", icon: require("../assets/icons/amenities/fence.png") },
-      { key: "parking", labelKey: "addListing.amenity.parking", icon: require("../assets/icons/amenities/parking.png") },
-      { key: "elevator", labelKey: "addListing.amenity.elevator", icon: require("../assets/icons/amenities/elevator.png") },
-      { key: "playground", labelKey: "addListing.amenity.playground", icon: require("../assets/icons/amenities/playground.png") },
-      { key: "pool", labelKey: "addListing.amenity.pool", icon: require("../assets/icons/amenities/pool.png") },
-      { key: "gym", labelKey: "addListing.amenity.gym", icon: require("../assets/icons/amenities/gym.png") },
-    ],
-  },
-  {
-    titleKey: "addListing.amenInApartment",
-    items: [
-      { key: "ac", labelKey: "addListing.amenity.ac", icon: require("../assets/icons/amenities/ac.png") },
-      { key: "warm_floor", labelKey: "addListing.amenity.warmFloor", icon: require("../assets/icons/amenities/warm_floor.png") },
-      { key: "balcony", labelKey: "addListing.amenity.balcony", icon: require("../assets/icons/amenities/balcony.png") },
-      { key: "sea_view", labelKey: "addListing.amenity.seaView", icon: require("../assets/icons/amenities/wave.png") },
-      { key: "panoramic", labelKey: "addListing.amenity.panoramic", icon: require("../assets/icons/amenities/window.png") },
-      { key: "appliances", labelKey: "addListing.amenity.appliances", icon: require("../assets/icons/amenities/appliances.png") },
-    ],
-  },
-  {
-    titleKey: "addListing.amenNearby",
-    items: [
-      { key: "metro", labelKey: "addListing.amenity.metro", icon: require("../assets/icons/amenities/metro.png") },
-      { key: "school", labelKey: "addListing.amenity.school", icon: require("../assets/icons/amenities/school.png") },
-      { key: "sea", labelKey: "addListing.amenity.sea", icon: require("../assets/icons/amenities/boat.png") },
-      { key: "park", labelKey: "addListing.amenity.park", icon: require("../assets/icons/amenities/park.png") },
-    ],
-  },
-];
 const GRID_GAP = 12;
 const PHOTO_SIZE = (Dimensions.get("window").width - 32 - GRID_GAP * 2) / 3;
 

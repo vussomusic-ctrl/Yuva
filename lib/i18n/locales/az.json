@@ -459,7 +459,10 @@
     "mortgage": "İpoteka",
     "min": "Min",
     "max": "Maks",
-    "any": "İstənilən"
+    "any": "İstənilən",
+    "anyPlural": "İstənilən",
+    "amenities": "Şərait",
+    "selectedCount": "Seçilib"
   },
   "location": {
     "label": "Lokasiya",

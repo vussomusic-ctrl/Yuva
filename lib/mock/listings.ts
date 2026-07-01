@@ -72,6 +72,7 @@ export type Listing = {
   baths: number;
   furnished: boolean;
   mortgage: boolean;
+  amenities?: string[]; // amenity keys (lib/amenities); from DB row — used by the amenity filter
   createdAt: string;
   lat: number;
   lng: number;

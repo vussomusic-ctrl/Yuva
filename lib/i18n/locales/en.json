@@ -459,7 +459,10 @@
     "mortgage": "Mortgage",
     "min": "Min",
     "max": "Max",
-    "any": "Any"
+    "any": "Any",
+    "anyPlural": "Any",
+    "amenities": "Amenities",
+    "selectedCount": "Selected"
   },
   "location": {
     "label": "Location",

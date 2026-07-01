@@ -191,6 +191,7 @@ export function rowToListing(row: ListingRow): Listing {
     baths: row.baths ?? 0,
     furnished: row.furnished,
     mortgage: row.mortgage,
+    amenities: row.amenities ?? [],
     buildingSeries: row.building_series ?? undefined,
     complexName: row.complex_name ?? undefined,
     builtYear: row.built_year ?? undefined,

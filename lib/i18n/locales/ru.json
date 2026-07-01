@@ -459,7 +459,10 @@
     "mortgage": "Ипотека",
     "min": "От",
     "max": "До",
-    "any": "Любой"
+    "any": "Любой",
+    "anyPlural": "Любые",
+    "amenities": "Удобства",
+    "selectedCount": "Выбрано"
   },
   "location": {
     "label": "Локация",

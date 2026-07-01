@@ -52,6 +52,7 @@ export type Filters = {
   floorMax: string;
   furnished: boolean;
   mortgage: boolean;
+  amenities: string[]; // amenity keys (lib/amenities) — AND-match: listing must have ALL
 };
 
 export const DEFAULT_FILTERS: Filters = {
@@ -70,6 +71,7 @@ export const DEFAULT_FILTERS: Filters = {
   floorMax: "",
   furnished: false,
   mortgage: false,
+  amenities: [],
 };
 
 /**
@@ -90,6 +92,7 @@ export function activeFilterCount(f: Filters): number {
   if (f.floorMin || f.floorMax) n++;
   if (f.furnished) n++;
   if (f.mortgage) n++;
+  if (f.amenities.length) n++;
   return n;
 }
 
@@ -100,6 +103,7 @@ export function filterListings(items: Listing[], f: Filters): Listing[] {
   return items.filter((l) => {
     if (l.dealType !== f.dealType) return false;
     if (f.propertyTypes.length && !f.propertyTypes.includes(l.propertyType)) return false;
+    if (f.amenities.length && !f.amenities.every((k) => (l.amenities ?? []).includes(k))) return false;
     if (f.buildType && l.buildType !== f.buildType) return false;
     if (f.priceMin && l.priceAzn < Number(f.priceMin)) return false;
     if (f.priceMax && l.priceAzn > Number(f.priceMax)) return false;
@@ -145,6 +149,7 @@ type FiltersContextValue = {
   setBuildType: (b: BuildKey | null) => void;
   setPriceRange: (min: string, max: string) => void;
   setAreaRange: (min: string, max: string) => void;
+  toggleAmenity: (key: string) => void;
   clear: () => void; // reset narrowing filters, keep the current deal type
   activeCount: number;
 };
@@ -159,6 +164,7 @@ const FiltersContext = createContext<FiltersContextValue>({
   setBuildType: () => {},
   setPriceRange: () => {},
   setAreaRange: () => {},
+  toggleAmenity: () => {},
   clear: () => {},
   activeCount: 0,
 });
@@ -187,6 +193,14 @@ export function FiltersProvider({ children }: { children: React.ReactNode }) {
   const setBuildType = useCallback((b: BuildKey | null) => setFilters((cur) => ({ ...cur, buildType: b })), []);
   const setPriceRange = useCallback((min: string, max: string) => setFilters((cur) => ({ ...cur, priceMin: min, priceMax: max })), []);
   const setAreaRange = useCallback((min: string, max: string) => setFilters((cur) => ({ ...cur, areaMin: min, areaMax: max })), []);
+  const toggleAmenity = useCallback(
+    (key: string) =>
+      setFilters((cur) => ({
+        ...cur,
+        amenities: cur.amenities.includes(key) ? cur.amenities.filter((k) => k !== key) : [...cur.amenities, key],
+      })),
+    [],
+  );
   const clear = useCallback(
     () => setFilters((cur) => ({ ...DEFAULT_FILTERS, dealType: cur.dealType })),
     [],
@@ -203,10 +217,11 @@ export function FiltersProvider({ children }: { children: React.ReactNode }) {
       setBuildType,
       setPriceRange,
       setAreaRange,
+      toggleAmenity,
       clear,
       activeCount: activeFilterCount(filters),
     }),
-    [filters, apply, setDealType, setPropertyTypes, setRooms, toggleRoom, setBuildType, setPriceRange, setAreaRange, clear],
+    [filters, apply, setDealType, setPropertyTypes, setRooms, toggleRoom, setBuildType, setPriceRange, setAreaRange, toggleAmenity, clear],
   );
 
   return <FiltersContext.Provider value={value}>{children}</FiltersContext.Provider>;

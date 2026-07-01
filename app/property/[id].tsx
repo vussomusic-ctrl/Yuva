@@ -44,6 +44,7 @@ import { Header } from "../my-listings";
 import { buildListingTitle } from "../../lib/listingTitle";
 import { placeById, placeName } from "../../lib/places";
 import { amenityLabel } from "../../lib/amenityLabel";
+import { AMENITY_META } from "../../lib/amenities";
 import { MetroBadge } from "../../components/MetroBadge";
 import { useLanguage } from "../../lib/i18n/languages";
 import { detectLang } from "../../lib/langDetect";
@@ -62,29 +63,6 @@ const badgePill = (bg: string) =>
     borderRadius: 8,
     backgroundColor: bg,
   }) as const;
-
-// Mirrors the form's AMENITY_GROUPS (add-listing) — same keys + i18n labels
-// (addListing.amenity.*). Ionicons (calm outline set) for a tidy reference list.
-const AMENITY_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; labelKey: string }> = {
-  concierge: { icon: "notifications-outline", labelKey: "addListing.amenity.concierge" },
-  security: { icon: "shield-checkmark-outline", labelKey: "addListing.amenity.security" },
-  fence: { icon: "lock-closed-outline", labelKey: "addListing.amenity.fence" },
-  parking: { icon: "car-outline", labelKey: "addListing.amenity.parking" },
-  elevator: { icon: "swap-vertical-outline", labelKey: "addListing.amenity.elevator" },
-  playground: { icon: "happy-outline", labelKey: "addListing.amenity.playground" },
-  pool: { icon: "water-outline", labelKey: "addListing.amenity.pool" },
-  gym: { icon: "barbell-outline", labelKey: "addListing.amenity.gym" },
-  ac: { icon: "snow-outline", labelKey: "addListing.amenity.ac" },
-  warm_floor: { icon: "flame-outline", labelKey: "addListing.amenity.warmFloor" },
-  balcony: { icon: "browsers-outline", labelKey: "addListing.amenity.balcony" },
-  sea_view: { icon: "eye-outline", labelKey: "addListing.amenity.seaView" },
-  panoramic: { icon: "tablet-landscape-outline", labelKey: "addListing.amenity.panoramic" },
-  appliances: { icon: "hardware-chip-outline", labelKey: "addListing.amenity.appliances" },
-  metro: { icon: "train-outline", labelKey: "addListing.amenity.metro" },
-  school: { icon: "school-outline", labelKey: "addListing.amenity.school" },
-  sea: { icon: "boat-outline", labelKey: "addListing.amenity.sea" },
-  park: { icon: "leaf-outline", labelKey: "addListing.amenity.park" },
-};
 
 export default function PropertyDetailScreen() {
   const { t } = useTranslation();
@@ -653,7 +631,7 @@ export default function PropertyDetailScreen() {
                       key={key}
                       style={{ width: "50%", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
                     >
-                      <Ionicons name={meta.icon} size={20} color={brand.violet} />
+                      <Ionicons name={meta.iconIonicon} size={20} color={brand.violet} />
                       <Text style={{ color: colors.text, fontFamily: font.regular, fontSize: 14, flex: 1 }}>{amenityLabel(key, t)}</Text>
                     </View>
                   );
