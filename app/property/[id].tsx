@@ -10,11 +10,10 @@ import {
   Alert,
   ActivityIndicator,
   useWindowDimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
   ImageSourcePropType,
   Modal,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -120,8 +119,8 @@ export default function PropertyDetailScreen() {
 
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [status, setStatus] = useState<"loading" | "error" | "notfound" | "ok">("loading");
-  const [page, setPage] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0); // tapped photo → fullscreen viewer start
   const scrollY = useSharedValue(0);
   const onContentScroll = useAnimatedScrollHandler((e) => {
     scrollY.value = e.contentOffset.y;
@@ -145,24 +144,6 @@ export default function PropertyDetailScreen() {
     },
     [expandedSheetY],
   );
-
-  const photoParallaxStyle = useAnimatedStyle(() => {
-    // Photo canvas drifts up as the sheet expands (collapsedSheetY -> expandedSheetY).
-    // Parallax: photo moves slower than the sheet for depth.
-    const ty = interpolate(
-      sheetTranslateY.value,
-      [expandedSheetY, collapsedSheetY],
-      [-(collapsedSheetY - expandedSheetY) * 0.35, 0],
-      "clamp",
-    );
-    const scale = interpolate(
-      sheetTranslateY.value,
-      [expandedSheetY, collapsedSheetY],
-      [1.04, 1],
-      "clamp",
-    );
-    return { transform: [{ translateY: ty }, { scale }] };
-  });
 
   // Migrating favorite heart: flies from header (collapsed) to bottom panel (expanded).
   const heartFlyStyle = useAnimatedStyle(() => {
@@ -362,8 +343,6 @@ export default function PropertyDetailScreen() {
     .replace(/\s/g, "");
   const openTelegram = () => Linking.openURL(`https://t.me/${tgUser}`).catch(() => {});
 
-  const onGalleryScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
-    setPage(Math.round(e.nativeEvent.contentOffset.x / width));
 
   const overlayBtn = {
     width: 40,
@@ -385,27 +364,28 @@ export default function PropertyDetailScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      {/* Photo hero — full-screen background layer (card rides over it) */}
-      <Animated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, height, overflow: "hidden" }, photoParallaxStyle]}>
+      {/* Photo hero — vertical Bayut-style feed (card rides over it) */}
+      <View style={{ position: "absolute", top: 0, left: 0, right: 0, height, overflow: "hidden" }}>
         <ScrollView
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={onGalleryScroll}
-          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingTop: 0, paddingBottom: collapsedGap - 16 }}
         >
           {listing.gallery.map((uri, i) => (
-            <Pressable key={i} onPress={() => setGalleryOpen(true)}>
-              <Image source={{ uri }} style={{ width, height }} resizeMode="cover" />
+            <Pressable
+              key={i}
+              onPress={() => { setGalleryIndex(i); setGalleryOpen(true); }}
+              style={{ marginBottom: i === listing.gallery.length - 1 ? 0 : 4 }}
+            >
+              <ExpoImage source={{ uri }} style={{ width, aspectRatio: 3 / 2, backgroundColor: colors.bg }} contentFit="cover" transition={200} />
             </Pressable>
           ))}
         </ScrollView>
 
         {/* Dark fade just above the collapsed card so the white info stays legible */}
         <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.55)", "rgba(0,0,0,0.92)"]}
-          locations={[0, 0.78, 1]}
-          style={{ position: "absolute", left: 0, right: 0, bottom: collapsedGap - 40, height: 260 }}
+          colors={["transparent", "rgba(0,0,0,0.35)", "rgba(0,0,0,0.9)"]}
+          locations={[0, 0.45, 1]}
+          style={{ position: "absolute", left: 0, right: 0, bottom: collapsedGap - 40, height: 140 }}
           pointerEvents="none"
         />
 
@@ -440,27 +420,7 @@ export default function PropertyDetailScreen() {
 
         {/* Info overlay — price / specs / district in white, just above the card edge */}
         <View pointerEvents="none" style={{ position: "absolute", left: 20, right: 20, bottom: collapsedGap + 16, gap: 6 }}>
-          {listing.gallery.length > 1 && (
-            <View style={{ flexDirection: "row", gap: 6, marginBottom: 4 }}>
-              {listing.gallery.map((_, i) => (
-                <View
-                  key={i}
-                  style={{
-                    width: i === page ? 18 : 6,
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: i === page ? "#FFFFFF" : "rgba(255,255,255,0.55)",
-                  }}
-                />
-              ))}
-            </View>
-          )}
           <Text style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.extrabold, fontSize: 28, textShadowColor: "rgba(0,0,0,0.5)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 }}>{formatPrice(listing.priceAzn)}</Text>
-          <Text style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.semibold, fontSize: 15, textShadowColor: "rgba(0,0,0,0.45)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }}>
-            {[!isLandType(listing.propertyType) ? `${listing.rooms} ${t("home.roomsUnit")}` : null, formatArea(listing, t)]
-              .filter(Boolean)
-              .join("  •  ")}
-          </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Ionicons name="location-outline" size={15} color="#FFFFFF" />
             <Text style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 14, textShadowColor: "rgba(0,0,0,0.45)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }}>{regionName}</Text>
@@ -474,7 +434,7 @@ export default function PropertyDetailScreen() {
             )}
           </View>
         </View>
-      </Animated.View>
+      </View>
 
       {/* Content card — draggable sheet (translateY) between collapsed/expanded */}
       <Animated.View
@@ -841,7 +801,7 @@ export default function PropertyDetailScreen() {
       <PhotoGallery
         visible={galleryOpen}
         photos={listing.gallery}
-        initialIndex={page}
+        initialIndex={galleryIndex}
         onClose={() => setGalleryOpen(false)}
       />
 
