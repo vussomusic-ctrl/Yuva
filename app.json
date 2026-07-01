@@ -34,7 +34,8 @@
         {
           "photosPermission": "Allow Yuva to access your photos to add them to your listing."
         }
-      ]
+      ],
+      "expo-image"
     ]
   }
 }

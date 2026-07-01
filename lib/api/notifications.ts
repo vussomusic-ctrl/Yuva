@@ -144,6 +144,16 @@ export function subscribeNotifications(
   onInsert: (n: AppNotification) => void,
   channelName = `notifications:${uid}`,
 ): () => void {
+  // Drop any stale channel with the same topic first — after logout→login a
+  // previous channel may still be registered (removeChannel is async), and
+  // supabase.channel() would hand back that already-subscribed channel, making
+  // the .on() below throw "cannot add postgres_changes callbacks after subscribe()".
+  for (const ch of supabase.getChannels()) {
+    if (ch.topic === channelName || ch.topic === `realtime:${channelName}`) {
+      supabase.removeChannel(ch);
+    }
+  }
+
   const channel = supabase
     .channel(channelName)
     .on(
@@ -154,6 +164,7 @@ export function subscribeNotifications(
     .subscribe();
 
   return () => {
+    channel.unsubscribe();
     supabase.removeChannel(channel);
   };
 }
