@@ -19,6 +19,8 @@ import { usePressShrink } from "../lib/animations";
 // Clay section icons (premium brand look, same set as the detail screen).
 const CLAY = {
   sparkle: require("../assets/icons/clay/sparkle.png"),
+  compass: require("../assets/icons/clay/compass.png"),
+  price: require("../assets/icons/clay/price.png"),
   house: require("../assets/icons/clay/house.png"),
   building: require("../assets/icons/clay/building.png"),
   bed: require("../assets/icons/clay/bed.png"),
@@ -194,7 +196,7 @@ export default function FiltersModal() {
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, gap: 24 }}
       >
         {/* Deal type */}
-        <Section title={t("filters.dealType")} icon={CLAY.sparkle} colors={colors}>
+        <Section title={t("filters.dealType")} icon={CLAY.compass} colors={colors}>
           <Segmented
             options={DEALS.map((d) => ({ key: d.key, label: t(d.labelKey) }))}
             value={dealType}
@@ -233,7 +235,7 @@ export default function FiltersModal() {
         </Section>
 
         {/* Price */}
-        <Section title={t("filters.price")} icon={CLAY.sparkle} colors={colors}>
+        <Section title={t("filters.price")} icon={CLAY.price} iconSize={56} colors={colors}>
           <RangeSlider
             min={priceBounds.min}
             max={priceBounds.max}
@@ -486,11 +488,11 @@ function LocChip({
   );
 }
 
-function Section({ title, icon, colors, children }: { title: string; icon?: number; colors: Theme; children: React.ReactNode }) {
+function Section({ title, icon, iconSize = 32, colors, children }: { title: string; icon?: number; iconSize?: number; colors: Theme; children: React.ReactNode }) {
   return (
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        {icon != null && <Image source={icon} style={{ width: 22, height: 22 }} resizeMode="contain" />}
+        {icon != null && <Image source={icon} style={{ width: iconSize, height: iconSize, marginVertical: -6 }} resizeMode="contain" />}
         <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{title}</Text>
       </View>
       {children}
