@@ -235,7 +235,7 @@ export default function FiltersModal() {
         </Section>
 
         {/* Price */}
-        <Section title={t("filters.price")} icon={CLAY.price} iconSize={56} colors={colors}>
+        <Section title={t("filters.price")} icon={CLAY.price} iconSize={56} iconStyle={{ marginLeft: -12, marginRight: -10 }} colors={colors}>
           <RangeSlider
             min={priceBounds.min}
             max={priceBounds.max}
@@ -488,11 +488,11 @@ function LocChip({
   );
 }
 
-function Section({ title, icon, iconSize = 32, colors, children }: { title: string; icon?: number; iconSize?: number; colors: Theme; children: React.ReactNode }) {
+function Section({ title, icon, iconSize = 32, iconStyle, colors, children }: { title: string; icon?: number; iconSize?: number; iconStyle?: any; colors: Theme; children: React.ReactNode }) {
   return (
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        {icon != null && <Image source={icon} style={{ width: iconSize, height: iconSize, marginVertical: -6 }} resizeMode="contain" />}
+        {icon != null && <Image source={icon} style={[{ width: iconSize, height: iconSize, marginVertical: -6 }, iconStyle]} resizeMode="contain" />}
         <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 16 }}>{title}</Text>
       </View>
       {children}
