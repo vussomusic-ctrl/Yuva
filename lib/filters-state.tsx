@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
 
 import { DealKey } from "./dealTypes";
-import { PropertyTypeKey } from "./propertyTypes";
+import { PropertyTypeKey, isLandType } from "./propertyTypes";
 import { BuildKey } from "./buildTypes";
 import { Listing } from "./mock/listings";
 import { AREAS, areasOfRayon, placeById } from "./places";
@@ -111,8 +111,19 @@ export function filterListings(items: Listing[], f: Filters): Listing[] {
       const ok = f.baths.some((b) => (b === "4+" ? l.baths >= 4 : Number(b) === l.baths));
       if (!ok) return false;
     }
-    if (f.areaMin && l.areaM2 < Number(f.areaMin)) return false;
-    if (f.areaMax && l.areaM2 > Number(f.areaMax)) return false;
+    // Площадь: если выбрана ТОЛЬКО земля — фильтруем по сотках; иначе по м², но землю (areaM2==0) не отсекаем
+    {
+      const landOnly = f.propertyTypes.length === 1 && isLandType(f.propertyTypes[0]);
+      if (landOnly) {
+        const sot = l.landAreaSot ?? 0;
+        if (f.areaMin && sot < Number(f.areaMin)) return false;
+        if (f.areaMax && sot > Number(f.areaMax)) return false;
+      } else if (l.areaM2 > 0) {
+        if (f.areaMin && l.areaM2 < Number(f.areaMin)) return false;
+        if (f.areaMax && l.areaM2 > Number(f.areaMax)) return false;
+      }
+      // если не landOnly и areaM2==0 (земля в смешанном/пустом наборе) — фильтр площади пропускаем, участок не выпадает
+    }
     if (regionSet && !(l.placeId && regionSet.has(l.placeId))) return false;
     if (f.metro.length && !(l.metroId && f.metro.includes(l.metroId))) return false;
     if (f.floorMin && (l.floor == null || l.floor < Number(f.floorMin))) return false;

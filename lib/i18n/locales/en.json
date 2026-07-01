@@ -451,6 +451,7 @@
     "price": "Price, ₼",
     "rooms": "Rooms",
     "area": "Area, m²",
+    "landArea": "Land area, sot",
     "region": "District",
     "metro": "Metro",
     "floor": "Floor",

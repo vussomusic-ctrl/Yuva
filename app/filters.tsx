@@ -33,7 +33,7 @@ const CLAY = {
 };
 const SOFT_BORDER = "rgba(0,0,0,0.10)";
 import { DEALS, DealKey } from "../lib/dealTypes";
-import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
+import { PROPERTY_TYPES, PropertyTypeKey, isLandType } from "../lib/propertyTypes";
 import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
 import { ROOMS } from "../lib/roomTypes";
 import { placeById, placeName } from "../lib/places";
@@ -105,7 +105,14 @@ export default function FiltersModal() {
     [feed, dealType, propertyTypes, buildType, rooms, baths, regions, metro, floorMin, floorMax, furnished, mortgage],
   );
   const priceBounds = useMemo(() => boundsOf(rangeSubset.map((l) => l.priceAzn).filter((v) => v > 0), 100000, 25000000), [rangeSubset]);
-  const areaBounds = useMemo(() => boundsOf(rangeSubset.map((l) => l.areaM2).filter((v) => v > 0), 5, 1000), [rangeSubset]);
+  // Только земля → границы/гистограмма по соткам (landAreaSot); иначе по м² (areaM2)
+  const landOnlyArea = propertyTypes.length === 1 && isLandType(propertyTypes[0] as PropertyTypeKey);
+  const areaBounds = useMemo(() => {
+    const vals = rangeSubset
+      .map((l) => (landOnlyArea ? (l.landAreaSot ?? 0) : l.areaM2))
+      .filter((v) => v > 0);
+    return boundsOf(vals, landOnlyArea ? 1 : 5, landOnlyArea ? 50 : 1000);
+  }, [rangeSubset, landOnlyArea]);
 
   const locCount = regions.length + metro.length;
   const locSummary =
@@ -296,7 +303,7 @@ export default function FiltersModal() {
         </Section>
 
         {/* Area */}
-        <Section title={t("filters.area")} icon={CLAY.ruler} colors={colors}>
+        <Section title={landOnlyArea ? t("filters.landArea") : t("filters.area")} icon={CLAY.ruler} colors={colors}>
           <RangeSlider
             min={areaBounds.min}
             max={areaBounds.max}
@@ -312,7 +319,7 @@ export default function FiltersModal() {
             }}
             step={5}
             histogram={areaBounds.histogram}
-            formatLabel={(v) => `${v.toLocaleString()} m²`}
+            formatLabel={(v) => `${v.toLocaleString()} ${landOnlyArea ? t("listingTitle.sotUnit") : t("listingTitle.areaUnit")}`}
           />
           <View style={{ height: 12 }} />
           <RangeRow

@@ -8,7 +8,7 @@ import type { TFunction } from "i18next";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
-import { Listing, formatPrice, isPromoActive } from "../lib/mock/listings";
+import { Listing, formatPrice, formatArea, isPromoActive } from "../lib/mock/listings";
 import { buildListingTitle } from "../lib/listingTitle";
 import { placeById, placeName } from "../lib/places";
 import { MetroBadge } from "./MetroBadge";
@@ -49,7 +49,7 @@ export function PropertyCardRow({ listing, viewed, favorited, onToggleFavorite, 
   const station = listing.metroId ? placeById(listing.metroId) : undefined;
   const stationName = station ? placeName(station, lang) : null;
   const tier = isPromoActive(listing) ? listing.promoTier : "none";
-  const area = listing.landAreaSot ? `${listing.landAreaSot} sot` : `${listing.areaM2} m²`;
+  const area = formatArea(listing, t);
 
   return (
     <Animated.View
