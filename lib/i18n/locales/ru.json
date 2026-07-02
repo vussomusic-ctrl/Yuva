@@ -143,6 +143,7 @@
     "description": "Описание",
     "amenities": "Удобства",
     "specsTitle": "Характеристики",
+    "similarTitle": "Похожие объявления",
     "locationTitle": "Расположение",
     "viewMap": "Открыть",
     "route": "Маршрут",

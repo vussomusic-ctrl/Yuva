@@ -112,6 +112,35 @@ export const BUMP_WINDOW_MS = 72 * 60 * 60 * 1000;
 export const isRecentlyBumped = (l: Pick<Listing, "lastBumpedAt">): boolean =>
   !!l.lastBumpedAt && Date.now() - new Date(l.lastBumpedAt).getTime() < BUMP_WINDOW_MS;
 
+/**
+ * "Similar listings" for a detail page: same deal type + property type, price
+ * within ±40% of the current listing, current one excluded. Ordered exactly
+ * like the Search list — paid promo bands first (Premium > VIP > normal), then
+ * closest by price. Returns at most `limit` items.
+ */
+export function getSimilarListings(all: Listing[], current: Listing, limit = 8): Listing[] {
+  const PRICE_BAND = 0.4; // ±40%
+  const lo = current.priceAzn * (1 - PRICE_BAND);
+  const hi = current.priceAzn * (1 + PRICE_BAND);
+  const candidates = all.filter(
+    (l) =>
+      l.id !== current.id &&
+      l.dealType === current.dealType &&
+      l.propertyType === current.propertyType &&
+      l.priceAzn >= lo &&
+      l.priceAzn <= hi,
+  );
+  // Promo band identical to the Search ranker: Premium=0, VIP=1, normal=2.
+  const band = (l: Listing) => (isPromoActive(l) ? (l.promoTier === "premium" ? 0 : 1) : 2);
+  candidates.sort((a, b) => {
+    const ba = band(a);
+    const bb = band(b);
+    if (ba !== bb) return ba - bb; // paid promos first
+    return Math.abs(a.priceAzn - current.priceAzn) - Math.abs(b.priceAzn - current.priceAzn); // closest price
+  });
+  return candidates.slice(0, limit);
+}
+
 // Area string with the correct unit per property type: land → "sot", else m².
 // Used everywhere area is shown (cards, detail, map preview, title) so land
 // never renders a misleading "0 m²".

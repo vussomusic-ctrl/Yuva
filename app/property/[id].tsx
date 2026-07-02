@@ -23,10 +23,10 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { font } from "../../lib/theme/typography";
-import { ListingDetail, formatPrice, formatArea, isPromoActive, isRecentlyBumped } from "../../lib/mock/listings";
+import { Listing, ListingDetail, formatPrice, formatArea, isPromoActive, isRecentlyBumped, getSimilarListings } from "../../lib/mock/listings";
 import { isLandType } from "../../lib/propertyTypes";
 import { pluralSuffix } from "../../lib/i18n/plural";
-import { fetchListingDetail } from "../../lib/api/listings";
+import { fetchListingDetail, fetchFeed } from "../../lib/api/listings";
 import { addViewed } from "../../lib/recentlyViewed";
 import { recordView } from "../../lib/api/listingViews";
 import { bumpListing } from "../../lib/api/promo";
@@ -37,6 +37,7 @@ import { LoadingState, ErrorState } from "../../components/ListState";
 import { BottomSheet } from "../../components/BottomSheet";
 import { PhotoGallery } from "../../components/PhotoGallery";
 import ListingMiniMap from "../../components/ListingMiniMap";
+import { PropertyCardCompact } from "../../components/PropertyCardCompact";
 import Animated, { useAnimatedScrollHandler, useSharedValue, useAnimatedRef, useAnimatedReaction, runOnJS, useAnimatedStyle, interpolate } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import { useDraggableSheet, useSheetScrollGesture, usePressScale } from "../../lib/animations";
@@ -96,6 +97,7 @@ export default function PropertyDetailScreen() {
   const hasDataRef = useRef(false); // true once the listing is loaded (silent refetch after)
 
   const [listing, setListing] = useState<ListingDetail | null>(null);
+  const [similar, setSimilar] = useState<Listing[]>([]);
   const [status, setStatus] = useState<"loading" | "error" | "notfound" | "ok">("loading");
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0); // tapped photo → fullscreen viewer start
@@ -197,6 +199,24 @@ export default function PropertyDetailScreen() {
       recordView(user.id, id).catch((e) => console.warn("recordView failed", e));
     }
   }, [user?.id, id]);
+
+  // Similar listings: once this listing is loaded, pull the active feed and
+  // rank same-type listings by promo band + price proximity. Keyed on the
+  // listing id so it computes once per property (silent refetches don't re-run).
+  useEffect(() => {
+    if (!listing) return;
+    let alive = true;
+    fetchFeed()
+      .then((feed) => {
+        if (!alive) return;
+        setSimilar(getSimilarListings(feed, listing));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listing?.id]);
 
   if (status !== "ok" || !listing) {
     return (
@@ -718,6 +738,32 @@ export default function PropertyDetailScreen() {
             <Section title={t("propertyDetail.locationTitle")} colors={colors}>
               <ListingMiniMap lat={listing.lat} lng={listing.lng} district={listing.district} />
             </Section>
+          )}
+
+          {/* Similar listings — promo bands first, closest by price (see getSimilarListings) */}
+          {similar.length > 0 && (
+            <View style={{ marginTop: 24 }}>
+              <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 17, marginBottom: 12 }}>
+                {t("propertyDetail.similarTitle")}
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ marginHorizontal: -20 }}
+                contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+              >
+                {similar.map((item) => (
+                  <View key={item.id} style={{ width: 170 }}>
+                    <PropertyCardCompact
+                      listing={item}
+                      favorited={isFavorite(item.id)}
+                      onToggleFavorite={() => toggle(item.id)}
+                      onPress={() => router.push(`/property/${item.id}`)}
+                    />
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
           )}
           </Animated.ScrollView>
         </GestureDetector>

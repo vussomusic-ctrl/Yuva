@@ -143,6 +143,7 @@
     "description": "Description",
     "amenities": "Amenities",
     "specsTitle": "Details",
+    "similarTitle": "Similar listings",
     "locationTitle": "Location",
     "viewMap": "View",
     "route": "Route",
