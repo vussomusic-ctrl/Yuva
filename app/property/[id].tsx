@@ -619,6 +619,45 @@ export default function PropertyDetailScreen() {
             </LinearGradient>
           )}
 
+          {/* Characteristics — real enum/text fields; each row hidden when empty */}
+          {!!(
+            listing.renovation ||
+            listing.material ||
+            listing.buildingSeries ||
+            listing.builtYear ||
+            listing.heating ||
+            listing.complexName
+          ) && (
+            <Section title={t("propertyDetail.specsTitle")} colors={colors}>
+              <SpecRow
+                label={t("addListing.renovationLabel")}
+                value={listing.renovation ? t(`addListing.renovationOpts.${listing.renovation}`) : null}
+                colors={colors}
+              />
+              <SpecRow
+                label={t("addListing.materialLabel")}
+                value={listing.material ? t(`addListing.materialOpts.${listing.material}`) : null}
+                colors={colors}
+              />
+              <SpecRow
+                label={t("addListing.seriesLabel")}
+                value={listing.buildingSeries ? t(`addListing.seriesOpts.${listing.buildingSeries}`) : null}
+                colors={colors}
+              />
+              <SpecRow
+                label={t("addListing.builtYear")}
+                value={listing.builtYear ? String(listing.builtYear) : null}
+                colors={colors}
+              />
+              <SpecRow
+                label={t("addListing.heatingLabel")}
+                value={listing.heating ? t(`addListing.heatingOpts.${listing.heating}`) : null}
+                colors={colors}
+              />
+              <SpecRow label={t("addListing.complexName")} value={listing.complexName ?? null} colors={colors} />
+            </Section>
+          )}
+
           {/* Amenities — hidden when none are set */}
           {listing.amenities.length > 0 && (
             <Section title={t("propertyDetail.amenities")} colors={colors}>
@@ -920,6 +959,31 @@ function SpecCard({
       </Text>
       <Text numberOfLines={1} style={{ color: colors.textSecondary, fontFamily: font.medium, fontSize: 12, textAlign: "center" }}>
         {label}
+      </Text>
+    </View>
+  );
+}
+
+// One "label → value" row for the Characteristics section. Hidden when empty,
+// so listings never show a blank/invented field.
+function SpecRow({ label, value, colors }: { label: string; value?: string | null; colors: Theme }) {
+  if (value == null || value === "") return null;
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      }}
+    >
+      <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 15 }}>{label}</Text>
+      <Text
+        style={{ color: colors.text, fontFamily: font.medium, fontSize: 15, textAlign: "right", flexShrink: 1, marginLeft: 16 }}
+      >
+        {value}
       </Text>
     </View>
   );

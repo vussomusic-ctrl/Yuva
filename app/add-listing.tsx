@@ -35,6 +35,7 @@ import { LoadingState } from "../components/ListState";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey } from "../lib/propertyTypes";
 import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
+import { RENOVATION_KEYS } from "../lib/renovationTypes";
 import { placeById, placeName, coordsForPlace, regionOfPlace } from "../lib/places";
 import { useLanguage } from "../lib/i18n/languages";
 import { buildListingTitle } from "../lib/listingTitle";
@@ -247,7 +248,7 @@ export default function AddListingModal() {
   const opts = (group: string, keys: string[]) => keys.map((k) => ({ key: k, label: t(`addListing.${group}.${k}`) }));
   const SERIES_OPTS = opts("seriesOpts", ["kiev", "leningrad", "stalinka", "khrushchevka", "other"]);
   const MATERIAL_OPTS = opts("materialOpts", ["monolith", "brick", "panel", "block", "other"]);
-  const RENOVATION_OPTS = opts("renovationOpts", ["euro", "designer", "cosmetic", "rough", "none"]);
+  const RENOVATION_OPTS = opts("renovationOpts", RENOVATION_KEYS);
   const HEATING_OPTS = opts("heatingOpts", ["kombi", "central", "gas", "none"]);
   const LAND_PURPOSE_OPTS = opts("landPurposeOpts", ["residential", "commercial", "agricultural"]);
   const COMMERCIAL_OPTS = opts("commercialTypeOpts", ["office", "shop", "warehouse", "restaurant", "beauty", "other"]);

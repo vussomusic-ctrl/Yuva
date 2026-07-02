@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 import { DealKey } from "./dealTypes";
 import { PropertyTypeKey, isLandType } from "./propertyTypes";
 import { BuildKey } from "./buildTypes";
+import { RenovationKey } from "./renovationTypes";
 import { Listing } from "./mock/listings";
 import { AREAS, areasOfRayon, placeById } from "./places";
 
@@ -53,6 +54,7 @@ export type Filters = {
   furnished: boolean;
   mortgage: boolean;
   amenities: string[]; // amenity keys (lib/amenities) — AND-match: listing must have ALL
+  renovation: RenovationKey[]; // renovation keys (lib/renovationTypes) — OR-match: any of the selected
 };
 
 export const DEFAULT_FILTERS: Filters = {
@@ -72,6 +74,7 @@ export const DEFAULT_FILTERS: Filters = {
   furnished: false,
   mortgage: false,
   amenities: [],
+  renovation: [],
 };
 
 /**
@@ -93,6 +96,7 @@ export function activeFilterCount(f: Filters): number {
   if (f.furnished) n++;
   if (f.mortgage) n++;
   if (f.amenities.length) n++;
+  if (f.renovation.length) n++;
   return n;
 }
 
@@ -105,6 +109,7 @@ export function filterListings(items: Listing[], f: Filters): Listing[] {
     if (f.propertyTypes.length && !f.propertyTypes.includes(l.propertyType)) return false;
     if (f.amenities.length && !f.amenities.every((k) => (l.amenities ?? []).includes(k))) return false;
     if (f.buildType && l.buildType !== f.buildType) return false;
+    if (f.renovation.length && !(l.renovation && f.renovation.includes(l.renovation as RenovationKey))) return false;
     if (f.priceMin && l.priceAzn < Number(f.priceMin)) return false;
     if (f.priceMax && l.priceAzn > Number(f.priceMax)) return false;
     if (f.rooms.length) {

@@ -31,11 +31,13 @@ const CLAY = {
   pin: require("../assets/icons/clay/pin.png"),
   sofa: require("../assets/icons/clay/sofa.png"),
   mortgage: require("../assets/icons/clay/mortgage.png"),
+  roller: require("../assets/icons/clay/roller.png"),
 };
 const SOFT_BORDER = "rgba(0,0,0,0.10)";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey, isLandType } from "../lib/propertyTypes";
 import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
+import { RENOVATION_TYPES, RenovationKey } from "../lib/renovationTypes";
 import { ROOMS } from "../lib/roomTypes";
 import { placeById, placeName } from "../lib/places";
 import { useLanguage } from "../lib/i18n/languages";
@@ -63,6 +65,7 @@ export default function FiltersModal() {
   const [priceMin, setPriceMin] = useState(filters.priceMin);
   const [priceMax, setPriceMax] = useState(filters.priceMax);
   const [rooms, setRooms] = useState<string[]>(filters.rooms);
+  const [renovation, setRenovation] = useState<RenovationKey[]>(filters.renovation);
   const [baths, setBaths] = useState<string[]>(filters.baths);
   const [areaMin, setAreaMin] = useState(filters.areaMin);
   const [areaMax, setAreaMax] = useState(filters.areaMax);
@@ -103,10 +106,11 @@ export default function FiltersModal() {
         furnished,
         mortgage,
         amenities,
+        renovation,
       }),
     // ranges intentionally excluded → dragging a slider never moves its own bounds
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [feed, dealType, propertyTypes, buildType, rooms, baths, regions, metro, floorMin, floorMax, furnished, mortgage, amenities],
+    [feed, dealType, propertyTypes, buildType, rooms, baths, regions, metro, floorMin, floorMax, furnished, mortgage, amenities, renovation],
   );
   const priceBounds = useMemo(() => boundsOf(rangeSubset.map((l) => l.priceAzn).filter((v) => v > 0), 100000, 25000000), [rangeSubset]);
   // Только земля → границы/гистограмма по соткам (landAreaSot); иначе по м² (areaM2)
@@ -148,6 +152,7 @@ export default function FiltersModal() {
       furnished,
       mortgage,
       amenities,
+      renovation,
     });
     close();
   };
@@ -170,6 +175,7 @@ export default function FiltersModal() {
     setFurnished(false);
     setMortgage(false);
     setAmenities([]);
+    setRenovation([]);
     apply({ ...DEFAULT_FILTERS, dealType });
   };
 
@@ -241,6 +247,25 @@ export default function FiltersModal() {
                 label={t(b.labelKey)}
                 active={buildType === b.key}
                 onPress={() => setBuildType((cur) => (cur === b.key ? null : b.key))}
+                colors={colors}
+              />
+            ))}
+          </ChipWrap>
+        </Section>
+
+        {/* Renovation (multi-select; OR-match) */}
+        <Section title={t("filters.renovation")} icon={CLAY.roller} iconSize={32} colors={colors}>
+          <ChipWrap>
+            {RENOVATION_TYPES.map((r) => (
+              <FilterChip
+                key={r.key}
+                label={t(r.labelKey)}
+                active={renovation.includes(r.key)}
+                onPress={() =>
+                  setRenovation((cur) =>
+                    cur.includes(r.key) ? cur.filter((x) => x !== r.key) : [...cur, r.key],
+                  )
+                }
                 colors={colors}
               />
             ))}
