@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { View, Text, Pressable, ScrollView, TextInput, Image } from "react-native";
-import Animated from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,7 +14,7 @@ import { RangeSlider } from "../components/RangeSlider";
 import { ClayToggle } from "../components/ClayToggle";
 import { LocationFilterSheet } from "../components/LocationFilterSheet";
 import { AmenitiesFilterSheet } from "../components/AmenitiesFilterSheet";
-import { usePressShrink } from "../lib/animations";
+import { FilterChip, ChipWrap } from "../components/FilterChip";
 
 // Clay section icons (premium brand look, same set as the detail screen).
 const CLAY = {
@@ -571,43 +570,6 @@ function Section({ title, icon, iconSize = 32, iconStyle, colors, children }: { 
       </View>
       {children}
     </View>
-  );
-}
-
-function ChipWrap({ children }: { children: React.ReactNode }) {
-  return <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{children}</View>;
-}
-
-function FilterChip({
-  label,
-  active,
-  onPress,
-  colors,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  colors: Theme;
-}) {
-  const press = usePressShrink(0.96);
-  return (
-    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View
-        style={[
-          {
-            paddingHorizontal: 16,
-            paddingVertical: 9,
-            borderRadius: 11,
-            backgroundColor: active ? brand.violet : colors.card,
-            borderWidth: 1,
-            borderColor: active ? brand.violet : SOFT_BORDER,
-          },
-          press.style,
-        ]}
-      >
-        <Text style={{ color: active ? "#FFFFFF" : colors.text, fontFamily: font.medium, fontSize: 14 }}>{label}</Text>
-      </Animated.View>
-    </Pressable>
   );
 }
 

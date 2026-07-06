@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { View, Text, Pressable, ScrollView, useWindowDimensions } from "react-native";
-import Animated from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 
@@ -9,11 +8,8 @@ import { PrimaryButton } from "./Button";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
-import { usePressShrink } from "../lib/animations";
+import { FilterChip, ChipWrap } from "./FilterChip";
 import { AMENITY_GROUPS } from "../lib/amenities";
-
-// Matches SOFT_BORDER in app/filters.tsx (chip border on light bg).
-const SOFT_BORDER = "rgba(0,0,0,0.10)";
 
 type Props = {
   visible: boolean;
@@ -75,18 +71,17 @@ export function AmenitiesFilterSheet({ visible, onClose, selected, onApply }: Pr
               >
                 {t(g.titleKey)}
               </Text>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              <ChipWrap>
                 {g.items.map((it) => (
-                  <AmenityChip
+                  <FilterChip
                     key={it.key}
                     label={t(it.labelKey)}
                     active={draft.includes(it.key)}
                     onPress={() => toggle(it.key)}
-                    textColor={colors.text}
-                    cardColor={colors.card}
+                    colors={colors}
                   />
                 ))}
-              </View>
+              </ChipWrap>
             </View>
           ))}
         </ScrollView>
@@ -102,42 +97,5 @@ export function AmenitiesFilterSheet({ visible, onClose, selected, onApply }: Pr
         </View>
       </View>
     </BottomSheet>
-  );
-}
-
-// Minimal duplicate of FilterChip (app/filters.tsx) — that one is a local,
-// unexported function. Same pill styling + press-shrink so the two visually match.
-function AmenityChip({
-  label,
-  active,
-  onPress,
-  textColor,
-  cardColor,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  textColor: string;
-  cardColor: string;
-}) {
-  const press = usePressShrink(0.96);
-  return (
-    <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View
-        style={[
-          {
-            paddingHorizontal: 16,
-            paddingVertical: 9,
-            borderRadius: 11,
-            backgroundColor: active ? brand.violet : cardColor,
-            borderWidth: 1,
-            borderColor: active ? brand.violet : SOFT_BORDER,
-          },
-          press.style,
-        ]}
-      >
-        <Text style={{ color: active ? "#FFFFFF" : textColor, fontFamily: font.medium, fontSize: 14 }}>{label}</Text>
-      </Animated.View>
-    </Pressable>
   );
 }
