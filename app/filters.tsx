@@ -30,6 +30,7 @@ const CLAY = {
   pin: require("../assets/icons/clay/pin.png"),
   sofa: require("../assets/icons/clay/sofa.png"),
   mortgage: require("../assets/icons/clay/mortgage.png"),
+  deed: require("../assets/icons/clay/deed.png"),
   roller: require("../assets/icons/clay/roller.png"),
 };
 const SOFT_BORDER = "rgba(0,0,0,0.10)";
@@ -531,6 +532,8 @@ export default function FiltersModal() {
         />
         <ToggleRow
           colors={colors}
+          iconSource={CLAY.deed}
+          iconStyle={{ width: 52, height: 23 }}
           label={t("addListing.hasDeedLabel")}
           value={hasDeed}
           onValueChange={setHasDeed}
@@ -702,12 +705,14 @@ function RangeRow({
 function ToggleRow({
   colors,
   iconSource,
+  iconStyle,
   label,
   value,
   onValueChange,
 }: {
   colors: Theme;
   iconSource?: number; // clay icon (require)
+  iconStyle?: any; // per-icon size override (denser artwork needs a smaller box)
   label: string;
   value: boolean;
   onValueChange: (v: boolean) => void;
@@ -727,7 +732,7 @@ function ToggleRow({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
-        {iconSource != null && <Image source={iconSource} style={{ width: 52, height: 52, marginVertical: -8 }} resizeMode="contain" />}
+        {iconSource != null && <Image source={iconSource} style={[{ width: 52, height: 52, marginVertical: -8 }, iconStyle]} resizeMode="contain" />}
         <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: 16 }}>{label}</Text>
       </View>
       <ClayToggle value={value} onValueChange={onValueChange} />
