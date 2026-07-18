@@ -333,6 +333,11 @@
     "separateEntrance": "Separate entrance",
     "shopfront": "Shopfront",
     "depositLabel": "Deposit, ₼",
+    "rentPeriodLabel": "Rent period",
+    "rentPeriodOpts": {
+      "monthly": "Monthly",
+      "daily": "Daily"
+    },
     "commissionLabel": "Commission",
     "commissionOpts": {
       "none": "No commission",
@@ -352,6 +357,7 @@
     "areaCardLabel": "Area, m²",
     "furnishedLabel": "Furnished",
     "mortgageLabel": "Mortgage available",
+    "hasDeedLabel": "Title deed",
     "step4Subtitle": "Set the city and exact location",
     "pickHint": "Tap to pick a point",
     "changePoint": "Change point",

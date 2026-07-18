@@ -129,6 +129,7 @@ export default function AddListingModal() {
   const [separateEntrance, setSeparateEntrance] = useState(false);
   const [shopfront, setShopfront] = useState(false);
   // Rent terms
+  const [rentPeriod, setRentPeriod] = useState<string | null>(null);
   const [deposit, setDeposit] = useState("");
   const [commissionPercent, setCommissionPercent] = useState("");
   const [commissionNegotiable, setCommissionNegotiable] = useState(false);
@@ -139,6 +140,7 @@ export default function AddListingModal() {
   const [prepayment, setPrepayment] = useState("");
   const [furnished, setFurnished] = useState(false);
   const [mortgage, setMortgage] = useState(false);
+  const [hasDeed, setHasDeed] = useState(false);
   const [description, setDescription] = useState("");
   // Amenities (step 6) — multi-select keys
   const [amenities, setAmenities] = useState<string[]>([]);
@@ -207,6 +209,7 @@ export default function AddListingModal() {
         setCommercialType(f.commercialType ?? null);
         setSeparateEntrance(f.separateEntrance ?? false);
         setShopfront(f.shopfront ?? false);
+        setRentPeriod(f.rentPeriod ?? null);
         setDeposit(f.deposit ?? "");
         setCommissionPercent(f.commissionPercent ?? "");
         setCommissionNegotiable(f.commissionNegotiable ?? false);
@@ -217,6 +220,7 @@ export default function AddListingModal() {
         setPrepayment(f.prepayment ?? "");
         setFurnished(f.furnished);
         setMortgage(f.mortgage);
+        setHasDeed(f.hasDeed ?? false);
         setDescription(f.description);
         setAmenities(f.amenities ?? []);
         setPhotos(rowToPhotoItems(row));
@@ -249,6 +253,7 @@ export default function AddListingModal() {
   const SERIES_OPTS = opts("seriesOpts", ["kiev", "leningrad", "stalinka", "khrushchevka", "other"]);
   const MATERIAL_OPTS = opts("materialOpts", ["monolith", "brick", "panel", "block", "other"]);
   const RENOVATION_OPTS = opts("renovationOpts", RENOVATION_KEYS);
+  const RENT_PERIOD_OPTS = opts("rentPeriodOpts", ["monthly", "daily"]);
   const HEATING_OPTS = opts("heatingOpts", ["kombi", "central", "gas", "none"]);
   const LAND_PURPOSE_OPTS = opts("landPurposeOpts", ["residential", "commercial", "agricultural"]);
   const COMMERCIAL_OPTS = opts("commercialTypeOpts", ["office", "shop", "warehouse", "restaurant", "beauty", "other"]);
@@ -386,6 +391,7 @@ export default function AddListingModal() {
       if (kidsAllowed) features.push(tg("addListing.kidsAllowed"));
       if (petsAllowed) features.push(tg("addListing.petsAllowed"));
     }
+    if (!isRent && hasDeed) features.push(tg("addListing.hasDeedLabel"));
     const amenityLabels = amenities.map((k) => amenityLabel(k, tg));
 
     try {
@@ -420,6 +426,7 @@ export default function AddListingModal() {
           ...(amenityLabels.length ? { amenities: amenityLabels } : {}),
           ...(features.length ? { features } : {}),
           // Rent terms (numbers only when set).
+          ...(isRent && rentPeriod ? { rentPeriod: opt("rentPeriodOpts", rentPeriod) } : {}),
           ...(isRent && deposit ? { deposit: Number(deposit) } : {}),
           ...(isRent && minTerm ? { minTerm: Number(minTerm) } : {}),
           ...(isRent && prepayment ? { prepayment: Number(prepayment) } : {}),
@@ -523,6 +530,7 @@ export default function AddListingModal() {
       separateEntrance: isCommercial ? separateEntrance : false,
       shopfront: isCommercial ? shopfront : false,
       // Rent terms (residential rent)
+      rentPeriod: isRent ? rentPeriod : null,
       deposit: isRent ? deposit || undefined : undefined,
       commissionNegotiable: isRent ? commissionNegotiable : false,
       commissionPercent: isRent && !commissionNegotiable ? commissionPercent || undefined : undefined,
@@ -533,6 +541,7 @@ export default function AddListingModal() {
       prepayment: isRent ? prepayment || undefined : undefined,
       furnished,
       mortgage,
+      hasDeed: !isRent ? hasDeed : false,
       description,
       amenities,
       lat: coords?.lat ?? null,
@@ -602,6 +611,7 @@ export default function AddListingModal() {
     baths: isLand ? 0 : Number(baths) || 1,
     furnished: isLand ? false : furnished,
     mortgage,
+    hasDeed: !isRent ? hasDeed : false,
     ownerPhone: `+994${phoneLocal}`,
     createdAt: new Date().toISOString(),
     ...(picked ?? coordsForPlace(placeId)),
@@ -855,6 +865,15 @@ export default function AddListingModal() {
                 value={mortgage}
                 onValueChange={setMortgage}
               />
+              {!isRent && (
+                <ToggleCard
+                  colors={colors}
+                  ionicon="document-text-outline"
+                  label={t("addListing.hasDeedLabel")}
+                  value={hasDeed}
+                  onValueChange={setHasDeed}
+                />
+              )}
 
               {/* Auto-generated title — read-only live preview */}
               <TintCard tint="violet" style={{ gap: 4 }}>
@@ -1098,6 +1117,16 @@ export default function AddListingModal() {
               {isRent && isResidential && (
                 <TintCard tint="violet" style={{ gap: 12 }}>
                   <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 16 }}>{t("addListing.rentConditions")}</Text>
+                  <EnumCard
+                    colors={colors}
+                    tint="violet"
+                    ionicon="calendar"
+                    label={t("addListing.rentPeriodLabel")}
+                    value={rentPeriod}
+                    options={RENT_PERIOD_OPTS}
+                    onChange={setRentPeriod}
+                    placeholder={t("addListing.notSelected")}
+                  />
                   <NumCard
                     colors={colors}
                     tint="violet"
@@ -1300,6 +1329,9 @@ export default function AddListingModal() {
               {/* Основное */}
               <SummaryGroup colors={colors} tint="violet" icon={require("../assets/icons/clay/ruler.png")} title={t("addListing.summary.main")}>
                 <SummaryRow colors={colors} label={t("filters.dealType")} value={t(DEALS.find((d) => d.key === dealType)!.labelKey)} />
+                {isRent && rentPeriod && (
+                  <SummaryRow colors={colors} label={t("addListing.rentPeriodLabel")} value={t(`addListing.rentPeriodOpts.${rentPeriod}`)} />
+                )}
                 {propertyType && (
                   <SummaryRow colors={colors} label={t("filters.propertyType")} value={t(PROPERTY_TYPES.find((p) => p.key === propertyType)!.labelKey)} />
                 )}
@@ -1334,7 +1366,8 @@ export default function AddListingModal() {
                 (propertyType === "house" && material) ||
                 amenities.length > 0 ||
                 (!isLand && furnished) ||
-                mortgage) && (
+                mortgage ||
+                (!isRent && hasDeed)) && (
                 <SummaryGroup colors={colors} tint="green" icon={require("../assets/icons/clay/building.png")} title={t("addListing.summary.specs")}>
                   {isResidential && renovation && (
                     <SummaryRow colors={colors} label={t("addListing.renovationLabel")} value={t(`addListing.renovationOpts.${renovation}`)} />
@@ -1347,6 +1380,7 @@ export default function AddListingModal() {
                   )}
                   {!isLand && furnished && <SummaryRow colors={colors} label={t("filters.furnished")} value={t("common.yes")} />}
                   {mortgage && <SummaryRow colors={colors} label={t("filters.mortgage")} value={t("common.yes")} />}
+                  {!isRent && hasDeed && <SummaryRow colors={colors} label={t("addListing.hasDeedLabel")} value={t("common.yes")} />}
                   {amenities.length > 0 && (
                     <SummaryRow colors={colors} label={t("addListing.step6Title")} value={amenities.map((k) => amenityLabel(k, t)).join(", ")} />
                   )}

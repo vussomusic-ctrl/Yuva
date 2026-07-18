@@ -42,6 +42,7 @@ export type ListingRow = {
   lng: number | null;
   furnished: boolean;
   mortgage: boolean;
+  has_deed: boolean;
   description: string | null;
   amenities: string[] | null;
   contact_phone: string | null;
@@ -69,6 +70,7 @@ export type ListingRow = {
   separate_entrance: boolean;
   shopfront: boolean;
   // Rent terms
+  rent_period: string | null; // enum: monthly | daily
   deposit: number | null;
   commission: string | null; // legacy
   commission_percent: number | null;
@@ -110,6 +112,7 @@ export type ListingFormInput = {
   whatsapp: string;
   furnished: boolean;
   mortgage: boolean;
+  hasDeed?: boolean;
   description: string;
   lat: number | null;
   lng: number | null;
@@ -133,6 +136,7 @@ export type ListingFormInput = {
   separateEntrance?: boolean;
   shopfront?: boolean;
   // Rent terms (deposit/minTerm/prepayment kept as strings like price)
+  rentPeriod?: string | null; // enum: monthly | daily
   deposit?: string;
   commissionPercent?: string;
   commissionNegotiable?: boolean;
@@ -191,6 +195,7 @@ export function rowToListing(row: ListingRow): Listing {
     baths: row.baths ?? 0,
     furnished: row.furnished,
     mortgage: row.mortgage,
+    hasDeed: row.has_deed,
     amenities: row.amenities ?? [],
     buildingSeries: row.building_series ?? undefined,
     complexName: row.complex_name ?? undefined,
@@ -210,6 +215,7 @@ export function rowToListing(row: ListingRow): Listing {
     commercialType: row.commercial_type ?? undefined,
     separateEntrance: row.separate_entrance ?? false,
     shopfront: row.shopfront ?? false,
+    rentPeriod: row.rent_period ?? undefined,
     deposit: row.deposit ?? undefined,
     commission: row.commission ?? undefined,
     commissionPercent: row.commission_percent ?? undefined,
@@ -290,6 +296,7 @@ export function formToRow(form: ListingFormInput, ownerId: string) {
     lng: form.lng ?? null,
     furnished: isLand ? false : form.furnished,
     mortgage: form.mortgage,
+    has_deed: form.hasDeed ?? false,
     description: form.description.trim() || null,
     // Characteristics (gated per property type in the form; written as-is).
     building_series: form.buildingSeries ?? null,
@@ -310,6 +317,7 @@ export function formToRow(form: ListingFormInput, ownerId: string) {
     separate_entrance: form.separateEntrance ?? false,
     shopfront: form.shopfront ?? false,
     // Rent terms
+    rent_period: form.rentPeriod ?? null,
     deposit: form.deposit ? Number(form.deposit) : null,
     commission: null, // legacy — replaced by percent + negotiable
     commission_percent: form.commissionPercent ? Number(form.commissionPercent) : null,
@@ -351,6 +359,7 @@ export function rowToForm(row: ListingRow): ListingFormInput {
     whatsapp: row.contact_whatsapp ?? "",
     furnished: row.furnished,
     mortgage: row.mortgage,
+    hasDeed: row.has_deed,
     description: row.description ?? "",
     lat: row.lat,
     lng: row.lng,
@@ -370,6 +379,7 @@ export function rowToForm(row: ListingRow): ListingFormInput {
     commercialType: row.commercial_type,
     separateEntrance: row.separate_entrance ?? false,
     shopfront: row.shopfront ?? false,
+    rentPeriod: row.rent_period,
     deposit: row.deposit != null ? String(row.deposit) : "",
     commissionPercent: row.commission_percent != null ? String(row.commission_percent) : "",
     commissionNegotiable: row.commission_negotiable ?? false,

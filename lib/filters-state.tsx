@@ -3,6 +3,8 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 import { DealKey } from "./dealTypes";
 import { PropertyTypeKey, isLandType } from "./propertyTypes";
 import { BuildKey } from "./buildTypes";
+import { LandPurposeKey } from "./landPurposeTypes";
+import { RentPeriodKey } from "./rentPeriodTypes";
 import { RenovationKey } from "./renovationTypes";
 import { Listing } from "./mock/listings";
 import { AREAS, areasOfRayon, placeById } from "./places";
@@ -41,6 +43,8 @@ export type Filters = {
   dealType: DealKey;
   propertyTypes: PropertyTypeKey[];
   buildType: BuildKey | null; // null = any
+  landPurpose: LandPurposeKey | null; // null = any; only meaningful for land
+  rentPeriod: RentPeriodKey | null; // null = any; only meaningful for rent
   priceMin: string;
   priceMax: string;
   rooms: string[];
@@ -53,6 +57,7 @@ export type Filters = {
   floorMax: string;
   furnished: boolean;
   mortgage: boolean;
+  hasDeed: boolean;
   amenities: string[]; // amenity keys (lib/amenities) — AND-match: listing must have ALL
   renovation: RenovationKey[]; // renovation keys (lib/renovationTypes) — OR-match: any of the selected
 };
@@ -61,6 +66,8 @@ export const DEFAULT_FILTERS: Filters = {
   dealType: "sale",
   propertyTypes: [],
   buildType: null,
+  landPurpose: null,
+  rentPeriod: null,
   priceMin: "",
   priceMax: "",
   rooms: [],
@@ -73,6 +80,7 @@ export const DEFAULT_FILTERS: Filters = {
   floorMax: "",
   furnished: false,
   mortgage: false,
+  hasDeed: false,
   amenities: [],
   renovation: [],
 };
@@ -86,6 +94,8 @@ export function activeFilterCount(f: Filters): number {
   let n = 0;
   if (f.propertyTypes.length) n++;
   if (f.buildType) n++;
+  if (f.landPurpose) n++;
+  if (f.rentPeriod) n++;
   if (f.priceMin || f.priceMax) n++;
   if (f.rooms.length) n++;
   if (f.baths.length) n++;
@@ -95,6 +105,7 @@ export function activeFilterCount(f: Filters): number {
   if (f.floorMin || f.floorMax) n++;
   if (f.furnished) n++;
   if (f.mortgage) n++;
+  if (f.hasDeed) n++;
   if (f.amenities.length) n++;
   if (f.renovation.length) n++;
   return n;
@@ -109,6 +120,8 @@ export function filterListings(items: Listing[], f: Filters): Listing[] {
     if (f.propertyTypes.length && !f.propertyTypes.includes(l.propertyType)) return false;
     if (f.amenities.length && !f.amenities.every((k) => (l.amenities ?? []).includes(k))) return false;
     if (f.buildType && l.buildType !== f.buildType) return false;
+    if (f.landPurpose && l.landPurpose !== f.landPurpose) return false;
+    if (f.rentPeriod && l.rentPeriod !== f.rentPeriod) return false;
     if (f.renovation.length && !(l.renovation && f.renovation.includes(l.renovation as RenovationKey))) return false;
     if (f.priceMin && l.priceAzn < Number(f.priceMin)) return false;
     if (f.priceMax && l.priceAzn > Number(f.priceMax)) return false;
@@ -139,6 +152,7 @@ export function filterListings(items: Listing[], f: Filters): Listing[] {
     if (f.floorMax && (l.floor == null || l.floor > Number(f.floorMax))) return false;
     if (f.furnished && !l.furnished) return false;
     if (f.mortgage && !l.mortgage) return false;
+    if (f.hasDeed && !l.hasDeed) return false;
     return true;
   });
 }

@@ -333,6 +333,11 @@
     "separateEntrance": "Ayrı giriş",
     "shopfront": "Vitrin",
     "depositLabel": "Depozit, ₼",
+    "rentPeriodLabel": "İcarə müddəti",
+    "rentPeriodOpts": {
+      "monthly": "Aylıq",
+      "daily": "Günlük"
+    },
     "commissionLabel": "Komissiya",
     "commissionOpts": {
       "none": "Komissiyasız",
@@ -352,6 +357,7 @@
     "areaCardLabel": "Sahə, m²",
     "furnishedLabel": "Mebellə",
     "mortgageLabel": "İpoteka mümkündür",
+    "hasDeedLabel": "Çıxarış var",
     "step4Subtitle": "Şəhəri və dəqiq yeri göstərin",
     "pickHint": "Nöqtəni seçmək üçün toxunun",
     "changePoint": "Nöqtəni dəyiş",

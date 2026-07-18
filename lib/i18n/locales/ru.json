@@ -333,6 +333,11 @@
     "separateEntrance": "Отдельный вход",
     "shopfront": "Витрина",
     "depositLabel": "Залог, ₼",
+    "rentPeriodLabel": "Период аренды",
+    "rentPeriodOpts": {
+      "monthly": "Помесячно",
+      "daily": "Посуточно"
+    },
     "commissionLabel": "Комиссия",
     "commissionOpts": {
       "none": "Без комиссии",
@@ -352,6 +357,7 @@
     "areaCardLabel": "Площадь, м²",
     "furnishedLabel": "Меблировано",
     "mortgageLabel": "Возможна ипотека",
+    "hasDeedLabel": "Есть купчая",
     "step4Subtitle": "Укажите город и точное расположение",
     "pickHint": "Нажмите, чтобы выбрать точку",
     "changePoint": "Изменить точку",

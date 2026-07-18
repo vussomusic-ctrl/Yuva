@@ -36,6 +36,8 @@ const SOFT_BORDER = "rgba(0,0,0,0.10)";
 import { DEALS, DealKey } from "../lib/dealTypes";
 import { PROPERTY_TYPES, PropertyTypeKey, isLandType } from "../lib/propertyTypes";
 import { BUILD_TYPES, BuildKey } from "../lib/buildTypes";
+import { LAND_PURPOSE_TYPES, LandPurposeKey } from "../lib/landPurposeTypes";
+import { RENT_PERIOD_TYPES, RentPeriodKey } from "../lib/rentPeriodTypes";
 import { RENOVATION_TYPES, RenovationKey } from "../lib/renovationTypes";
 import { ROOMS } from "../lib/roomTypes";
 import { placeById, placeName } from "../lib/places";
@@ -61,6 +63,8 @@ export default function FiltersModal() {
   const [dealType, setDealType] = useState<DealKey>(filters.dealType);
   const [propertyTypes, setPropertyTypes] = useState<string[]>(filters.propertyTypes);
   const [buildType, setBuildType] = useState<BuildKey | null>(filters.buildType);
+  const [landPurpose, setLandPurpose] = useState<LandPurposeKey | null>(filters.landPurpose);
+  const [rentPeriod, setRentPeriod] = useState<RentPeriodKey | null>(filters.rentPeriod);
   const [priceMin, setPriceMin] = useState(filters.priceMin);
   const [priceMax, setPriceMax] = useState(filters.priceMax);
   const [rooms, setRooms] = useState<string[]>(filters.rooms);
@@ -74,6 +78,7 @@ export default function FiltersModal() {
   const [floorMax, setFloorMax] = useState(filters.floorMax);
   const [furnished, setFurnished] = useState(filters.furnished);
   const [mortgage, setMortgage] = useState(filters.mortgage);
+  const [hasDeed, setHasDeed] = useState(filters.hasDeed);
   const [locOpen, setLocOpen] = useState(false);
   const [amenities, setAmenities] = useState<string[]>(filters.amenities);
   const [amenOpen, setAmenOpen] = useState(false);
@@ -86,12 +91,17 @@ export default function FiltersModal() {
     fetchFeed().then(setFeed).catch(() => {});
   }, []);
 
+  // Ровно один выбранный тип и это земля → секция «Назначение» + площадь в сотках.
+  const landOnlyArea = propertyTypes.length === 1 && isLandType(propertyTypes[0] as PropertyTypeKey);
+
   const rangeSubset = useMemo(
     () =>
       filterListings(feed, {
         dealType,
         propertyTypes: propertyTypes as PropertyTypeKey[],
         buildType,
+        landPurpose: landOnlyArea ? landPurpose : null,
+        rentPeriod: dealType === "rent" ? rentPeriod : null,
         priceMin: "",
         priceMax: "",
         rooms,
@@ -104,16 +114,16 @@ export default function FiltersModal() {
         floorMax,
         furnished,
         mortgage,
+        hasDeed,
         amenities,
         renovation,
       }),
     // ranges intentionally excluded → dragging a slider never moves its own bounds
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [feed, dealType, propertyTypes, buildType, rooms, baths, regions, metro, floorMin, floorMax, furnished, mortgage, amenities, renovation],
+    [feed, dealType, propertyTypes, buildType, landPurpose, rentPeriod, rooms, baths, regions, metro, floorMin, floorMax, furnished, mortgage, hasDeed, amenities, renovation],
   );
   const priceBounds = useMemo(() => boundsOf(rangeSubset.map((l) => l.priceAzn).filter((v) => v > 0), 100000, 25000000), [rangeSubset]);
   // Только земля → границы/гистограмма по соткам (landAreaSot); иначе по м² (areaM2)
-  const landOnlyArea = propertyTypes.length === 1 && isLandType(propertyTypes[0] as PropertyTypeKey);
   const areaBounds = useMemo(() => {
     const vals = rangeSubset
       .map((l) => (landOnlyArea ? (l.landAreaSot ?? 0) : l.areaM2))
@@ -138,6 +148,8 @@ export default function FiltersModal() {
       dealType,
       propertyTypes: propertyTypes as PropertyTypeKey[],
       buildType,
+      landPurpose: landOnlyArea ? landPurpose : null,
+      rentPeriod: dealType === "rent" ? rentPeriod : null,
       priceMin,
       priceMax,
       rooms,
@@ -150,6 +162,7 @@ export default function FiltersModal() {
       floorMax,
       furnished,
       mortgage,
+      hasDeed,
       amenities,
       renovation,
     });
@@ -161,6 +174,8 @@ export default function FiltersModal() {
   const clearAll = () => {
     setPropertyTypes([]);
     setBuildType(null);
+    setLandPurpose(null);
+    setRentPeriod(null);
     setPriceMin("");
     setPriceMax("");
     setRooms([]);
@@ -173,6 +188,7 @@ export default function FiltersModal() {
     setFloorMax("");
     setFurnished(false);
     setMortgage(false);
+    setHasDeed(false);
     setAmenities([]);
     setRenovation([]);
     apply({ ...DEFAULT_FILTERS, dealType });
@@ -221,6 +237,23 @@ export default function FiltersModal() {
             onChange={(k) => setDealType(k as DealKey)}
           />
         </Section>
+
+        {/* Rent period — only for rent (single-select, tap active → clear) */}
+        {dealType === "rent" && (
+          <Section title={t("addListing.rentPeriodLabel")} colors={colors}>
+            <ChipWrap>
+              {RENT_PERIOD_TYPES.map((p) => (
+                <FilterChip
+                  key={p.key}
+                  label={t(p.labelKey)}
+                  active={rentPeriod === p.key}
+                  onPress={() => setRentPeriod((cur) => (cur === p.key ? null : p.key))}
+                  colors={colors}
+                />
+              ))}
+            </ChipWrap>
+          </Section>
+        )}
 
         {/* Property type */}
         <Section title={t("filters.propertyType")} icon={CLAY.house} colors={colors}>
@@ -331,6 +364,23 @@ export default function FiltersModal() {
             ))}
           </ChipWrap>
         </Section>
+
+        {/* Land purpose — only for land (single-select, tap active → clear) */}
+        {landOnlyArea && (
+          <Section title={t("addListing.landPurposeLabel")} icon={CLAY.pin} colors={colors}>
+            <ChipWrap>
+              {LAND_PURPOSE_TYPES.map((p) => (
+                <FilterChip
+                  key={p.key}
+                  label={t(p.labelKey)}
+                  active={landPurpose === p.key}
+                  onPress={() => setLandPurpose((cur) => (cur === p.key ? null : p.key))}
+                  colors={colors}
+                />
+              ))}
+            </ChipWrap>
+          </Section>
+        )}
 
         {/* Area */}
         <Section title={landOnlyArea ? t("filters.landArea") : t("filters.area")} icon={CLAY.ruler} colors={colors}>
@@ -478,6 +528,12 @@ export default function FiltersModal() {
           label={t("filters.mortgage")}
           value={mortgage}
           onValueChange={setMortgage}
+        />
+        <ToggleRow
+          colors={colors}
+          label={t("addListing.hasDeedLabel")}
+          value={hasDeed}
+          onValueChange={setHasDeed}
         />
       </ScrollView>
 

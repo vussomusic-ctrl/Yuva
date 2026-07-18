@@ -55,6 +55,7 @@ export type Listing = {
   commercialType?: string;
   separateEntrance?: boolean;
   shopfront?: boolean;
+  rentPeriod?: string; // enum: monthly | daily (rent only)
   deposit?: number;
   commission?: string; // legacy
   commissionPercent?: number | null;
@@ -72,6 +73,7 @@ export type Listing = {
   baths: number;
   furnished: boolean;
   mortgage: boolean;
+  hasDeed?: boolean; // купчая / çıxarış — title deed present (sale only)
   amenities?: string[]; // amenity keys (lib/amenities); from DB row — used by the amenity filter
   createdAt: string;
   lat: number;

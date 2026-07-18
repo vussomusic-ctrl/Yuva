@@ -31,6 +31,7 @@ export type DescriptionParams = {
   commercialType?: string;
   amenities?: string[];
   features?: string[];
+  rentPeriod?: string;
   deposit?: number;
   minTerm?: number;
   prepayment?: number;
