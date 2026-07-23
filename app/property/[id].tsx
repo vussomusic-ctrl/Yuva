@@ -148,6 +148,23 @@ export default function PropertyDetailScreen() {
     return { transform: [{ translateX: tx }, { translateY: ty }] };
   });
 
+  const photoParallaxStyle = useAnimatedStyle(() => {
+    // Photo canvas drifts up as the sheet expands (collapsedSheetY -> expandedSheetY).
+    const ty = interpolate(
+      sheetTranslateY.value,
+      [expandedSheetY, collapsedSheetY],
+      [-(collapsedSheetY - expandedSheetY) * 0.35, 0],
+      "clamp",
+    );
+    const scale = interpolate(
+      sheetTranslateY.value,
+      [expandedSheetY, collapsedSheetY],
+      [1.04, 1],
+      "clamp",
+    );
+    return { transform: [{ translateY: ty }, { scale }] };
+  });
+
   const contactBtnStyle = useAnimatedStyle(() => {
     // Button shrinks to free the heart slot as the sheet expands (heart lands).
     const ml = interpolate(
@@ -363,7 +380,7 @@ export default function PropertyDetailScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Photo hero — vertical Bayut-style feed (card rides over it) */}
-      <View style={{ position: "absolute", top: 0, left: 0, right: 0, height, overflow: "hidden" }}>
+      <Animated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, height, overflow: "hidden" }, photoParallaxStyle]}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingTop: 0, paddingBottom: collapsedGap - 16 }}
@@ -432,7 +449,7 @@ export default function PropertyDetailScreen() {
             )}
           </View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Content card — draggable sheet (translateY) between collapsed/expanded */}
       <Animated.View
