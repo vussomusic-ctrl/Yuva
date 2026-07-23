@@ -646,7 +646,9 @@ export default function PropertyDetailScreen() {
             listing.buildingSeries ||
             listing.builtYear ||
             listing.heating ||
-            listing.complexName
+            listing.complexName ||
+            listing.landPurpose ||
+            listing.commercialType
           ) && (
             <Section title={t("propertyDetail.specsTitle")} colors={colors}>
               <SpecRow
@@ -675,6 +677,16 @@ export default function PropertyDetailScreen() {
                 colors={colors}
               />
               <SpecRow label={t("addListing.complexName")} value={listing.complexName ?? null} colors={colors} />
+              <SpecRow
+                label={t("addListing.landPurposeLabel")}
+                value={listing.landPurpose ? t(`addListing.landPurposeOpts.${listing.landPurpose}`) : null}
+                colors={colors}
+              />
+              <SpecRow
+                label={t("addListing.commercialTypeLabel")}
+                value={listing.commercialType ? t(`addListing.commercialTypeOpts.${listing.commercialType}`) : null}
+                colors={colors}
+              />
             </Section>
           )}
 

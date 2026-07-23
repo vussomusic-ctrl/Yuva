@@ -404,6 +404,7 @@
       "rooms": "Set rooms (1–30)",
       "baths": "Check the number of bathrooms (0–15)",
       "floorGtTotal": "Floor is higher than the building height",
+      "floorRequired": "Enter the floor",
       "builtYear": "Check the year built",
       "location": "Set the location or a map point",
       "phone": "Enter the phone (9 digits)",

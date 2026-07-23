@@ -62,6 +62,8 @@ export function validateStep(step: number, s: ValidationState): { ok: boolean; e
         if (!(baths >= 0 && baths <= 15)) e.baths = "addListing.err.baths";
       }
 
+      if (s.propertyType === "apartment" && s.floor.trim() === "") e.floor = "addListing.err.floorRequired";
+
       if (s.floor.trim() !== "" && s.floorTotal.trim() !== "") {
         const f = n(s.floor);
         const ft = n(s.floorTotal);

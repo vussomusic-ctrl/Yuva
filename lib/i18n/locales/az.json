@@ -404,6 +404,7 @@
       "rooms": "Otaqları göstərin (1–30)",
       "baths": "Sanitar qovşaqların sayını yoxlayın (0–15)",
       "floorGtTotal": "Mərtəbə binanın mərtəbə sayından çoxdur",
+      "floorRequired": "Mərtəbəni qeyd edin",
       "builtYear": "Tikilmə ilini yoxlayın",
       "location": "Yerləşməni və ya xəritə nöqtəsini göstərin",
       "phone": "Telefonu daxil edin (9 rəqəm)",

@@ -236,6 +236,17 @@ export default function AddListingModal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, id]);
 
+  // New listing: prefill contact phone from the signed-in user's profile once it
+  // loads (async), same strip as the edit prefill. Guards: skip edit mode (its
+  // prefill wins) and only seed while the field is still empty (never clobber
+  // what the user typed).
+  useEffect(() => {
+    if (isEdit || !user?.phone) return;
+    setPhoneLocal((cur) =>
+      cur === "" ? (user.phone ?? "").replace(/[^\d]/g, "").replace(/^994/, "").replace(/^0+/, "").slice(0, 9) : cur,
+    );
+  }, [isEdit, user]);
+
   // Bail out (no blank form under Save) if the listing is gone / failed to load.
   useEffect(() => {
     if (editStatus === "notfound" || editStatus === "error") {
