@@ -354,7 +354,7 @@ function Chevron({ open, color }: { open: boolean; color: string }) {
   );
 }
 
-// Collapsed rayon header: name + zone count + rotating chevron (expand) and a
+// Collapsed rayon header: name + rotating chevron (expand) and a
 // separate "весь район" checkbox (does not toggle the accordion). Whole-rayon
 // selection tints the row so it's visible without expanding.
 function RayonRow({
@@ -397,9 +397,6 @@ function RayonRow({
       <Text numberOfLines={1} style={{ color: whole ? brand.violet : colors.text, fontFamily: font.bold, fontSize: 15 }}>
         {placeName(rayon, lang)}
       </Text>
-      {hasZones && (
-        <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13 }}>{` · ${count}`}</Text>
-      )}
       <View style={{ flex: 1 }} />
       {hasZones && <Chevron open={open} color={colors.textSecondary} />}
       <Pressable onPress={onCheck} hitSlop={12}>

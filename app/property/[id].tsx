@@ -436,18 +436,20 @@ export default function PropertyDetailScreen() {
         {/* Info overlay — price / specs / district in white, just above the card edge */}
         <View pointerEvents="none" style={{ position: "absolute", left: 20, right: 20, bottom: collapsedGap + 16, gap: 6 }}>
           <Text style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.extrabold, fontSize: 28, textShadowColor: "rgba(0,0,0,0.5)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 }}>{formatPrice(listing.priceAzn)}</Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Ionicons name="location-outline" size={15} color="#FFFFFF" />
-            <Text style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 14, textShadowColor: "rgba(0,0,0,0.45)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }}>{regionName}</Text>
-            {station && (
-              <>
-                <View style={{ marginLeft: 6 }}>
-                  <MetroBadge size={16} />
-                </View>
-                <Text style={{ marginLeft: 4, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 14, textShadowColor: "rgba(0,0,0,0.45)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }}>{placeName(station, lang)}</Text>
-              </>
-            )}
-          </View>
+          {regionName ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Ionicons name="location-outline" size={15} color="#FFFFFF" />
+              <Text style={{ color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 14, textShadowColor: "rgba(0,0,0,0.45)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }}>{regionName}</Text>
+              {station && (
+                <>
+                  <View style={{ marginLeft: 6 }}>
+                    <MetroBadge size={16} />
+                  </View>
+                  <Text style={{ marginLeft: 4, color: "rgba(255,255,255,0.9)", fontFamily: font.regular, fontSize: 14, textShadowColor: "rgba(0,0,0,0.45)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }}>{placeName(station, lang)}</Text>
+                </>
+              )}
+            </View>
+          ) : null}
         </View>
       </Animated.View>
 
