@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, Pressable, TextInput, ScrollView, useWindowDimensions } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,16 +9,7 @@ import { PrimaryButton } from "./Button";
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
-import {
-  REGIONS,
-  RAYONS,
-  AREAS,
-  METRO,
-  Place,
-  placeName,
-  placeById,
-  areasOfRayon,
-} from "../lib/places";
+import { REGIONS, RAYONS, AREAS, METRO, Place, placeName, placeById, areasOfRayon } from "../lib/places";
 import { foldSearch } from "../lib/normalize";
 import { POPULAR, matchPlace, isBakuId } from "../lib/placeSearch";
 
@@ -27,34 +18,38 @@ type Lang = "az" | "ru" | "en";
 type Props = {
   visible: boolean;
   onClose: () => void;
-  regions: string[]; // selected place ids: country region | Baku rayon | Baku area
-  metro: string[]; // selected metro ids
-  onApply: (regions: string[], metro: string[]) => void;
+  placeId: string | null;
+  metroId: string | null;
+  onSelectPlace: (id: string | null) => void;
+  onSelectMetro: (id: string | null) => void;
   lang: Lang;
 };
 
-export function LocationFilterSheet({ visible, onClose, regions, metro, onApply, lang }: Props) {
+/**
+ * SINGLE-select location picker for Add Listing — same rich hierarchy as the
+ * search LocationFilterSheet (Bakı → rayon → zones tree, Район/Метро tabs, search,
+ * "Популярные"), but one place at a time. Live select via onSelectPlace/onSelectMetro
+ * (no draft/apply). A non-Baku country pick selects + closes; rayon/zone/metro picks
+ * highlight and stay open (confirm with «Готово»). Metro is Baku-only, independent
+ * of placeId. Drop-in replacement for RegionPickerSheet (same props).
+ */
+export function LocationPickerSheet({ visible, onClose, placeId, metroId, onSelectPlace, onSelectMetro, lang }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { height } = useWindowDimensions();
 
-  const [level, setLevel] = useState<"regions" | "baku">("baku");
+  const [level, setLevel] = useState<"regions" | "baku">("regions");
   const [tab, setTab] = useState<"rayon" | "metro">("rayon");
   const [q, setQ] = useState("");
-  const [draftR, setDraftR] = useState<string[]>(regions);
-  const [draftM, setDraftM] = useState<string[]>(metro);
   const [regionsExpanded, setRegionsExpanded] = useState(false);
   const [expandedRayons, setExpandedRayons] = useState<Set<string>>(new Set());
 
-  // Seed drafts on open; land on the level matching the current selection
-  // (a country region → level 1, otherwise Baku detail).
+  // On open: drill straight into Baku if the current place lives there, else land
+  // on the country list. Reset search + accordions.
   useEffect(() => {
     if (!visible) return;
-    setDraftR(regions);
-    setDraftM(metro);
     setQ("");
-    const countryRegion = regions.find((id) => !isBakuId(id));
-    setLevel(countryRegion ? "regions" : "baku");
+    setLevel(placeId && isBakuId(placeId) ? "baku" : "regions");
     setTab("rayon");
     setRegionsExpanded(false);
     setExpandedRayons(new Set());
@@ -62,59 +57,43 @@ export function LocationFilterSheet({ visible, onClose, regions, metro, onApply,
   }, [visible]);
 
   const folded = foldSearch(q.trim());
-  const count = draftR.length + draftM.length;
+  const count = (placeId ? 1 : 0) + (metroId ? 1 : 0);
 
-  const toggle = (arr: string[], id: string): string[] =>
-    arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id];
-
-  const toggleR = (id: string) => setDraftR((a) => toggle(a, id));
-  const toggleM = (id: string) => setDraftM((a) => toggle(a, id));
-
-  // Level 1 — single country-region context (radio). Tapping the selected one
-  // again clears it (-> "Любая"). Baku drills into level 2, so it never lands here.
-  const selectRegion = (id: string) => {
-    setDraftR((cur) => (cur.includes(id) ? [] : [id]));
-    setDraftM([]);
-  };
-
-  const reset = () => {
-    setDraftR([]);
-    setDraftM([]);
-  };
-  const apply = () => {
-    onApply(draftR, draftM);
+  // Country leaf (non-Baku) → select + clear metro + close, like the old sheet.
+  const selectCountry = (id: string) => {
+    onSelectMetro(null);
+    onSelectPlace(id);
     onClose();
   };
+  // Rayon / zone → select (or re-tap to clear); stays open.
+  const selectPlace = (id: string) => onSelectPlace(placeId === id ? null : id);
+  // Metro → select (or re-tap to clear); independent of placeId, stays open.
+  const selectMetro = (id: string) => onSelectMetro(metroId === id ? null : id);
+  // Expand/collapse a rayon's zones (chevron, and the row tap alongside select).
+  const toggleExpand = (id: string) =>
+    setExpandedRayons((s) => {
+      const n = new Set(s);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
 
-  // --- Level 1 data ---
-  const popularRegions = useMemo(
-    () => POPULAR.map((id) => placeById(id)).filter((p): p is Place => !!p && matchPlace(p, folded)),
-    [folded],
-  );
-  // Baku lives only in "Популярные" (and drills) — exclude it here to avoid a
-  // dup. Sort by az name (stable across UI languages).
-  const allRegions = useMemo(
-    () =>
-      [...REGIONS]
-        .filter((p) => p.id !== "baku" && matchPlace(p, folded))
-        .sort((a, b) => a.az.localeCompare(b.az)),
-    [folded],
-  );
+  const reset = () => {
+    onSelectPlace(null);
+    onSelectMetro(null);
+  };
 
-  // --- Level 2 (Baku) search results across rayons / zones / metro ---
-  const searchRayons = useMemo(() => RAYONS.filter((p) => matchPlace(p, folded)), [folded]);
-  const searchZones = useMemo(
-    () => AREAS.filter((p) => p.type !== "rayon" && matchPlace(p, folded)),
-    [folded],
-  );
-  const searchMetro = useMemo(() => METRO.filter((p) => matchPlace(p, folded)), [folded]);
+  const popularRegions = POPULAR.map((id) => placeById(id)).filter((p): p is Place => !!p && matchPlace(p, folded));
+  const allRegions = [...REGIONS].filter((p) => p.id !== "baku" && matchPlace(p, folded)).sort((a, b) => a.az.localeCompare(b.az));
 
-  const orphanZones = useMemo(() => AREAS.filter((p) => p.type !== "rayon" && !p.rayonId), []);
+  const searchRayons = RAYONS.filter((p) => matchPlace(p, folded));
+  const searchZones = AREAS.filter((p) => p.type !== "rayon" && matchPlace(p, folded));
+  const searchMetro = METRO.filter((p) => matchPlace(p, folded));
+  const orphanZones = AREAS.filter((p) => p.type !== "rayon" && !p.rayonId);
 
   return (
     <BottomSheet visible={visible} onClose={onClose}>
       <View style={{ height: height * 0.88 }}>
-        {/* Header — X closes (cancel), back returns to the regions list */}
+        {/* Header — X closes (cancel); back returns to the country list */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 12, paddingTop: 8, paddingBottom: 8 }}>
           <Pressable onPress={onClose} hitSlop={8} style={({ pressed }) => ({ padding: 4, opacity: pressed ? 0.6 : 1 })}>
             <Ionicons name="close" size={26} color={colors.text} />
@@ -130,9 +109,7 @@ export function LocationFilterSheet({ visible, onClose, regions, metro, onApply,
               style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 6, opacity: pressed ? 0.6 : 1 })}
             >
               <Ionicons name="chevron-back" size={20} color={brand.violet} />
-              <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 16 }}>
-                {placeName(placeById("baku")!, lang)}
-              </Text>
+              <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 16 }}>{placeName(placeById("baku")!, lang)}</Text>
             </Pressable>
           )}
         </View>
@@ -169,20 +146,18 @@ export function LocationFilterSheet({ visible, onClose, regions, metro, onApply,
             <>
               {popularRegions.length > 0 && <SectionHeader label={t("location.popular")} colors={colors} />}
               {popularRegions.map((p) => (
-                <RegionRow key={`pop-${p.id}`} place={p} lang={lang} draftR={draftR} colors={colors}
-                  onDrill={() => setLevel("baku")} onSelect={() => selectRegion(p.id)} />
+                <RegionRow key={`pop-${p.id}`} place={p} lang={lang} placeId={placeId} colors={colors}
+                  onDrill={() => setLevel("baku")} onSelect={() => selectCountry(p.id)} />
               ))}
               {folded ? (
-                // Search: flat list of all matching regions (no collapse)
                 <>
                   {allRegions.length > 0 && <SectionHeader label={t("location.allRegions")} colors={colors} />}
                   {allRegions.map((p) => (
-                    <RegionRow key={p.id} place={p} lang={lang} draftR={draftR} colors={colors}
-                      onDrill={() => setLevel("baku")} onSelect={() => selectRegion(p.id)} />
+                    <RegionRow key={p.id} place={p} lang={lang} placeId={placeId} colors={colors}
+                      onDrill={() => setLevel("baku")} onSelect={() => selectCountry(p.id)} />
                   ))}
                 </>
               ) : (
-                // Collapsed by default behind a toggle row
                 <>
                   <Pressable
                     onPress={() => setRegionsExpanded((x) => !x)}
@@ -203,8 +178,8 @@ export function LocationFilterSheet({ visible, onClose, regions, metro, onApply,
                   </Pressable>
                   {regionsExpanded &&
                     allRegions.map((p) => (
-                      <RegionRow key={p.id} place={p} lang={lang} draftR={draftR} colors={colors}
-                        onDrill={() => setLevel("baku")} onSelect={() => selectRegion(p.id)} />
+                      <RegionRow key={p.id} place={p} lang={lang} placeId={placeId} colors={colors}
+                        onDrill={() => setLevel("baku")} onSelect={() => selectCountry(p.id)} />
                     ))}
                 </>
               )}
@@ -214,27 +189,25 @@ export function LocationFilterSheet({ visible, onClose, regions, metro, onApply,
             <>
               {searchRayons.length > 0 && <SectionHeader label={t("filters.region")} colors={colors} />}
               {searchRayons.map((r) => (
-                <CheckRow key={r.id} label={placeName(r, lang)} note={t("location.wholeRayon")}
-                  checked={draftR.includes(r.id)} colors={colors} onPress={() => toggleR(r.id)} />
+                <SelectRow key={r.id} label={placeName(r, lang)} note={t("location.wholeRayon")}
+                  selected={placeId === r.id} colors={colors} onPress={() => selectPlace(r.id)} />
               ))}
               {searchZones.length > 0 && <SectionHeader label={t("location.zones")} colors={colors} />}
               {searchZones.map((z) => (
-                <CheckRow key={z.id} label={placeName(z, lang)}
+                <SelectRow key={z.id} label={placeName(z, lang)}
                   note={z.rayonId ? placeName(placeById(z.rayonId)!, lang) : undefined}
-                  checked={draftR.includes(z.id) || (z.rayonId ? draftR.includes(z.rayonId) : false)}
-                  colors={colors} onPress={() => toggleR(z.id)} />
+                  selected={placeId === z.id} colors={colors} onPress={() => selectPlace(z.id)} />
               ))}
               {searchMetro.length > 0 && <SectionHeader label={t("filters.metro")} colors={colors} />}
               {searchMetro.map((m) => (
-                <CheckRow key={m.id} label={placeName(m, lang)} note={t("filters.metro")}
-                  checked={draftM.includes(m.id)} colors={colors} onPress={() => toggleM(m.id)} />
+                <SelectRow key={m.id} label={placeName(m, lang)} note={t("filters.metro")}
+                  selected={metroId === m.id} colors={colors} onPress={() => selectMetro(m.id)} />
               ))}
             </>
           ) : tab === "rayon" ? (
             <>
               {RAYONS.map((r) => {
                 const children = areasOfRayon(r.id);
-                const wholeRayon = draftR.includes(r.id);
                 const open = expandedRayons.has(r.id);
                 return (
                   <View key={r.id}>
@@ -242,48 +215,47 @@ export function LocationFilterSheet({ visible, onClose, regions, metro, onApply,
                       rayon={r}
                       lang={lang}
                       count={children.length}
-                      whole={wholeRayon}
+                      selected={placeId === r.id}
                       open={open}
                       colors={colors}
-                      onToggleExpand={() =>
-                        setExpandedRayons((s) => {
-                          const n = new Set(s);
-                          n.has(r.id) ? n.delete(r.id) : n.add(r.id);
-                          return n;
-                        })
-                      }
-                      onCheck={() => toggleR(r.id)}
+                      onToggleExpand={() => toggleExpand(r.id)}
+                      onSelect={() => {
+                        // Row tap = select the rayon AND toggle its zones open, so a
+                        // single tap both picks it and reveals the zones (chevron alone
+                        // just expands without selecting).
+                        selectPlace(r.id);
+                        toggleExpand(r.id);
+                      }}
                     />
                     {open &&
                       children.map((c) => (
-                        <CheckRow key={c.id} label={placeName(c, lang)} indent
-                          checked={wholeRayon || draftR.includes(c.id)} colors={colors}
-                          onPress={() => { if (!wholeRayon) toggleR(c.id); }} />
+                        <SelectRow key={c.id} label={placeName(c, lang)} indent
+                          selected={placeId === c.id} colors={colors} onPress={() => selectPlace(c.id)} />
                       ))}
                   </View>
                 );
               })}
               {orphanZones.length > 0 && <SectionHeader label={t("location.other")} colors={colors} />}
               {orphanZones.map((z) => (
-                <CheckRow key={z.id} label={placeName(z, lang)} indent
-                  checked={draftR.includes(z.id)} colors={colors} onPress={() => toggleR(z.id)} />
+                <SelectRow key={z.id} label={placeName(z, lang)} indent
+                  selected={placeId === z.id} colors={colors} onPress={() => selectPlace(z.id)} />
               ))}
             </>
           ) : (
             METRO.map((m) => (
-              <CheckRow key={m.id} label={placeName(m, lang)}
-                checked={draftM.includes(m.id)} colors={colors} onPress={() => toggleM(m.id)} />
+              <SelectRow key={m.id} label={placeName(m, lang)}
+                selected={metroId === m.id} colors={colors} onPress={() => selectMetro(m.id)} />
             ))
           )}
         </ScrollView>
 
-        {/* Footer: reset + apply(N) */}
+        {/* Footer: reset + done(N) */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingTop: 12 }}>
           <Pressable onPress={reset} hitSlop={8} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
             <Text style={{ color: brand.violet, fontFamily: font.semibold, fontSize: 15 }}>{t("location.reset")}</Text>
           </Pressable>
           <View style={{ flex: 1 }}>
-            <PrimaryButton label={`${t("location.done")}${count > 0 ? ` (${count})` : ""}`} onPress={apply} />
+            <PrimaryButton label={`${t("location.done")}${count > 0 ? ` (${count})` : ""}`} onPress={onClose} />
           </View>
         </View>
       </View>
@@ -310,26 +282,6 @@ function TabPill({ label, active, onPress }: { label: string; active: boolean; o
   );
 }
 
-function Checkbox({ checked }: { checked: boolean }) {
-  const { colors } = useTheme();
-  return (
-    <View
-      style={{
-        width: 22,
-        height: 22,
-        borderRadius: 6,
-        borderWidth: 2,
-        borderColor: checked ? brand.violet : colors.border,
-        backgroundColor: checked ? brand.violet : "transparent",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {checked && <Ionicons name="checkmark" size={15} color="#FFFFFF" />}
-    </View>
-  );
-}
-
 function Chevron({ open, color }: { open: boolean; color: string }) {
   const r = useSharedValue(open ? 1 : 0);
   useEffect(() => {
@@ -343,34 +295,33 @@ function Chevron({ open, color }: { open: boolean; color: string }) {
   );
 }
 
-// Collapsed rayon header: name + rotating chevron (expand) and a
-// separate "весь район" checkbox (does not toggle the accordion). Whole-rayon
-// selection tints the row so it's visible without expanding.
+// Collapsed rayon header (single-select): tap the name selects the whole rayon
+// (violet tint + check); the chevron expands its zones without selecting.
 function RayonRow({
   rayon,
   lang,
   count,
-  whole,
+  selected,
   open,
   colors,
   onToggleExpand,
-  onCheck,
+  onSelect,
 }: {
   rayon: Place;
   lang: Lang;
   count: number;
-  whole: boolean;
+  selected: boolean;
   open: boolean;
   colors: { text: string; textSecondary: string; border: string };
   onToggleExpand: () => void;
-  onCheck: () => void;
+  onSelect: () => void;
 }) {
   const { mode } = useTheme();
   const hasZones = count > 0;
   const tint = mode === "dark" ? "rgba(139,63,214,0.14)" : "rgba(139,63,214,0.06)";
   return (
     <Pressable
-      onPress={hasZones ? onToggleExpand : undefined}
+      onPress={onSelect}
       style={({ pressed }) => ({
         flexDirection: "row",
         alignItems: "center",
@@ -379,37 +330,37 @@ function RayonRow({
         paddingHorizontal: 20,
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
-        backgroundColor: whole ? tint : "transparent",
+        backgroundColor: selected ? tint : "transparent",
         opacity: pressed ? 0.7 : 1,
       })}
     >
-      <Text numberOfLines={1} style={{ color: whole ? brand.violet : colors.text, fontFamily: font.bold, fontSize: 15 }}>
+      <Text numberOfLines={1} style={{ color: selected ? brand.violet : colors.text, fontFamily: font.bold, fontSize: 15 }}>
         {placeName(rayon, lang)}
       </Text>
       <View style={{ flex: 1 }} />
-      {hasZones && <Chevron open={open} color={colors.textSecondary} />}
-      <Pressable onPress={onCheck} hitSlop={12}>
-        <Checkbox checked={whole} />
-      </Pressable>
+      {hasZones && (
+        <Pressable onPress={onToggleExpand} hitSlop={12} style={({ pressed }) => ({ padding: 4, opacity: pressed ? 0.6 : 1 })}>
+          <Chevron open={open} color={colors.textSecondary} />
+        </Pressable>
+      )}
+      {selected && <Ionicons name="checkmark-circle" size={22} color={brand.violet} />}
     </Pressable>
   );
 }
 
-function CheckRow({
+function SelectRow({
   label,
   note,
-  checked,
+  selected,
   colors,
   onPress,
-  bold,
   indent,
 }: {
   label: string;
   note?: string;
-  checked: boolean;
+  selected: boolean;
   colors: { text: string; textSecondary: string; border: string };
   onPress: () => void;
-  bold?: boolean;
   indent?: boolean;
 }) {
   return (
@@ -427,16 +378,11 @@ function CheckRow({
         opacity: pressed ? 0.6 : 1,
       })}
     >
-      <Text
-        numberOfLines={1}
-        style={{ flex: 1, color: checked ? brand.violet : colors.text, fontFamily: bold ? font.bold : font.medium, fontSize: 15 }}
-      >
+      <Text numberOfLines={1} style={{ flex: 1, color: selected ? brand.violet : colors.text, fontFamily: font.medium, fontSize: 15 }}>
         {label}
       </Text>
-      {note ? (
-        <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12 }}>{note}</Text>
-      ) : null}
-      <Checkbox checked={checked} />
+      {note ? <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 12 }}>{note}</Text> : null}
+      {selected && <Ionicons name="checkmark-circle" size={22} color={brand.violet} />}
     </Pressable>
   );
 }
@@ -444,20 +390,20 @@ function CheckRow({
 function RegionRow({
   place,
   lang,
-  draftR,
+  placeId,
   colors,
   onDrill,
   onSelect,
 }: {
   place: Place;
   lang: Lang;
-  draftR: string[];
+  placeId: string | null;
   colors: { text: string; textSecondary: string; border: string };
   onDrill: () => void;
   onSelect: () => void;
 }) {
   const isBaku = place.id === "baku";
-  const selected = isBaku ? draftR.some(isBakuId) : draftR.includes(place.id);
+  const selected = isBaku ? isBakuId(placeId ?? "") : placeId === place.id;
   return (
     <Pressable
       onPress={isBaku ? onDrill : onSelect}
@@ -508,8 +454,6 @@ function SectionHeader({ label, colors }: { label: string; colors: { textSeconda
 }
 
 const styles = {
-  title: (color: string) =>
-    ({ color, fontFamily: font.bold, fontSize: 17, textAlign: "center", paddingTop: 6, paddingBottom: 10 } as const),
   search: (border: string, bg: string) =>
     ({
       flexDirection: "row",

@@ -27,7 +27,7 @@ import { usePressScale } from "../lib/animations";
 import { ClayToggle } from "../components/ClayToggle";
 import { TintCard } from "../components/TintCard";
 import { MapPickerOverlay } from "../components/MapPickerOverlay";
-import { RegionPickerSheet } from "../components/RegionPickerSheet";
+import { LocationPickerSheet } from "../components/LocationPickerSheet";
 import { BottomSheet } from "../components/BottomSheet";
 import { PropertyCard } from "../components/PropertyCard";
 import { PrimaryButton, SecondaryButton } from "../components/Button";
@@ -1487,8 +1487,8 @@ export default function AddListingModal() {
         </View>
       </KeyboardAvoidingView>
 
-      {/* Location picker — cascading region → Baku area + metro */}
-      <RegionPickerSheet
+      {/* Location picker — rich single-select: region → Baku rayon→zones + metro */}
+      <LocationPickerSheet
         visible={locationSheet}
         onClose={() => setLocationSheet(false)}
         placeId={placeId}
