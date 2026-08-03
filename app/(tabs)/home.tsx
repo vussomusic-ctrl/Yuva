@@ -304,7 +304,7 @@ export default function HomeScreen() {
                 title={`🔥 ${t("home.newListings")}`}
                 action={t("home.seeAll")}
                 colors={colors}
-                onAction={() => router.push("/search")}
+                onAction={() => router.push("/rail-list?kind=new")}
               />
               {(feed ?? []).length === 0 ? (
                 <EmptyState
@@ -340,7 +340,7 @@ export default function HomeScreen() {
                   title={`👀 ${t("home.recentlyViewed")}`}
                   action={t("home.seeAll")}
                   colors={colors}
-                  onAction={() => router.push("/search")}
+                  onAction={() => router.push("/rail-list?kind=recent")}
                 />
                 <ScrollView
                   horizontal

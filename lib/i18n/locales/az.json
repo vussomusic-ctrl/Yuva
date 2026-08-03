@@ -525,6 +525,10 @@
     "emptyTitle": "Seçilmişlər boşdur",
     "emptyDesc": "Bəyəndiyiniz elanları ürək düyməsi ilə saxlayın"
   },
+  "railList": {
+    "emptyRecentTitle": "Hələ heç nəyə baxmamısınız",
+    "emptyRecentDesc": "Açdığınız elanlar burada görünəcək"
+  },
   "agencies": {
     "title": "Agentliklər",
     "agents": "Agentlər",

@@ -72,6 +72,7 @@ function RootInner() {
         <Stack.Screen name="admin/agencies/[id]" />
         <Stack.Screen name="my-listings" />
         <Stack.Screen name="saved" />
+        <Stack.Screen name="rail-list" />
         <Stack.Screen name="notifications" />
         <Stack.Screen name="promote/[id]" options={{ presentation: "modal" }} />
         <Stack.Screen name="edit-profile" options={{ presentation: "modal" }} />

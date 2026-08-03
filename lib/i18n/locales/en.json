@@ -525,6 +525,10 @@
     "emptyTitle": "Nothing saved yet",
     "emptyDesc": "Tap the heart to save listings you like"
   },
+  "railList": {
+    "emptyRecentTitle": "You haven't viewed anything yet",
+    "emptyRecentDesc": "Listings you open will appear here"
+  },
   "agencies": {
     "title": "Agencies",
     "agents": "Agents",
