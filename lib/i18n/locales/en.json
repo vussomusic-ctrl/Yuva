@@ -395,7 +395,7 @@
     "step7Subtitle": "How buyers will reach you",
     "step8Subtitle": "Review everything before publishing",
     "err": {
-      "photos": "Add at least one photo",
+      "photos": "Add at least 3 photos",
       "propertyType": "Select the property type",
       "priceLowSale": "Price is too low for sale (from 5000 ₼)",
       "priceLowRent": "Price is too low for rent (from 50 ₼)",
@@ -518,7 +518,13 @@
     "deleteConfirmMsg": "This action cannot be undone",
     "errDelete": "Couldn't delete",
     "edit": "Edit",
-    "promote": "Promote"
+    "promote": "Promote",
+    "actionsTitle": "Actions",
+    "promoUntil": "until {{date}}",
+    "statusActive": "Active",
+    "statusModeration": "In review",
+    "statusSold": "Sold",
+    "statusArchived": "Archived"
   },
   "saved": {
     "title": "Saved",

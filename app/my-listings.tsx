@@ -8,14 +8,16 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
 import { brand, Theme } from "../lib/theme/colors";
-import { PropertyCard } from "../components/PropertyCard";
+import { font } from "../lib/theme/typography";
+import { OwnerListingRow } from "../components/OwnerListingRow";
+import { BottomSheet } from "../components/BottomSheet";
 import { LoadingState, ErrorState } from "../components/ListState";
 import { EmptyState } from "../components/EmptyState";
-import { useFavorites } from "../lib/favorites";
 import { useAuth } from "../lib/auth";
 import { useLanguage } from "../lib/i18n/languages";
 import { pluralSuffix } from "../lib/i18n/plural";
 import { Listing } from "../lib/mock/listings";
+import { buildListingTitle } from "../lib/listingTitle";
 import { fetchMyListings, deleteListing } from "../lib/api/listings";
 import { bumpListing } from "../lib/api/promo";
 
@@ -32,13 +34,13 @@ export default function MyListingsScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
-  const { isFavorite, toggle } = useFavorites();
   const { user } = useAuth();
   const { current: lang } = useLanguage();
 
   const [items, setItems] = useState<Listing[] | null>(null);
   const [error, setError] = useState(false);
   const [bumping, setBumping] = useState<Set<string>>(new Set()); // ids mid-bump
+  const [menuItem, setMenuItem] = useState<Listing | null>(null); // actions sheet target
 
   // Refetch every time the screen gains focus — this is what makes a freshly
   // published listing appear (the DB doesn't unshift into an in-memory array).
@@ -109,6 +111,12 @@ export default function MyListingsScreen() {
     ]);
   };
 
+  const list = items ?? [];
+  const activeN = list.filter((l) => (l.status ?? "active") === "active").length;
+  const modN = list.filter((l) => l.status === "moderation").length;
+
+  const closeMenu = () => setMenuItem(null);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       {/* Contextual header: back + title. No logo. */}
@@ -118,17 +126,24 @@ export default function MyListingsScreen() {
         onBack={() => (router.canGoBack() ? router.back() : router.replace("/profile"))}
       />
 
+      {/* Summary line — counts from the loaded list (first-wave, plain text) */}
+      {list.length > 0 && (
+        <Text style={{ paddingHorizontal: 16, paddingBottom: 8, color: colors.textSecondary, fontFamily: font.regular, fontSize: 13 }}>
+          {`${t("profile.nActive", { n: activeN })} · ${t("profile.nModeration", { n: modN })}`}
+        </Text>
+      )}
+
       {loading ? (
         <LoadingState colors={colors} />
       ) : error ? (
         <ErrorState colors={colors} onRetry={load} />
       ) : (
         <FlatList
-          data={items ?? []}
+          data={list}
           keyExtractor={(l) => l.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 8, flexGrow: 1 }}
-          ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           ListEmptyComponent={
             <EmptyState
               image={require("../assets/icons/empty/house-keys-bonus.png")}
@@ -137,114 +152,106 @@ export default function MyListingsScreen() {
             />
           }
           renderItem={({ item }) => (
-            <View>
-              <PropertyCard
-                listing={item}
-                variant="feed"
-                favorited={isFavorite(item.id)}
-                onToggleFavorite={() => toggle(item.id)}
-                onPress={() => router.push(`/property/${item.id}`)}
-              />
-              {/* Owner actions: wide Promote (headline) above a compact icon row */}
-              <View style={{ gap: 8, marginTop: 8 }}>
-                <Pressable
-                  onPress={() => router.push(`/promote/${item.id}`)}
-                  style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
-                >
-                  <LinearGradient
-                    colors={brand.gradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      paddingVertical: 12,
-                      borderRadius: 12,
-                    }}
-                  >
-                    <Ionicons name="trending-up" size={18} color="#FFFFFF" />
-                    <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
-                      {t("myListings.promote")}
-                    </Text>
-                  </LinearGradient>
-                </Pressable>
-
-                {item.bumpsRemaining > 0 && (
-                  <Pressable
-                    onPress={() => onBumpNow(item)}
-                    disabled={bumping.has(item.id)}
-                    hitSlop={6}
-                    accessibilityLabel={t("promote.bumpShort")}
-                    style={({ pressed }) => ({
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 6,
-                      paddingVertical: 12,
-                      borderRadius: 12,
-                      backgroundColor: tint(brand.blue, 0.12),
-                      opacity: bumping.has(item.id) ? 0.5 : pressed ? 0.6 : 1,
-                    })}
-                  >
-                    <Ionicons name="arrow-up" size={18} color={brand.blue} />
-                    <Text numberOfLines={1} style={{ color: brand.blue, fontSize: 14, fontWeight: "600" }}>
-                      {`${t("promote.bumpShort")} · ${t(`promote.packBumps_${pluralSuffix(lang, item.bumpsRemaining)}`, { count: item.bumpsRemaining })}`}
-                    </Text>
-                  </Pressable>
-                )}
-
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                  <Pressable
-                    onPress={() => router.push(`/add-listing?id=${item.id}`)}
-                    hitSlop={6}
-                    accessibilityLabel={t("myListings.edit")}
-                    style={({ pressed }) => ({
-                      flex: 1,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 6,
-                      paddingVertical: 12,
-                      borderRadius: 12,
-                      backgroundColor: tint(brand.violet, 0.12),
-                      opacity: pressed ? 0.6 : 1,
-                    })}
-                  >
-                    <Ionicons name="create-outline" size={18} color={brand.violet} />
-                    <Text style={{ color: brand.violet, fontSize: 14, fontWeight: "600" }}>
-                      {t("myListings.edit")}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => confirmDelete(item)}
-                    hitSlop={6}
-                    accessibilityLabel={t("myListings.delete")}
-                    style={({ pressed }) => ({
-                      flex: 1,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 6,
-                      paddingVertical: 12,
-                      borderRadius: 12,
-                      backgroundColor: tint(colors.danger, 0.12),
-                      opacity: pressed ? 0.6 : 1,
-                    })}
-                  >
-                    <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                    <Text style={{ color: colors.danger, fontSize: 14, fontWeight: "600" }}>
-                      {t("myListings.delete")}
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-            </View>
+            <OwnerListingRow
+              listing={item}
+              colors={colors}
+              lang={lang}
+              onPress={() => router.push(`/property/${item.id}`)}
+              onMenu={() => setMenuItem(item)}
+            />
           )}
         />
       )}
+
+      {/* Actions sheet for the tapped "⋯" */}
+      <BottomSheet visible={menuItem !== null} onClose={closeMenu}>
+        {menuItem && (
+          <View style={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 8, gap: 8 }}>
+            <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.bold, fontSize: 16, paddingHorizontal: 4, paddingBottom: 4 }}>
+              {buildListingTitle(menuItem, t, lang)}
+            </Text>
+
+            {/* Promote — primary gradient row */}
+            <Pressable
+              onPress={() => { const id = menuItem.id; closeMenu(); router.push(`/promote/${id}`); }}
+              style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
+            >
+              <LinearGradient
+                colors={brand.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14 }}
+              >
+                <Ionicons name="trending-up" size={20} color="#FFFFFF" />
+                <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 15 }}>{t("myListings.promote")}</Text>
+              </LinearGradient>
+            </Pressable>
+
+            {menuItem.bumpsRemaining > 0 && (
+              <MenuRow
+                icon="arrow-up"
+                color={brand.blue}
+                label={`${t("promote.bumpShort")} · ${t(`promote.packBumps_${pluralSuffix(lang, menuItem.bumpsRemaining)}`, { count: menuItem.bumpsRemaining })}`}
+                disabled={bumping.has(menuItem.id)}
+                colors={colors}
+                onPress={() => { const it = menuItem; closeMenu(); onBumpNow(it); }}
+              />
+            )}
+            <MenuRow
+              icon="create-outline"
+              color={brand.violet}
+              label={t("myListings.edit")}
+              colors={colors}
+              onPress={() => { const id = menuItem.id; closeMenu(); router.push(`/add-listing?id=${id}`); }}
+            />
+            <MenuRow
+              icon="trash-outline"
+              color={colors.danger}
+              label={t("myListings.delete")}
+              colors={colors}
+              onPress={() => { const it = menuItem; closeMenu(); confirmDelete(it); }}
+            />
+          </View>
+        )}
+      </BottomSheet>
     </SafeAreaView>
+  );
+}
+
+// One action row inside the "⋯" sheet: tinted icon + label.
+function MenuRow({
+  icon,
+  color,
+  label,
+  colors,
+  onPress,
+  disabled,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  label: string;
+  colors: Theme;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => ({
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderRadius: 14,
+        backgroundColor: tint(color, 0.1),
+        opacity: disabled ? 0.5 : pressed ? 0.6 : 1,
+      })}
+    >
+      <Ionicons name={icon} size={20} color={color} />
+      <Text style={{ color, fontFamily: font.semibold, fontSize: 15 }}>{label}</Text>
+    </Pressable>
   );
 }
 

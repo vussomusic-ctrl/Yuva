@@ -32,7 +32,7 @@ export function validateStep(step: number, s: ValidationState): { ok: boolean; e
   const e: StepErrors = {};
 
   if (step === 1) {
-    if (s.photosCount < 1) e.photos = "addListing.err.photos";
+    if (s.photosCount < 3) e.photos = "addListing.err.photos";
   }
 
   if (step === 2) {

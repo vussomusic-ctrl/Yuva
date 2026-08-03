@@ -395,7 +395,7 @@
     "step7Subtitle": "Как с вами свяжутся покупатели",
     "step8Subtitle": "Проверьте всё перед публикацией",
     "err": {
-      "photos": "Добавьте хотя бы одно фото",
+      "photos": "Добавьте минимум 3 фото",
       "propertyType": "Выберите тип объекта",
       "priceLowSale": "Цена слишком низкая для продажи (от 5000 ₼)",
       "priceLowRent": "Цена слишком низкая для аренды (от 50 ₼)",
@@ -518,7 +518,13 @@
     "deleteConfirmMsg": "Это действие необратимо",
     "errDelete": "Не удалось удалить",
     "edit": "Редактировать",
-    "promote": "Продвинуть"
+    "promote": "Продвинуть",
+    "actionsTitle": "Действия",
+    "promoUntil": "до {{date}}",
+    "statusActive": "Активно",
+    "statusModeration": "На модерации",
+    "statusSold": "Продано",
+    "statusArchived": "В архиве"
   },
   "saved": {
     "title": "Сохранённые",

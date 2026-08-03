@@ -395,7 +395,7 @@
     "step7Subtitle": "Alıcılar sizinlə necə əlaqə saxlayacaq",
     "step8Subtitle": "Dərc etməzdən əvvəl hər şeyi yoxlayın",
     "err": {
-      "photos": "Ən azı bir şəkil əlavə edin",
+      "photos": "Ən azı 3 şəkil əlavə edin",
       "propertyType": "Obyekt növünü seçin",
       "priceLowSale": "Satış üçün qiymət çox aşağıdır (5000 ₼-dən)",
       "priceLowRent": "Kirayə üçün qiymət çox aşağıdır (50 ₼-dən)",
@@ -518,7 +518,13 @@
     "deleteConfirmMsg": "Bu əməliyyat geri qaytarıla bilməz",
     "errDelete": "Silinmədi",
     "edit": "Redaktə et",
-    "promote": "İrəli çək"
+    "promote": "İrəli çək",
+    "actionsTitle": "Əməliyyatlar",
+    "promoUntil": "{{date}}-dək",
+    "statusActive": "Aktiv",
+    "statusModeration": "Moderasiyada",
+    "statusSold": "Satılıb",
+    "statusArchived": "Arxivdə"
   },
   "saved": {
     "title": "Yadda saxlanılanlar",
