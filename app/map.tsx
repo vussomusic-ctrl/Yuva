@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { View, Pressable, ActivityIndicator, StyleSheet, Animated, Image, Text } from "react-native";
+import { View, Pressable, ActivityIndicator, StyleSheet, Animated, Image, Text, InteractionManager } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MapView, { PROVIDER_DEFAULT, Region } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
@@ -45,6 +45,11 @@ function regionForListings(ls: Listing[]): Region {
   };
 }
 
+// Stable immediate region (Baku default) for the FIRST frame. Mounting MapView
+// unconditionally with a constant initialRegion — instead of behind the async
+// fetch — is what keeps Apple Maps' gestures bound (a late mount leaves them dead).
+const INITIAL_REGION = regionForListings([]);
+
 /**
  * Full-screen interactive map (card-push, immersive — no header bar). Shows
  * price pins for every active listing with coordinates. Tap a pin → it turns
@@ -59,6 +64,9 @@ export default function MapScreen() {
   const { current: lang } = useLanguage();
 
   const [listings, setListings] = useState<Listing[] | null>(null);
+  // Defer the native MapView until the push transition finishes — mounting it
+  // mid-transition leaves Apple Maps' gestures unbound (dead pan/zoom/tap).
+  const [mapReady, setMapReady] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [cardData, setCardData] = useState<Listing | null>(null); // last selected — kept while card slides out
   // iOS fires both the marker's onPress AND the map's onPress on a pin tap; this
@@ -67,6 +75,11 @@ export default function MapScreen() {
   const cardY = useRef(new Animated.Value(CARD_HIDDEN)).current;
   const mapRef = useRef<MapView>(null);
   const regionRef = useRef<Region | null>(null);
+
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => setMapReady(true));
+    return () => task.cancel();
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -94,18 +107,27 @@ export default function MapScreen() {
     }).start();
   }, [selectedId, cardY]);
 
+  // Fit the camera to the pins once listings resolve. initialRegion is read once
+  // at mount (stable Baku default), so the fit now lives here instead. Gated on
+  // mapReady: if listings land before the map mounts, animateToRegion would hit a
+  // null ref — this reruns once the map is up.
+  useEffect(() => {
+    if (mapReady && listings && listings.length > 0) {
+      mapRef.current?.animateToRegion(regionForListings(listings), 500);
+    }
+  }, [listings, mapReady]);
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      {listings === null ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator color={brand.violet} />
-        </View>
-      ) : (
+      {/* MapView mounts only AFTER the push transition settles (mapReady) — a
+          mid-transition mount leaves Apple Maps' gestures unbound. Constant
+          initialRegion; pins arrive as children, camera fits via the effect. */}
+      {mapReady && (
         <MapView
           ref={mapRef}
           provider={PROVIDER_DEFAULT}
-          style={StyleSheet.absoluteFill}
-          initialRegion={region}
+          style={{ flex: 1 }}
+          initialRegion={INITIAL_REGION}
           onRegionChangeComplete={(r) => {
             regionRef.current = r;
           }}
@@ -114,7 +136,7 @@ export default function MapScreen() {
             setSelectedId(null);
           }}
         >
-          {listings.map((l) => (
+          {(listings ?? []).map((l) => (
             <PriceMarker
               key={l.id}
               coordinate={{ latitude: l.lat, longitude: l.lng }}
@@ -139,6 +161,16 @@ export default function MapScreen() {
             />
           ))}
         </MapView>
+      )}
+
+      {/* Loading — overlay while the map mounts / listings load; taps pass through */}
+      {(!mapReady || listings === null) && (
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.05)" }]}
+        >
+          <ActivityIndicator color={brand.violet} />
+        </View>
       )}
 
       {/* Floating back button — top-left (keeps bottom-left clear for Apple's logo) */}
