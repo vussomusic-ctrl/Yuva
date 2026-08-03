@@ -25,6 +25,7 @@ import { brand, Theme } from "../../lib/theme/colors";
 import { font } from "../../lib/theme/typography";
 import { Listing, ListingDetail, formatPrice, formatArea, isPromoActive, isRecentlyBumped, getSimilarListings } from "../../lib/mock/listings";
 import { isLandType } from "../../lib/propertyTypes";
+import { useFilters, DEFAULT_FILTERS } from "../../lib/filters-state";
 import { pluralSuffix } from "../../lib/i18n/plural";
 import { fetchListingDetail, fetchFeed } from "../../lib/api/listings";
 import { addViewed } from "../../lib/recentlyViewed";
@@ -70,6 +71,7 @@ export default function PropertyDetailScreen() {
   const { current: lang } = useLanguage();
   const { colors, mode } = useTheme();
   const router = useRouter();
+  const { apply } = useFilters();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -258,6 +260,17 @@ export default function PropertyDetailScreen() {
   const title = buildListingTitle(listing, t, lang, { withMetro: false, withRegion: false });
   const station = listing.metroId ? placeById(listing.metroId) : undefined; // user-picked metro, never inferred
   const regionName = placeById(listing.placeId) ? placeName(placeById(listing.placeId)!, lang) : listing.district;
+
+  // Land utilities — boolean flags shown as a checklist (only the ones that hold).
+  const utils = (
+    [
+      { key: "utilGas", icon: "flame", on: listing.utilGas },
+      { key: "utilWater", icon: "water", on: listing.utilWater },
+      { key: "utilElectricity", icon: "flash", on: listing.utilElectricity },
+      { key: "utilSewage", icon: "water-outline", on: listing.utilSewage },
+      { key: "roadAccess", icon: "car", on: listing.roadAccess },
+    ] as { key: string; icon: keyof typeof Ionicons.glyphMap; on?: boolean }[]
+  ).filter((u) => u.on);
 
   // Translate: show the button only when the description's language differs from
   // the UI language. Tap caches per target language, so toggling is free.
@@ -730,6 +743,23 @@ export default function PropertyDetailScreen() {
             </Section>
           )}
 
+          {/* Utilities (land) — checklist, same 2-col pattern as amenities; hidden when none */}
+          {utils.length > 0 && (
+            <Section title={t("addListing.utilitiesGroupLabel")} colors={colors}>
+              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                {utils.map((u) => (
+                  <View
+                    key={u.key}
+                    style={{ width: "50%", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
+                  >
+                    <Ionicons name={u.icon} size={20} color={brand.violet} />
+                    <Text style={{ color: colors.text, fontFamily: font.regular, fontSize: 14, flex: 1 }}>{t(`addListing.${u.key}`)}</Text>
+                  </View>
+                ))}
+              </View>
+            </Section>
+          )}
+
           {/* Description — full text, full width (no house, no collapse) */}
           {listing.description.trim() !== "" && (
             <View style={{ marginTop: 24 }}>
@@ -774,9 +804,20 @@ export default function PropertyDetailScreen() {
           {/* Similar listings — promo bands first, closest by price (see getSimilarListings) */}
           {similar.length > 0 && (
             <View style={{ marginTop: 24 }}>
-              <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 17, marginBottom: 12 }}>
-                {t("propertyDetail.similarTitle")}
-              </Text>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12 }}>
+                <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: 17 }}>
+                  {t("propertyDetail.similarTitle")}
+                </Text>
+                <Pressable
+                  onPress={() => {
+                    apply({ ...DEFAULT_FILTERS, dealType: listing.dealType, propertyTypes: [listing.propertyType] });
+                    router.navigate("/search");
+                  }}
+                  hitSlop={8}
+                >
+                  <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 13 }}>{t("home.seeAll")}</Text>
+                </Pressable>
+              </View>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
