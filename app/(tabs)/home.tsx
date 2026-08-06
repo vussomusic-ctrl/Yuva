@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { font } from "../../lib/theme/typography";
-import { usePressScale } from "../../lib/animations";
+import { usePressScale, usePressShrink } from "../../lib/animations";
 import { PropertyCard } from "../../components/PropertyCard";
 import { PropertyCardCompact } from "../../components/PropertyCardCompact";
 import { EmptyState } from "../../components/EmptyState";
@@ -27,6 +27,7 @@ import { useFavorites } from "../../lib/favorites";
 import { useFilters } from "../../lib/filters-state";
 import { PropertyTypeKey } from "../../lib/propertyTypes";
 import { Listing, isPromoActive } from "../../lib/mock/listings";
+import { buildListingTitle } from "../../lib/listingTitle";
 import { fetchFeed, fetchListingsByIds } from "../../lib/api/listings";
 import { getViewedIds } from "../../lib/recentlyViewed";
 import { NearbyMap } from "../../components/NearbyMap";
@@ -117,6 +118,20 @@ export default function HomeScreen() {
   const loading = feed === null && !error;
   const recommended = (feed ?? []).filter((l) => l.promoTier === "premium" && isPromoActive(l));
   const nearby = (feed ?? []).filter((l) => l.lat !== 0 && l.lng !== 0);
+
+  // Hero greeting by time of day (two-sided intervals; 0–4 and 22–23 → night).
+  const h = new Date().getHours();
+  const greetKey =
+    h >= 5 && h < 12 ? "greetingMorning" : h >= 12 && h < 17 ? "greetingDay" : h >= 17 && h < 22 ? "greetingEvening" : "greetingNight";
+
+  // Hero chip: the last viewed listing (Continue).
+  const continueItem = recentlyViewed[0];
+
+  // Quick-preset chip → merge a patch onto the current filters and open Search.
+  const goPreset = (patch: Partial<typeof filters>) => {
+    apply({ ...filters, ...patch });
+    router.navigate("/search");
+  };
 
   const { width: winW } = useWindowDimensions();
 
@@ -215,7 +230,7 @@ export default function HomeScreen() {
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <View style={{ flex: 1, gap: 4 }}>
                 <Text style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 22 }}>
-                  {t("home.heroTitle")}
+                  {t(`home.${greetKey}`)}
                 </Text>
                 <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13 }}>
                   {t("home.heroSubtitle")}
@@ -244,6 +259,39 @@ export default function HomeScreen() {
                 <Ionicons name="options-outline" size={18} color="#FFFFFF" />
               </View>
             </Pressable>
+
+            {/* Smart chips — scroll sideways; Rent is always present */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8 }}
+              style={{ marginTop: 12 }}
+            >
+              {continueItem && (
+                <HeroChip
+                  label={t("home.chipContinue", { title: buildListingTitle(continueItem, t, current) })}
+                  colors={colors}
+                  mode={mode}
+                  maxWidth={220}
+                  onPress={() => router.push(`/property/${continueItem.id}`)}
+                />
+              )}
+              {nearby.length > 0 && (
+                <HeroChip
+                  label={t("home.chipNearby")}
+                  colors={colors}
+                  mode={mode}
+                  onPress={() => router.push("/map")}
+                />
+              )}
+              <HeroChip label={t("home.chipRent")} colors={colors} mode={mode} onPress={() => goPreset({ dealType: "rent" })} />
+              <HeroChip label={t("home.chipDaily")} colors={colors} mode={mode} onPress={() => goPreset({ dealType: "rent", rentPeriod: "daily" })} />
+              <HeroChip label={t("home.chipNew")} colors={colors} mode={mode} onPress={() => goPreset({ buildType: "new" })} />
+              <HeroChip label={t("home.chipEuro")} colors={colors} mode={mode} onPress={() => goPreset({ renovation: ["euro"] })} />
+              <HeroChip label={t("home.chipPrice")} colors={colors} mode={mode} onPress={() => goPreset({ priceMax: "100000" })} />
+              <HeroChip label={t("home.chipSea")} colors={colors} mode={mode} onPress={() => goPreset({ amenities: ["sea"] })} />
+              <HeroChip label={t("home.chipMetro")} colors={colors} mode={mode} onPress={() => goPreset({ amenities: ["metro"] })} />
+            </ScrollView>
           </View>
         </View>
 
@@ -411,6 +459,54 @@ function SectionHeader({
         <Text style={{ color: brand.violet, fontFamily: font.bold, fontSize: 13 }}>{action}</Text>
       </Pressable>
     </View>
+  );
+}
+
+// Pill chip inside the hero card — reads on the tinted hero background.
+function HeroChip({
+  label,
+  colors,
+  mode,
+  onPress,
+  maxWidth,
+}: {
+  label: string;
+  colors: Theme;
+  mode: string;
+  onPress: () => void;
+  maxWidth?: number | string;
+}) {
+  // Spring-scale press feedback (same preset as FilterChip / cards) + a light dim.
+  const press = usePressShrink(0.95);
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={({ pressed }) => ({ maxWidth: maxWidth as any, opacity: pressed ? 0.9 : 1 })}
+    >
+      <Animated.View
+        style={[
+          {
+            flexDirection: "row",
+            alignItems: "center",
+            borderRadius: 999,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            backgroundColor: mode === "dark" ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.7)",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.06,
+            shadowRadius: 4,
+          },
+          press.style,
+        ]}
+      >
+        <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.medium, fontSize: 13 }}>
+          {label}
+        </Text>
+      </Animated.View>
+    </Pressable>
   );
 }
 
