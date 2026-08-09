@@ -9,7 +9,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, { useAnimatedScrollHandler, useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, interpolate, Extrapolation, withSpring } from "react-native-reanimated";
 import { useScrollCtx } from "../../lib/scrollContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -35,6 +35,9 @@ import { getViewedIds } from "../../lib/recentlyViewed";
 import { NearbyMap } from "../../components/NearbyMap";
 import { unreadCount, subscribeNotifications } from "../../lib/api/notifications";
 import { useAuth } from "../../lib/auth";
+
+// Status-bar readability scrim under the collapsed hero — prepared but OFF.
+const STATUS_SCRIM = false;
 
 const CATEGORIES: { key: string; label: string; image: number; type: PropertyTypeKey }[] = [
   { key: "apartments", label: "home.catApartments", image: require("../../assets/icons/categories/menziller.png"), type: "apartment" },
@@ -147,8 +150,12 @@ export default function HomeScreen() {
   const heroGradB = mode === "dark" ? (["#301733", "#3E1A45"] as const) : (["#FCE3EF", "#EBDDFA"] as const);
 
   // Collapsing hero — card shrinks to just the search bar as the list scrolls.
-  const { cardStyle, wrapperStyle, contentStyle, greetingStyle, chipsStyle, headerStyle, overlayStyle, veilStyle } =
+  const { progress, cardStyle, wrapperStyle, contentStyle, greetingStyle, chipsStyle, headerStyle, overlayStyle, heroBgStyle, pillShadowStyle } =
     useCollapsingHero(heroScrollY, heroHsv, greetingHsv);
+  // Status-bar scrim opacity (only visible when docked). Rendered only if STATUS_SCRIM.
+  const scrimStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0.7, 1], [0, 1], Extrapolation.CLAMP),
+  }));
 
   // Quick-preset chip → merge a patch onto the current filters and open Search.
   const goPreset = (patch: Partial<typeof filters>) => {
@@ -184,13 +191,18 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={[]}>
       {/* Header — Home is allowed the brand logo (transparent PNG, no plate).
           Slides up + fades on collapse (headerStyle) so the search bar docks under
           the status bar; pointerEvents off once hidden. */}
       <Animated.View
         style={[
           {
+            position: "absolute",
+            top: insets.top,
+            left: 0,
+            right: 0,
+            zIndex: 20,
             height: 56,
             flexDirection: "row",
             alignItems: "center",
@@ -249,10 +261,21 @@ export default function HomeScreen() {
         </View>
       </Animated.View>
 
+      {/* Status-bar readability scrim — prepared, OFF by default. Above the list,
+          under the header; visible only when docked. */}
+      {STATUS_SCRIM && (
+        <Animated.View
+          pointerEvents="none"
+          style={[{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top, zIndex: 15 }, scrimStyle]}
+        >
+          <LinearGradient colors={[colors.bg, colors.bg + "00"]} style={StyleSheet.absoluteFill} />
+        </Animated.View>
+      )}
+
       <View style={{ flex: 1 }}>
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: heroH + 24, paddingBottom: insets.bottom + 96, gap: 24 }}
+        contentContainerStyle={{ paddingTop: heroH + 24 + insets.top + 56, paddingBottom: insets.bottom + 96, gap: 24 }}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
@@ -396,12 +419,11 @@ export default function HomeScreen() {
           content slide, and the greeting/chips fade all interpolate off heroScrollY.
           On collapse the card morphs into a full-bleed bar: side inset 16→0 and
           corner radii 24→0 (from wrapperStyle / cardStyle), clipping the list edge. */}
-      <Animated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 10 }, overlayStyle]}>
+      <Animated.View style={[{ position: "absolute", top: insets.top + 56, left: 0, right: 0, zIndex: 10 }, overlayStyle]}>
         <Animated.View style={wrapperStyle}>
           <Animated.View
             style={[
               {
-                backgroundColor: mode === "dark" ? "#1E1830" : "#F3EDFB", // base/fallback under the gradients
                 overflow: "hidden",
                 shadowColor: brand.violet,
                 shadowOffset: { width: 0, height: 6 },
@@ -412,21 +434,21 @@ export default function HomeScreen() {
               cardStyle,
             ]}
           >
-            {/* Background — two stacked gradients; B crossfades over A (shimmer) */}
-            <LinearGradient
-              colors={heroGradA}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-            />
-            <Animated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, crossfadeStyle]}>
-              <LinearGradient colors={heroGradB} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }} style={{ flex: 1 }} />
+            {/* Background group — underlay + both gradients (B crossfades over A). The
+                whole group fades out on collapse (heroBgStyle) → transparent dock, so
+                the list scrolls behind the pill and under the status bar. */}
+            <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, heroBgStyle]}>
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: mode === "dark" ? "#1E1830" : "#F3EDFB" }]} />
+              <LinearGradient
+                colors={heroGradA}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+              />
+              <Animated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, crossfadeStyle]}>
+                <LinearGradient colors={heroGradB} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }} style={{ flex: 1 }} />
+              </Animated.View>
             </Animated.View>
-
-            {/* Veil — over both gradients, under the content. Fades in on collapse to
-                the SCREEN bg, so the docked card melts into the page (only the white
-                search pill remains visible). Gradients live on underneath. */}
-            <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg }, veilStyle]} />
 
             {/* Content — above the gradients, padded. Measured HERE (not on the card,
                 whose height is animated → would loop the paddingTop). Layout height is
@@ -456,6 +478,8 @@ export default function HomeScreen() {
               </Animated.View>
             </Animated.View>
 
+            {/* Pill wrapper carries the docked shadow (only when floating free). */}
+            <Animated.View style={[{ borderRadius: 25, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowRadius: 12 }, pillShadowStyle]}>
             <Pressable
               onPress={() => router.navigate("/search")}
               style={{
@@ -476,6 +500,7 @@ export default function HomeScreen() {
                 <Ionicons name="options-outline" size={18} color="#FFFFFF" />
               </View>
             </Pressable>
+            </Animated.View>
 
             {/* Smart chips — scroll sideways, cascade in on mount */}
             <Animated.View style={chipsStyle}>

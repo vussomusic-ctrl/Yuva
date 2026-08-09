@@ -146,11 +146,17 @@ export function useCollapsingHero(
   const overlayStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: -HEADER_H * progress.value }],
   }));
-  // Veil over the gradients — dissolves the colour into the screen bg on collapse.
-  const veilStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0.25, 0.85], [0, 1], Extrapolation.CLAMP),
+  // Card background (underlay + gradients) fades out on collapse → transparent dock:
+  // the list scrolls behind the search pill, nothing frames it.
+  const heroBgStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0.25, 0.85], [1, 0], Extrapolation.CLAMP),
   }));
-  return { progress, cardStyle, wrapperStyle, contentStyle, greetingStyle, chipsStyle, headerStyle, overlayStyle, veilStyle };
+  // The search pill picks up a light shadow only once it's a free-floating docked bar.
+  const pillShadowStyle = useAnimatedStyle(() => ({
+    shadowOpacity: interpolate(progress.value, [0.7, 1], [0, 0.12], Extrapolation.CLAMP),
+    elevation: interpolate(progress.value, [0.7, 1], [0, 2], Extrapolation.CLAMP),
+  }));
+  return { progress, cardStyle, wrapperStyle, contentStyle, greetingStyle, chipsStyle, headerStyle, overlayStyle, heroBgStyle, pillShadowStyle };
 }
 
 /**
