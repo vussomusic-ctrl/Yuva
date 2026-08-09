@@ -79,6 +79,34 @@ export function useCrossfadeLoop(duration = 7000) {
 }
 
 /**
+ * Search-overlay entrance. The input sits still (positioned at the pill by the
+ * caller) and only fades; the panel drops out from under it (fade + short slide +
+ * subtle scale); the backdrop fades. Parent keeps the Modal mounted through the
+ * exit (~180ms) before unmounting.
+ */
+export function useOverlayEntrance(visible: boolean) {
+  const progress = useSharedValue(0);
+  useEffect(() => {
+    progress.value = visible
+      ? withTiming(1, { duration: 260, easing: Easing.out(Easing.cubic) })
+      : withTiming(0, { duration: 180 });
+  }, [visible, progress]);
+
+  const inputStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.25], [0, 1], Extrapolation.CLAMP),
+  }));
+  const panelStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0.2, 0.8], [0, 1], Extrapolation.CLAMP),
+    transform: [
+      { translateY: interpolate(progress.value, [0, 1], [-8, 0]) },
+      { scale: interpolate(progress.value, [0, 1], [0.98, 1]) },
+    ],
+  }));
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
+  return { inputStyle, backdropStyle, panelStyle };
+}
+
+/**
  * Collapsing hero driven by a scroll shared value. As the list scrolls from 0 to
  * `fullH - collapsedH`, the hero card shrinks from its measured full height to
  * `collapsedH` (just the search bar), the greeting+mascot row slides up and fades,

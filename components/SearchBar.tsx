@@ -13,10 +13,13 @@ type Props = {
   placeholder?: string;
   // Number of active filters; shows a count badge on the filter icon when > 0.
   filterBadge?: number;
+  // Applied-location label shown as a leading token (primary colour) with a clear X.
+  locationLabel?: string | null;
+  onClearLocation?: () => void;
 };
 
 /** Rounded search field with a trailing filter button. Shared by Home & Search. */
-export function SearchBar({ value, onChangeText, onPressFilter, placeholder, filterBadge = 0 }: Props) {
+export function SearchBar({ value, onChangeText, onPressFilter, placeholder, filterBadge = 0, locationLabel, onClearLocation }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
 
@@ -34,10 +37,18 @@ export function SearchBar({ value, onChangeText, onPressFilter, placeholder, fil
       }}
     >
       <Ionicons name="search" size={20} color={colors.textSecondary} />
+      {locationLabel ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginLeft: 8, flexShrink: 1 }}>
+          <Text numberOfLines={1} style={{ color: colors.text, fontFamily: font.medium, fontSize: 14 }}>{locationLabel}</Text>
+          <Pressable onPress={onClearLocation} hitSlop={8}>
+            <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+          </Pressable>
+        </View>
+      ) : null}
       <TextInput
         value={value}
         onChangeText={onChangeText}
-        placeholder={placeholder ?? t("home.searchPlaceholder")}
+        placeholder={locationLabel ? "" : (placeholder ?? t("home.searchPlaceholder"))}
         placeholderTextColor={colors.textSecondary}
         style={{ flex: 1, marginHorizontal: 8, color: colors.text, fontFamily: font.regular, fontSize: 14, letterSpacing: 0 }}
       />

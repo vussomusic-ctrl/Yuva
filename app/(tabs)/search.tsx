@@ -30,6 +30,7 @@ import { BottomSheet } from "../../components/BottomSheet";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { useFavorites } from "../../lib/favorites";
 import { useFilters, filterListings } from "../../lib/filters-state";
+import { locationLabel } from "../../lib/placeSearch";
 import { Listing, isPromoActive, formatPrice, formatArea } from "../../lib/mock/listings";
 import { fetchFeed } from "../../lib/api/listings";
 import { fetchViewedIds } from "../../lib/api/listingViews";
@@ -66,7 +67,7 @@ export default function SearchScreen() {
   const [areaSheetOpen, setAreaSheetOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null); // tapped map pin
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
-  const { filters, setDealType, setPropertyTypes, setRooms, setBuildType, setPriceRange, setAreaRange, activeCount } = useFilters();
+  const { filters, apply, setDealType, setPropertyTypes, setRooms, setBuildType, setPriceRange, setAreaRange, activeCount } = useFilters();
   const { user } = useAuth();
 
   // Multi-select / range sheets work on a local draft, committed on "Show" /
@@ -367,6 +368,8 @@ export default function SearchScreen() {
             onChangeText={setQuery}
             onPressFilter={() => router.push("/filters")}
             filterBadge={activeCount}
+            locationLabel={locationLabel(filters, lang)}
+            onClearLocation={() => apply({ ...filters, regions: [], metro: [] })}
           />
         </View>
         <FilterChipsRow

@@ -437,6 +437,18 @@
     "typeLandSub": "Plot for construction",
     "typeObjectSub": "Shop, office, warehouse"
   },
+  "searchTakeover": {
+    "recent": "Recent",
+    "popular": "Popular",
+    "regions": "Cities & districts",
+    "zones": "Baku",
+    "metro": "Metro",
+    "metroLabel": "metro",
+    "empty": "Nothing found — try a district, town or metro",
+    "back": "Back",
+    "all": "All {{name}}",
+    "districts": "Districts"
+  },
   "search": {
     "resultsCount": "{{count}} listings found",
     "viewList": "List",

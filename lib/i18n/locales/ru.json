@@ -437,6 +437,18 @@
     "typeLandSub": "Участок под строительство",
     "typeObjectSub": "Магазин, офис, склад"
   },
+  "searchTakeover": {
+    "recent": "Недавние",
+    "popular": "Популярные",
+    "regions": "Города и районы",
+    "zones": "Баку",
+    "metro": "Метро",
+    "metroLabel": "метро",
+    "empty": "Ничего не найдено — попробуйте район, посёлок или метро",
+    "back": "Назад",
+    "all": "Весь {{name}}",
+    "districts": "Районы"
+  },
   "search": {
     "resultsCount": "Найдено {{count}}",
     "viewList": "Список",

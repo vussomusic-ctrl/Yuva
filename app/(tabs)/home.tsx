@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -33,6 +33,7 @@ import { buildListingTitle } from "../../lib/listingTitle";
 import { fetchFeed, fetchListingsByIds } from "../../lib/api/listings";
 import { getViewedIds } from "../../lib/recentlyViewed";
 import { NearbyMap } from "../../components/NearbyMap";
+import { SearchTakeover } from "../../components/SearchTakeover";
 import { unreadCount, subscribeNotifications } from "../../lib/api/notifications";
 import { useAuth } from "../../lib/auth";
 
@@ -84,6 +85,10 @@ export default function HomeScreen() {
   const [error, setError] = useState(false);
   const [unread, setUnread] = useState(0); // live bell badge
   const [recentlyViewed, setRecentlyViewed] = useState<Listing[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false); // search takeover
+  const [searchFromY, setSearchFromY] = useState<number | null>(null); // pill's window Y at tap → overlay input position
+  const [searchAutoFocus, setSearchAutoFocus] = useState(false); // autofocus only when opened from the docked bar
+  const pillRef = useRef<View>(null);
   const load = useCallback(() => {
     setError(false);
     fetchFeed()
@@ -481,7 +486,19 @@ export default function HomeScreen() {
             {/* Pill wrapper carries the docked shadow (only when floating free). */}
             <Animated.View style={[{ borderRadius: 25, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowRadius: 12 }, pillShadowStyle]}>
             <Pressable
-              onPress={() => router.navigate("/search")}
+              ref={pillRef}
+              onPress={() => {
+                // Autofocus only when the pill is docked (little context to lose);
+                // when expanded, let the panel show recent/popular before the keyboard.
+                setSearchAutoFocus(progress.value > 0.9);
+                // Measure the pill so the overlay input sits exactly on it.
+                if (pillRef.current) {
+                  pillRef.current.measureInWindow((_x, y) => { setSearchFromY(y); setSearchOpen(true); });
+                } else {
+                  setSearchFromY(null);
+                  setSearchOpen(true);
+                }
+              }}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -520,6 +537,8 @@ export default function HomeScreen() {
         </Animated.View>
       </Animated.View>
       </View>
+
+      <SearchTakeover visible={searchOpen} fromY={searchFromY} autoFocusOnOpen={searchAutoFocus} onClose={() => setSearchOpen(false)} />
     </SafeAreaView>
   );
 }

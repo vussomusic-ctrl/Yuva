@@ -437,6 +437,18 @@
     "typeLandSub": "Tikinti üçün torpaq",
     "typeObjectSub": "Mağaza, ofis, anbar"
   },
+  "searchTakeover": {
+    "recent": "Son axtarışlar",
+    "popular": "Populyar",
+    "regions": "Şəhər və rayonlar",
+    "zones": "Bakı",
+    "metro": "Metro",
+    "metroLabel": "metro",
+    "empty": "Heç nə tapılmadı — rayon, qəsəbə və ya metro yoxlayın",
+    "back": "Geri",
+    "all": "Bütün {{name}}",
+    "districts": "Rayonlar"
+  },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",
     "viewList": "Siyahı",
