@@ -19,7 +19,7 @@ import { getRecentSearchIds, addRecentSearch } from "../lib/recentSearches";
 import { usePressShrink, useOverlayEntrance } from "../lib/animations";
 
 type Lang = "az" | "ru" | "en";
-type Props = { visible: boolean; fromY: number | null; autoFocusOnOpen: boolean; onClose: () => void };
+type Props = { visible: boolean; frame: { x: number; y: number; w: number } | null; autoFocusOnOpen: boolean; onClose: () => void };
 
 const resolveIds = (ids: string[]): Place[] => ids.map((id) => placeById(id)).filter((p): p is Place => !!p);
 
@@ -30,12 +30,12 @@ const resolveIds = (ids: string[]): Place[] => ids.map((id) => placeById(id)).fi
  * rayons + metro IN THE SAME PANEL; any leaf pick sets the location filter and
  * jumps to /search (other filters preserved — same shape as Home's goPreset).
  */
-export function SearchTakeover({ visible, fromY, autoFocusOnOpen, onClose }: Props) {
+export function SearchTakeover({ visible, frame, autoFocusOnOpen, onClose }: Props) {
   const { t } = useTranslation();
   const { colors, mode } = useTheme();
   const { current: lang } = useLanguage();
   const insets = useSafeAreaInsets();
-  const { height: winH } = useWindowDimensions();
+  const { width: winW, height: winH } = useWindowDimensions();
   const router = useRouter();
   const { filters, apply } = useFilters();
 
@@ -58,10 +58,16 @@ export function SearchTakeover({ visible, fromY, autoFocusOnOpen, onClose }: Pro
     return () => { s.remove(); h.remove(); };
   }, []);
 
-  // Input stays on the pill (fromY); panel drops under it. Entrance = fade only for
-  // the input, fade+drop for the panel.
-  const { inputStyle, backdropStyle, panelStyle } = useOverlayEntrance(visible);
-  const baseTop = fromY ?? insets.top + 8; // overlay input Y (pill position)
+  // Cancel button width (+12 gap) reserved as the pill shrinks. Measured on layout.
+  const [cancelReserve, setCancelReserve] = useState(88);
+
+  // Entrance: the row is born pixel-identical to the pill (frame) and eases to the
+  // 16pt margins; the pill shrinks to reveal Cancel; the panel drops under it.
+  const opts = frame
+    ? { fromLeft: frame.x, fromRight: Math.max(winW - frame.x - frame.w, 16), cancelReserve }
+    : null;
+  const { rowStyle, pillStyle, cancelStyle, backdropStyle, panelStyle } = useOverlayEntrance(visible, opts);
+  const baseTop = frame?.y ?? insets.top + 8; // overlay input Y (pill position)
   const panelTop = baseTop + 50 + 8; // under the 50-tall input + 8 gap
   const bottomGap = Math.max(insets.bottom + 16, kbH + 16);
   const panelMaxHeight = Math.max(120, winH - panelTop - bottomGap);
@@ -128,32 +134,46 @@ export function SearchTakeover({ visible, fromY, autoFocusOnOpen, onClose }: Pro
           </Pressable>
         </Animated.View>
 
-        {/* Input row + Cancel — pinned on the pill (fromY), no vertical travel */}
-        <Animated.View style={[{ position: "absolute", top: baseTop, left: 16, right: 16, flexDirection: "row", alignItems: "center", gap: 12 }, inputStyle]}>
-            <View style={{ flex: 1, flexDirection: "row", alignItems: "center", height: 50, borderRadius: 25, backgroundColor: pillBg, paddingHorizontal: 14, gap: 10 }}>
-              <Ionicons name="search" size={20} color={colors.textSecondary} />
-              <TextInput
-                ref={inputRef}
-                autoFocus={autoFocusOnOpen}
-                value={q}
-                onChangeText={setQ}
-                placeholder={t("home.heroSearchPlaceholder")}
-                placeholderTextColor={colors.textSecondary}
-                returnKeyType="search"
-                autoCorrect={false}
-                autoCapitalize="none"
-                style={{ flex: 1, color: colors.text, fontFamily: font.regular, fontSize: 15 }}
-              />
-              {q.length > 0 && (
-                <Pressable onPress={() => setQ("")} hitSlop={8}>
-                  <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
-                </Pressable>
-              )}
-            </View>
+        {/* Input row — born on the pill's exact frame, eases to the 16pt margins */}
+        <Animated.View style={[{ position: "absolute", top: baseTop, flexDirection: "row", alignItems: "center" }, rowStyle]}>
+          {/* Pill — 1:1 with the real Home pill (icon / placeholder / filter button) */}
+          <Animated.View style={[{ flex: 1, flexDirection: "row", alignItems: "center", height: 50, borderRadius: 25, backgroundColor: pillBg, paddingHorizontal: 14, gap: 10 }, pillStyle]}>
+            <Ionicons name="search" size={20} color={colors.textSecondary} />
+            <TextInput
+              ref={inputRef}
+              autoFocus={autoFocusOnOpen}
+              value={q}
+              onChangeText={setQ}
+              placeholder={t("home.heroSearchPlaceholder")}
+              placeholderTextColor={colors.textSecondary}
+              returnKeyType="search"
+              autoCorrect={false}
+              autoCapitalize="none"
+              style={{ flex: 1, color: colors.text, fontFamily: font.regular, fontSize: 14 }}
+            />
+            {q.length > 0 && (
+              <Pressable onPress={() => setQ("")} hitSlop={8}>
+                <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+              </Pressable>
+            )}
+            <Pressable
+              onPress={() => { onClose(); router.push({ pathname: "/filters", params: { from: "home" } }); }}
+              hitSlop={8}
+              style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 12, backgroundColor: brand.violet, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 })}
+            >
+              <Ionicons name="options-outline" size={18} color="#FFFFFF" />
+            </Pressable>
+          </Animated.View>
+          {/* Cancel — slides/fades in at the right as the pill shrinks */}
+          <Animated.View
+            onLayout={(e) => setCancelReserve(e.nativeEvent.layout.width + 12)}
+            style={[{ position: "absolute", right: 0, height: 50, justifyContent: "center" }, cancelStyle]}
+          >
             <Pressable onPress={onClose} hitSlop={8} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
               <Text style={{ color: brand.violet, fontFamily: font.semibold, fontSize: 15 }}>{t("common.cancel")}</Text>
             </Pressable>
           </Animated.View>
+        </Animated.View>
 
         {/* Glass panel — dropdown under the input; fades in + drops a touch later */}
         <Animated.View

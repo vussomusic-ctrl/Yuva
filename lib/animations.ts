@@ -84,7 +84,14 @@ export function useCrossfadeLoop(duration = 7000) {
  * subtle scale); the backdrop fades. Parent keeps the Modal mounted through the
  * exit (~180ms) before unmounting.
  */
-export function useOverlayEntrance(visible: boolean) {
+// RULE: every useAnimatedStyle worklet here must return a CONSTANT set of keys —
+// Reanimated does NOT reset a key that disappears between evaluations, so a stale
+// value (e.g. opacity:0 computed on an earlier branch) sticks. Branch on values,
+// never on which keys are present.
+export function useOverlayEntrance(
+  visible: boolean,
+  opts: { fromLeft: number; fromRight: number; cancelReserve: number } | null,
+) {
   const progress = useSharedValue(0);
   useEffect(() => {
     progress.value = visible
@@ -92,8 +99,31 @@ export function useOverlayEntrance(visible: boolean) {
       : withTiming(0, { duration: 180 });
   }, [visible, progress]);
 
-  const inputStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.25], [0, 1], Extrapolation.CLAMP),
+  const hasFrame = opts !== null;
+  const fromLeft = opts?.fromLeft ?? 16;
+  const fromRight = opts?.fromRight ?? 16;
+  const cancelReserve = opts?.cancelReserve ?? 88;
+
+  // With a measured frame the row is pixel-identical to the real pill at t=0 (no
+  // fade) and eases to the 16pt margins; without one it just fades in at 16pt.
+  // NOTE both branches return the SAME keys (see the constant-keys rule above).
+  const rowStyle = useAnimatedStyle(() => {
+    const rowOpacity = hasFrame ? 1 : interpolate(progress.value, [0, 0.25], [0, 1], Extrapolation.CLAMP);
+    return hasFrame
+      ? {
+          left: interpolate(progress.value, [0, 1], [fromLeft, 16]),
+          right: interpolate(progress.value, [0, 1], [fromRight, 16]),
+          opacity: rowOpacity,
+        }
+      : { left: 16, right: 16, opacity: rowOpacity };
+  });
+  // Pill shrinks to reserve room for Cancel as it appears.
+  const pillStyle = useAnimatedStyle(() => ({
+    marginRight: hasFrame ? interpolate(progress.value, [0.15, 1], [0, cancelReserve], Extrapolation.CLAMP) : cancelReserve,
+  }));
+  const cancelStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0.35, 1], [0, 1], Extrapolation.CLAMP),
+    transform: [{ translateX: interpolate(progress.value, [0, 1], [12, 0]) }],
   }));
   const panelStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0.2, 0.8], [0, 1], Extrapolation.CLAMP),
@@ -103,7 +133,7 @@ export function useOverlayEntrance(visible: boolean) {
     ],
   }));
   const backdropStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
-  return { inputStyle, backdropStyle, panelStyle };
+  return { progress, rowStyle, pillStyle, cancelStyle, backdropStyle, panelStyle };
 }
 
 /**

@@ -86,7 +86,7 @@ export default function HomeScreen() {
   const [unread, setUnread] = useState(0); // live bell badge
   const [recentlyViewed, setRecentlyViewed] = useState<Listing[]>([]);
   const [searchOpen, setSearchOpen] = useState(false); // search takeover
-  const [searchFromY, setSearchFromY] = useState<number | null>(null); // pill's window Y at tap → overlay input position
+  const [searchFrame, setSearchFrame] = useState<{ x: number; y: number; w: number } | null>(null); // pill window frame at tap → overlay origin
   const [searchAutoFocus, setSearchAutoFocus] = useState(false); // autofocus only when opened from the docked bar
   const pillRef = useRef<View>(null);
   const load = useCallback(() => {
@@ -494,9 +494,9 @@ export default function HomeScreen() {
                 setSearchAutoFocus(progress.value > 0.9);
                 // Measure the pill so the overlay input sits exactly on it.
                 if (pillRef.current) {
-                  pillRef.current.measureInWindow((_x, y) => { setSearchFromY(y); setSearchOpen(true); });
+                  pillRef.current.measureInWindow((x, y, w) => { setSearchFrame({ x, y, w }); setSearchOpen(true); });
                 } else {
-                  setSearchFromY(null);
+                  setSearchFrame(null);
                   setSearchOpen(true);
                 }
               }}
@@ -543,7 +543,7 @@ export default function HomeScreen() {
       </Animated.View>
       </View>
 
-      <SearchTakeover visible={searchOpen} fromY={searchFromY} autoFocusOnOpen={searchAutoFocus} onClose={() => setSearchOpen(false)} />
+      <SearchTakeover visible={searchOpen} frame={searchFrame} autoFocusOnOpen={searchAutoFocus} onClose={() => setSearchOpen(false)} />
     </SafeAreaView>
   );
 }
