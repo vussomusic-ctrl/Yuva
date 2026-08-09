@@ -17,7 +17,8 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { font } from "../../lib/theme/typography";
-import { usePressScale, usePressShrink } from "../../lib/animations";
+import { LinearGradient } from "expo-linear-gradient";
+import { usePressScale, usePressShrink, useBreathe, useStaggerIn, useCrossfadeLoop } from "../../lib/animations";
 import { PropertyCard } from "../../components/PropertyCard";
 import { PropertyCardCompact } from "../../components/PropertyCardCompact";
 import { EmptyState } from "../../components/EmptyState";
@@ -127,11 +128,36 @@ export default function HomeScreen() {
   // Hero chip: the last viewed listing (Continue).
   const continueItem = recentlyViewed[0];
 
+  // Hero mascot — soft breathing loop.
+  const breatheStyle = useBreathe(1.04, 2200);
+
+  // Hero background — two stacked gradients, the top one slowly crossfading in/out
+  // for a gentle shimmer (deliberate, close tints — never acid).
+  const crossfadeStyle = useCrossfadeLoop(7000);
+  const heroGradA = mode === "dark" ? (["#1E1830", "#251B3B"] as const) : (["#F3EDFB", "#ECE3FA"] as const);
+  const heroGradB = mode === "dark" ? (["#301733", "#3E1A45"] as const) : (["#FCE3EF", "#EBDDFA"] as const);
+
   // Quick-preset chip → merge a patch onto the current filters and open Search.
   const goPreset = (patch: Partial<typeof filters>) => {
     apply({ ...filters, ...patch });
     router.navigate("/search");
   };
+
+  // Hero chips as data (for the staggered cascade). Conditional ones spread in.
+  type HeroChipDesc = { key: string; label: string; maxWidth?: number; onPress: () => void };
+  const heroChips: HeroChipDesc[] = [
+    ...(continueItem
+      ? [{ key: "continue", label: t("home.chipContinue", { title: buildListingTitle(continueItem, t, current) }), maxWidth: 220, onPress: () => router.push(`/property/${continueItem.id}`) }]
+      : []),
+    ...(nearby.length > 0 ? [{ key: "nearby", label: t("home.chipNearby"), onPress: () => router.push("/map") }] : []),
+    { key: "rent", label: t("home.chipRent"), onPress: () => goPreset({ dealType: "rent" }) },
+    { key: "daily", label: t("home.chipDaily"), onPress: () => goPreset({ dealType: "rent", rentPeriod: "daily" }) },
+    { key: "new", label: t("home.chipNew"), onPress: () => goPreset({ buildType: "new" }) },
+    { key: "euro", label: t("home.chipEuro"), onPress: () => goPreset({ renovation: ["euro"] }) },
+    { key: "price", label: t("home.chipPrice"), onPress: () => goPreset({ priceMax: "100000" }) },
+    { key: "sea", label: t("home.chipSea"), onPress: () => goPreset({ amenities: ["sea"] }) },
+    { key: "metro", label: t("home.chipMetro"), onPress: () => goPreset({ amenities: ["metro"] }) },
+  ];
 
   const { width: winW } = useWindowDimensions();
 
@@ -215,11 +241,9 @@ export default function HomeScreen() {
         <View style={{ paddingHorizontal: 16 }}>
           <View
             style={{
-              backgroundColor: mode === "dark" ? "#1E1830" : "#F3EDFB",
+              backgroundColor: mode === "dark" ? "#1E1830" : "#F3EDFB", // base/fallback under the gradients
               borderRadius: 24,
-              padding: 18,
               overflow: "hidden",
-              gap: 16,
               shadowColor: brand.violet,
               shadowOffset: { width: 0, height: 6 },
               shadowOpacity: 0.12,
@@ -227,6 +251,19 @@ export default function HomeScreen() {
               elevation: 4,
             }}
           >
+            {/* Background — two stacked gradients; B crossfades over A (shimmer) */}
+            <LinearGradient
+              colors={heroGradA}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+            />
+            <Animated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, crossfadeStyle]}>
+              <LinearGradient colors={heroGradB} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }} style={{ flex: 1 }} />
+            </Animated.View>
+
+            {/* Content — above the gradients, padded */}
+            <View style={{ padding: 18, gap: 16 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <View style={{ flex: 1, gap: 4 }}>
                 <Text style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 22 }}>
@@ -236,7 +273,9 @@ export default function HomeScreen() {
                   {t("home.heroSubtitle")}
                 </Text>
               </View>
-              <Image source={require("../../assets/mascot/bird-nest.png")} style={{ width: 96, height: 96 }} resizeMode="contain" />
+              <Animated.View style={breatheStyle}>
+                <Image source={require("../../assets/mascot/bird-nest.png")} style={{ width: 96, height: 96 }} resizeMode="contain" />
+              </Animated.View>
             </View>
 
             <Pressable
@@ -260,38 +299,18 @@ export default function HomeScreen() {
               </View>
             </Pressable>
 
-            {/* Smart chips — scroll sideways; Rent is always present */}
+            {/* Smart chips — scroll sideways, cascade in on mount */}
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ gap: 8 }}
               style={{ marginTop: 12 }}
             >
-              {continueItem && (
-                <HeroChip
-                  label={t("home.chipContinue", { title: buildListingTitle(continueItem, t, current) })}
-                  colors={colors}
-                  mode={mode}
-                  maxWidth={220}
-                  onPress={() => router.push(`/property/${continueItem.id}`)}
-                />
-              )}
-              {nearby.length > 0 && (
-                <HeroChip
-                  label={t("home.chipNearby")}
-                  colors={colors}
-                  mode={mode}
-                  onPress={() => router.push("/map")}
-                />
-              )}
-              <HeroChip label={t("home.chipRent")} colors={colors} mode={mode} onPress={() => goPreset({ dealType: "rent" })} />
-              <HeroChip label={t("home.chipDaily")} colors={colors} mode={mode} onPress={() => goPreset({ dealType: "rent", rentPeriod: "daily" })} />
-              <HeroChip label={t("home.chipNew")} colors={colors} mode={mode} onPress={() => goPreset({ buildType: "new" })} />
-              <HeroChip label={t("home.chipEuro")} colors={colors} mode={mode} onPress={() => goPreset({ renovation: ["euro"] })} />
-              <HeroChip label={t("home.chipPrice")} colors={colors} mode={mode} onPress={() => goPreset({ priceMax: "100000" })} />
-              <HeroChip label={t("home.chipSea")} colors={colors} mode={mode} onPress={() => goPreset({ amenities: ["sea"] })} />
-              <HeroChip label={t("home.chipMetro")} colors={colors} mode={mode} onPress={() => goPreset({ amenities: ["metro"] })} />
+              {heroChips.map((c, i) => (
+                <ChipItem key={c.key} index={i} label={c.label} colors={colors} mode={mode} maxWidth={c.maxWidth} onPress={c.onPress} />
+              ))}
             </ScrollView>
+            </View>
           </View>
         </View>
 
@@ -463,6 +482,31 @@ function SectionHeader({
 }
 
 // Pill chip inside the hero card — reads on the tinted hero background.
+// Wrapper that gives each chip a staggered fade+slide-in on mount. Hooks can't
+// run inside .map, so the per-index animation lives here as its own component.
+function ChipItem({
+  index,
+  label,
+  colors,
+  mode,
+  maxWidth,
+  onPress,
+}: {
+  index: number;
+  label: string;
+  colors: Theme;
+  mode: string;
+  maxWidth?: number | string;
+  onPress: () => void;
+}) {
+  const enter = useStaggerIn(index);
+  return (
+    <Animated.View style={enter}>
+      <HeroChip label={label} colors={colors} mode={mode} maxWidth={maxWidth} onPress={onPress} />
+    </Animated.View>
+  );
+}
+
 function HeroChip({
   label,
   colors,

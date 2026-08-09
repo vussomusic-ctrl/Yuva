@@ -8,6 +8,8 @@ import {
   useAnimatedStyle,
   withSpring,
   withSequence,
+  withRepeat,
+  withDelay,
   withTiming,
   Easing,
   type SharedValue,
@@ -27,6 +29,49 @@ export function useMountFadeScale(fromScale = 0.92, duration = 450) {
   useEffect(() => {
     progress.value = withTiming(1, { duration, easing: Easing.out(Easing.cubic) });
   }, [progress, duration]);
+  return style;
+}
+
+/**
+ * Endless soft "breathing": scale gently loops 1 ↔ `to` and back (yoyo). Apply
+ * `style` to an Animated.View (e.g. the home hero mascot).
+ */
+export function useBreathe(to = 1.04, duration = 2200) {
+  const scale = useSharedValue(1);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  useEffect(() => {
+    scale.value = withRepeat(withTiming(to, { duration, easing: Easing.inOut(Easing.ease) }), -1, true);
+  }, [scale, to, duration]);
+  return style;
+}
+
+/**
+ * Staggered mount entrance for list items: fade in + slide up, each item delayed
+ * by `index * delayStep`. Apply `style` to an Animated.View wrapping the item.
+ */
+export function useStaggerIn(index: number, opts?: { delayStep?: number; duration?: number; distance?: number }) {
+  const { delayStep = 70, duration = 320, distance = 12 } = opts ?? {};
+  const p = useSharedValue(0);
+  const style = useAnimatedStyle(() => ({
+    opacity: p.value,
+    transform: [{ translateY: (1 - p.value) * distance }],
+  }));
+  useEffect(() => {
+    p.value = withDelay(index * delayStep, withTiming(1, { duration, easing: Easing.out(Easing.ease) }));
+  }, [p, index, delayStep, duration]);
+  return style;
+}
+
+/**
+ * Slow opacity crossfade loop (0 → 1 → 0, yoyo). Put `style` on the TOP layer of
+ * two stacked gradients so the background gently shimmers between two tints.
+ */
+export function useCrossfadeLoop(duration = 7000) {
+  const p = useSharedValue(0);
+  const style = useAnimatedStyle(() => ({ opacity: p.value }));
+  useEffect(() => {
+    p.value = withRepeat(withTiming(1, { duration, easing: Easing.inOut(Easing.ease) }), -1, true);
+  }, [p, duration]);
   return style;
 }
 
