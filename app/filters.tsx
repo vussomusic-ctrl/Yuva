@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, TextInput, Image } from "react-nativ
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../lib/theme/ThemeContext";
@@ -56,6 +56,7 @@ export default function FiltersModal() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const router = useRouter();
+  const { from } = useLocalSearchParams<{ from?: string }>(); // "home" → land on /search after apply
   const { current: lang } = useLanguage();
   const { filters, apply } = useFilters();
 
@@ -168,6 +169,8 @@ export default function FiltersModal() {
       renovation,
     });
     close();
+    // Opened from the Home pill's filter button → land the user on the results.
+    if (from === "home") router.navigate("/search");
   };
 
   // Clear resets the narrowing filters (keeps the chosen deal type) and applies

@@ -483,8 +483,9 @@ export default function HomeScreen() {
               </Animated.View>
             </Animated.View>
 
-            {/* Pill wrapper carries the docked shadow (only when floating free). */}
-            <Animated.View style={[{ borderRadius: 25, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowRadius: 12 }, pillShadowStyle]}>
+            {/* Pill wrapper carries the docked shadow. Hidden while the takeover is
+                open (its own pill shows there) so it doesn't bleed through the blur. */}
+            <Animated.View style={[{ borderRadius: 25, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, opacity: searchOpen ? 0 : 1 }, pillShadowStyle]}>
             <Pressable
               ref={pillRef}
               onPress={() => {
@@ -513,9 +514,13 @@ export default function HomeScreen() {
               <Text style={{ flex: 1, color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
                 {t("home.heroSearchPlaceholder")}
               </Text>
-              <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: brand.violet, alignItems: "center", justifyContent: "center" }}>
+              <Pressable
+                onPress={() => router.push({ pathname: "/filters", params: { from: "home" } })}
+                hitSlop={8}
+                style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 12, backgroundColor: brand.violet, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 })}
+              >
                 <Ionicons name="options-outline" size={18} color="#FFFFFF" />
-              </View>
+              </Pressable>
             </Pressable>
             </Animated.View>
 
