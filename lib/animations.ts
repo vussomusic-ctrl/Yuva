@@ -6,6 +6,9 @@ import { useCallback, useEffect } from "react";
 import {
   useSharedValue,
   useAnimatedStyle,
+  useDerivedValue,
+  interpolate,
+  Extrapolation,
   withSpring,
   withSequence,
   withRepeat,
@@ -73,6 +76,81 @@ export function useCrossfadeLoop(duration = 7000) {
     p.value = withRepeat(withTiming(1, { duration, easing: Easing.inOut(Easing.ease) }), -1, true);
   }, [p, duration]);
   return style;
+}
+
+/**
+ * Collapsing hero driven by a scroll shared value. As the list scrolls from 0 to
+ * `fullH - collapsedH`, the hero card shrinks from its measured full height to
+ * `collapsedH` (just the search bar), the greeting+mascot row slides up and fades,
+ * and the chips fade out. `progress` (0→1) is exposed for any extra tie-ins.
+ *   - fullH: measured full hero-content height (shared value, from onLayout)
+ *   - greetingH: measured greeting+mascot row height (shared value)
+ *   - collapsedH: 18 + 50 + 18 = paddings + search bar row
+ *   - gapAfterGreeting: the content gap between greeting and search bar
+ */
+export function useCollapsingHero(
+  scrollY: SharedValue<number>,
+  fullH: SharedValue<number>,
+  greetingH: SharedValue<number>,
+  collapsedH = 66, // 8 + 50 + 8 (slim paddings + search bar row)
+  gapAfterGreeting = 16,
+) {
+  const PAD_SLIM = 10; // 18 → 8 vertical padding shed on collapse
+  const HEADER_H = 56; // fixed header height — the bar takes its place
+  const SHADOW_ORIG = 0.12; // card shadowOpacity at rest (matches home markup)
+  const ELEV_ORIG = 4; // card elevation at rest (Android)
+
+  const progress = useDerivedValue(() => {
+    const dist = Math.max(fullH.value - collapsedH + HEADER_H, 1); // + header: bar edge tracks the finger 1:1, gap stays 24
+    return interpolate(scrollY.value, [0, dist], [0, 1], Extrapolation.CLAMP);
+  });
+  const cardStyle = useAnimatedStyle(() => {
+    const dist = Math.max(fullH.value - collapsedH + HEADER_H, 1); // + header: bar edge tracks the finger 1:1, gap stays 24
+    const r = interpolate(progress.value, [0, 1], [24, 0], Extrapolation.CLAMP);
+    return {
+      height: interpolate(scrollY.value, [0, dist], [fullH.value, collapsedH], Extrapolation.CLAMP),
+      // Four corners separately so top/bottom can be tuned independently later.
+      borderTopLeftRadius: r,
+      borderTopRightRadius: r,
+      borderBottomLeftRadius: r,
+      borderBottomRightRadius: r,
+      // Fully drop the shadow when docked so nothing frames the search zone.
+      shadowOpacity: interpolate(progress.value, [0.5, 1], [SHADOW_ORIG, 0], Extrapolation.CLAMP),
+      elevation: interpolate(progress.value, [0.5, 1], [ELEV_ORIG, 0], Extrapolation.CLAMP),
+    };
+  });
+  // Morph the side inset 16 → 0 so the card becomes a full-bleed bar when collapsed.
+  const wrapperStyle = useAnimatedStyle(() => ({
+    paddingHorizontal: interpolate(progress.value, [0, 1], [16, 0], Extrapolation.CLAMP),
+  }));
+  // Slide the content up so the search bar lands at y=8 when collapsed (greeting +
+  // gap + the 10px of padding shed). Pure transform — no per-frame layout; the
+  // bottom clips under the card's overflow:hidden.
+  const contentStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -(greetingH.value + gapAfterGreeting + PAD_SLIM) * progress.value }],
+  }));
+  const greetingStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.6], [1, 0], Extrapolation.CLAMP),
+  }));
+  const chipsStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.5], [1, 0], Extrapolation.CLAMP),
+  }));
+  // Header slides up + fades out; pointerEvents off so the hidden bell/RU can't be
+  // tapped from under the status bar.
+  const headerStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.35], [1, 0], Extrapolation.CLAMP),
+    transform: [{ translateY: -HEADER_H * progress.value }],
+    pointerEvents: progress.value > 0.4 ? "none" : "auto",
+  }));
+  // The whole hero overlay rises by the header height, docking the bar under the status bar.
+  const overlayStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -HEADER_H * progress.value }],
+  }));
+  // Veil over the gradients — dissolves the colour into the screen bg on collapse.
+  const veilStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0.25, 0.85], [0, 1], Extrapolation.CLAMP),
+  }));
+  return { progress, cardStyle, wrapperStyle, contentStyle, greetingStyle, chipsStyle, headerStyle, overlayStyle, veilStyle };
 }
 
 /**

@@ -5,10 +5,11 @@ import {
   Image,
   Pressable,
   ScrollView,
+  StyleSheet,
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, { useAnimatedScrollHandler, withSpring } from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler, useSharedValue, withSpring } from "react-native-reanimated";
 import { useScrollCtx } from "../../lib/scrollContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -18,7 +19,7 @@ import { useTheme } from "../../lib/theme/ThemeContext";
 import { brand, Theme } from "../../lib/theme/colors";
 import { font } from "../../lib/theme/typography";
 import { LinearGradient } from "expo-linear-gradient";
-import { usePressScale, usePressShrink, useBreathe, useStaggerIn, useCrossfadeLoop } from "../../lib/animations";
+import { usePressScale, usePressShrink, useBreathe, useStaggerIn, useCrossfadeLoop, useCollapsingHero } from "../../lib/animations";
 import { PropertyCard } from "../../components/PropertyCard";
 import { PropertyCardCompact } from "../../components/PropertyCardCompact";
 import { EmptyState } from "../../components/EmptyState";
@@ -55,8 +56,16 @@ const CATEGORY_TINT: Record<string, { light: string; dark: string }> = {
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { scrollY } = useScrollCtx();
+  // Local scroll value for the (future) collapsing hero — mirrors the real offset.
+  // The global scrollY is still fed too (it drives the bottom tab bar collapse).
+  const heroScrollY = useSharedValue(0);
+  // Measured hero heights (prep for phase 2 — not read by anything yet).
+  const heroHsv = useSharedValue(236); // full hero-card height
+  const greetingHsv = useSharedValue(96); // greeting+mascot row height
+  const [heroH, setHeroH] = useState(236); // reserves list top-padding under the pinned hero
   const scrollHandler = useAnimatedScrollHandler((e) => {
     scrollY.value = e.contentOffset.y;
+    heroScrollY.value = e.contentOffset.y;
   });
   const { t } = useTranslation();
   const { colors, mode } = useTheme();
@@ -137,6 +146,10 @@ export default function HomeScreen() {
   const heroGradA = mode === "dark" ? (["#1E1830", "#251B3B"] as const) : (["#F3EDFB", "#ECE3FA"] as const);
   const heroGradB = mode === "dark" ? (["#301733", "#3E1A45"] as const) : (["#FCE3EF", "#EBDDFA"] as const);
 
+  // Collapsing hero — card shrinks to just the search bar as the list scrolls.
+  const { cardStyle, wrapperStyle, contentStyle, greetingStyle, chipsStyle, headerStyle, overlayStyle, veilStyle } =
+    useCollapsingHero(heroScrollY, heroHsv, greetingHsv);
+
   // Quick-preset chip → merge a patch onto the current filters and open Search.
   const goPreset = (patch: Partial<typeof filters>) => {
     apply({ ...filters, ...patch });
@@ -172,15 +185,20 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
-      {/* Header — Home is allowed the brand logo (transparent PNG, no plate) */}
-      <View
-        style={{
-          height: 56,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 16,
-        }}
+      {/* Header — Home is allowed the brand logo (transparent PNG, no plate).
+          Slides up + fades on collapse (headerStyle) so the search bar docks under
+          the status bar; pointerEvents off once hidden. */}
+      <Animated.View
+        style={[
+          {
+            height: 56,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: 16,
+          },
+          headerStyle,
+        ]}
       >
         <Image
           source={require("../../assets/yuva-logo.png")}
@@ -229,91 +247,15 @@ export default function HomeScreen() {
             </Text>
           </Pressable>
         </View>
-      </View>
+      </Animated.View>
 
+      <View style={{ flex: 1 }}>
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 96, gap: 24 }}
+        contentContainerStyle={{ paddingTop: heroH + 24, paddingBottom: insets.bottom + 96, gap: 24 }}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
-        {/* Hero — greeting + mascot + search entry (static, no animation) */}
-        <View style={{ paddingHorizontal: 16 }}>
-          <View
-            style={{
-              backgroundColor: mode === "dark" ? "#1E1830" : "#F3EDFB", // base/fallback under the gradients
-              borderRadius: 24,
-              overflow: "hidden",
-              shadowColor: brand.violet,
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.12,
-              shadowRadius: 16,
-              elevation: 4,
-            }}
-          >
-            {/* Background — two stacked gradients; B crossfades over A (shimmer) */}
-            <LinearGradient
-              colors={heroGradA}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-            />
-            <Animated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, crossfadeStyle]}>
-              <LinearGradient colors={heroGradB} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }} style={{ flex: 1 }} />
-            </Animated.View>
-
-            {/* Content — above the gradients, padded */}
-            <View style={{ padding: 18, gap: 16 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <View style={{ flex: 1, gap: 4 }}>
-                <Text style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 22 }}>
-                  {t(`home.${greetKey}`)}
-                </Text>
-                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13 }}>
-                  {t("home.heroSubtitle")}
-                </Text>
-              </View>
-              <Animated.View style={breatheStyle}>
-                <Image source={require("../../assets/mascot/bird-nest.png")} style={{ width: 96, height: 96 }} resizeMode="contain" />
-              </Animated.View>
-            </View>
-
-            <Pressable
-              onPress={() => router.navigate("/search")}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                height: 50,
-                borderRadius: 25,
-                backgroundColor: mode === "dark" ? "rgba(255,255,255,0.08)" : "#FFFFFF",
-                paddingHorizontal: 14,
-                gap: 10,
-              }}
-            >
-              <Ionicons name="search" size={20} color={colors.textSecondary} />
-              <Text style={{ flex: 1, color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
-                {t("home.heroSearchPlaceholder")}
-              </Text>
-              <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: brand.violet, alignItems: "center", justifyContent: "center" }}>
-                <Ionicons name="options-outline" size={18} color="#FFFFFF" />
-              </View>
-            </Pressable>
-
-            {/* Smart chips — scroll sideways, cascade in on mount */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8 }}
-              style={{ marginTop: 12 }}
-            >
-              {heroChips.map((c, i) => (
-                <ChipItem key={c.key} index={i} label={c.label} colors={colors} mode={mode} maxWidth={c.maxWidth} onPress={c.onPress} />
-              ))}
-            </ScrollView>
-            </View>
-          </View>
-        </View>
-
         {/* Categories — first content under the header (clean showcase) */}
         <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16 }}>
           {CATEGORIES.map((c) => (
@@ -449,6 +391,110 @@ export default function HomeScreen() {
           </>
         )}
       </Animated.ScrollView>
+
+      {/* Hero — pinned collapsing overlay above the scroll. The card height, the
+          content slide, and the greeting/chips fade all interpolate off heroScrollY.
+          On collapse the card morphs into a full-bleed bar: side inset 16→0 and
+          corner radii 24→0 (from wrapperStyle / cardStyle), clipping the list edge. */}
+      <Animated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 10 }, overlayStyle]}>
+        <Animated.View style={wrapperStyle}>
+          <Animated.View
+            style={[
+              {
+                backgroundColor: mode === "dark" ? "#1E1830" : "#F3EDFB", // base/fallback under the gradients
+                overflow: "hidden",
+                shadowColor: brand.violet,
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.12,
+                shadowRadius: 16,
+                elevation: 4,
+              },
+              cardStyle,
+            ]}
+          >
+            {/* Background — two stacked gradients; B crossfades over A (shimmer) */}
+            <LinearGradient
+              colors={heroGradA}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+            />
+            <Animated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, crossfadeStyle]}>
+              <LinearGradient colors={heroGradB} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }} style={{ flex: 1 }} />
+            </Animated.View>
+
+            {/* Veil — over both gradients, under the content. Fades in on collapse to
+                the SCREEN bg, so the docked card melts into the page (only the white
+                search pill remains visible). Gradients live on underneath. */}
+            <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg }, veilStyle]} />
+
+            {/* Content — above the gradients, padded. Measured HERE (not on the card,
+                whose height is animated → would loop the paddingTop). Layout height is
+                unaffected by the collapse transform, so it stays the full hero height. */}
+            <Animated.View
+              onLayout={(e) => {
+                const hgt = e.nativeEvent.layout.height;
+                setHeroH(hgt);
+                heroHsv.value = hgt;
+              }}
+              style={[{ padding: 18, gap: 16 }, contentStyle]}
+            >
+            <Animated.View
+              onLayout={(e) => { greetingHsv.value = e.nativeEvent.layout.height; }}
+              style={[{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, greetingStyle]}
+            >
+              <View style={{ flex: 1, gap: 4 }}>
+                <Text style={{ color: colors.text, fontFamily: font.extrabold, fontSize: 22 }}>
+                  {t(`home.${greetKey}`)}
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontFamily: font.regular, fontSize: 13 }}>
+                  {t("home.heroSubtitle")}
+                </Text>
+              </View>
+              <Animated.View style={breatheStyle}>
+                <Image source={require("../../assets/mascot/bird-nest.png")} style={{ width: 96, height: 96 }} resizeMode="contain" />
+              </Animated.View>
+            </Animated.View>
+
+            <Pressable
+              onPress={() => router.navigate("/search")}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                height: 50,
+                borderRadius: 25,
+                backgroundColor: mode === "dark" ? "rgba(255,255,255,0.08)" : "#FFFFFF",
+                paddingHorizontal: 14,
+                gap: 10,
+              }}
+            >
+              <Ionicons name="search" size={20} color={colors.textSecondary} />
+              <Text style={{ flex: 1, color: colors.textSecondary, fontFamily: font.regular, fontSize: 14 }}>
+                {t("home.heroSearchPlaceholder")}
+              </Text>
+              <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: brand.violet, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="options-outline" size={18} color="#FFFFFF" />
+              </View>
+            </Pressable>
+
+            {/* Smart chips — scroll sideways, cascade in on mount */}
+            <Animated.View style={chipsStyle}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8 }}
+              style={{ marginTop: 12 }}
+            >
+              {heroChips.map((c, i) => (
+                <ChipItem key={c.key} index={i} label={c.label} colors={colors} mode={mode} maxWidth={c.maxWidth} onPress={c.onPress} />
+              ))}
+            </ScrollView>
+            </Animated.View>
+            </Animated.View>
+          </Animated.View>
+        </Animated.View>
+      </Animated.View>
+      </View>
     </SafeAreaView>
   );
 }
