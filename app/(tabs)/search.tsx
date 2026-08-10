@@ -30,7 +30,7 @@ import { BottomSheet } from "../../components/BottomSheet";
 import { LoadingState, ErrorState } from "../../components/ListState";
 import { useFavorites } from "../../lib/favorites";
 import { useFilters, filterListings } from "../../lib/filters-state";
-import { locationLabel } from "../../lib/placeSearch";
+import { locationChips } from "../../lib/placeSearch";
 import { Listing, isPromoActive, formatPrice, formatArea } from "../../lib/mock/listings";
 import { fetchFeed } from "../../lib/api/listings";
 import { fetchViewedIds } from "../../lib/api/listingViews";
@@ -368,7 +368,14 @@ export default function SearchScreen() {
             onChangeText={setQuery}
             onPressFilter={() => router.push("/filters")}
             filterBadge={activeCount}
-            locationLabel={locationLabel(filters, lang)}
+            chips={locationChips(filters, lang)}
+            onRemoveChip={(c) =>
+              apply(
+                c.kind === "metro"
+                  ? { ...filters, metro: filters.metro.filter((id) => id !== c.id) }
+                  : { ...filters, regions: filters.regions.filter((id) => id !== c.id) },
+              )
+            }
             onClearLocation={() => apply({ ...filters, regions: [], metro: [] })}
           />
         </View>

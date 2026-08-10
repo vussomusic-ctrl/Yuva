@@ -447,7 +447,8 @@
     "empty": "Nothing found — try a district, town or metro",
     "back": "Back",
     "all": "All {{name}}",
-    "districts": "Districts"
+    "districts": "Districts",
+    "show": "Show ({{n}})"
   },
   "search": {
     "resultsCount": "{{count}} listings found",

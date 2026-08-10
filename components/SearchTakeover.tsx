@@ -7,8 +7,9 @@ import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
+import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../lib/theme/ThemeContext";
-import { brand } from "../lib/theme/colors";
+import { brand, tints } from "../lib/theme/colors";
 import { font } from "../lib/theme/typography";
 import { useLanguage } from "../lib/i18n/languages";
 import { useFilters } from "../lib/filters-state";
@@ -75,13 +76,17 @@ export function SearchTakeover({ visible, frame, autoFocusOnOpen, onClose }: Pro
   const [q, setQ] = useState("");
   const [recent, setRecent] = useState<Place[]>([]);
   const [drill, setDrill] = useState<string | null>(null); // region id being drilled (Baku)
+  const [selRegions, setSelRegions] = useState<string[]>([]); // multi-selected area ids
+  const [selMetro, setSelMetro] = useState<string[]>([]); // multi-selected metro ids
   const inputRef = useRef<TextInput>(null);
 
-  // On open: reset query + drill, (re)load recent.
+  // On open: reset query + drill + selection, (re)load recent. (drill does NOT reset selection.)
   useEffect(() => {
     if (!visible) return;
     setQ("");
     setDrill(null);
+    setSelRegions([]);
+    setSelMetro([]);
     getRecentSearchIds().then((ids) => setRecent(resolveIds(ids)));
   }, [visible]);
 
@@ -113,14 +118,32 @@ export function SearchTakeover({ visible, frame, autoFocusOnOpen, onClose }: Pro
     router.navigate("/search");
   };
 
-  // Non-drill tap: a region with children (Baku) drills in; anything else applies.
+  const selCount = selRegions.length + selMetro.length;
+  const isSelected = (p: Place) => (p.kind === "metro" ? selMetro.includes(p.id) : selRegions.includes(p.id));
+  const toggleSel = (p: Place) => {
+    const set = p.kind === "metro" ? setSelMetro : setSelRegions;
+    set((cur) => (cur.includes(p.id) ? cur.filter((x) => x !== p.id) : [...cur, p.id]));
+  };
+
+  // Row tap: a region with children (Baku) drills in; a childless region applies
+  // instantly (single); a rayon/zone/metro toggles into the multi-selection.
   const onRowTap = (p: Place) => {
     if (!drill && p.kind === "region" && areasOf(p.id).length > 0) {
       setDrill(p.id);
       setQ("");
       return;
     }
-    finish(p);
+    if (p.kind === "region") { finish(p); return; }
+    toggleSel(p);
+  };
+
+  // "Показать (N)" — apply the whole multi-selection at once.
+  const showSelection = () => {
+    apply({ ...filters, regions: selRegions, metro: selMetro });
+    [...selRegions, ...selMetro].forEach((id) => addRecentSearch(id));
+    Keyboard.dismiss();
+    onClose();
+    router.navigate("/search");
   };
 
   return (
@@ -200,7 +223,7 @@ export function SearchTakeover({ visible, frame, autoFocusOnOpen, onClose }: Pro
             <BlurView intensity={45} tint={mode === "dark" ? "dark" : "light"} style={StyleSheet.absoluteFill} />
             <View style={[StyleSheet.absoluteFill, { backgroundColor: mode === "dark" ? "rgba(28,28,30,0.6)" : "rgba(255,255,255,0.6)" }]} />
 
-            <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
+            <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
               {drill && drillRegion ? (
                 <>
                   <Pressable onPress={() => { setDrill(null); setQ(""); }} hitSlop={6} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 14, paddingTop: 14, paddingBottom: 8, opacity: pressed ? 0.6 : 1 })}>
@@ -216,11 +239,11 @@ export function SearchTakeover({ visible, frame, autoFocusOnOpen, onClose }: Pro
                     <>
                       {drillZones.length > 0 && <SectionHeader label={t("searchTakeover.districts")} colors={colors} />}
                       {drillZones.map((p) => (
-                        <PlaceRow key={`dz-${p.id}`} place={p} lang={lang} colors={colors} onPress={() => finish(p)} t={t} />
+                        <PlaceRow key={`dz-${p.id}`} place={p} lang={lang} colors={colors} selected={isSelected(p)} onPress={() => onRowTap(p)} t={t} />
                       ))}
                       {drillMetro.length > 0 && <SectionHeader label={t("searchTakeover.metro")} colors={colors} />}
                       {drillMetro.map((p) => (
-                        <PlaceRow key={`dm-${p.id}`} place={p} lang={lang} colors={colors} onPress={() => finish(p)} t={t} />
+                        <PlaceRow key={`dm-${p.id}`} place={p} lang={lang} colors={colors} selected={isSelected(p)} onPress={() => onRowTap(p)} t={t} />
                       ))}
                     </>
                   )}
@@ -231,34 +254,45 @@ export function SearchTakeover({ visible, frame, autoFocusOnOpen, onClose }: Pro
                     <>
                       <SectionHeader label={t("searchTakeover.recent")} colors={colors} />
                       {recent.map((p) => (
-                        <PlaceRow key={`r-${p.id}`} place={p} lang={lang} colors={colors} onPress={() => onRowTap(p)} t={t} />
+                        <PlaceRow key={`r-${p.id}`} place={p} lang={lang} colors={colors} selected={isSelected(p)} onPress={() => onRowTap(p)} t={t} />
                       ))}
                     </>
                   )}
                   <SectionHeader label={t("searchTakeover.popular")} colors={colors} />
                   {popular.map((p) => (
-                    <PlaceRow key={`p-${p.id}`} place={p} lang={lang} colors={colors} onPress={() => onRowTap(p)} t={t} />
+                    <PlaceRow key={`p-${p.id}`} place={p} lang={lang} colors={colors} selected={isSelected(p)} onPress={() => onRowTap(p)} t={t} />
                   ))}
                 </>
               ) : hasResults ? (
                 <>
                   {results.regions.length > 0 && <SectionHeader label={t("searchTakeover.regions")} colors={colors} />}
                   {results.regions.map((p) => (
-                    <PlaceRow key={`reg-${p.id}`} place={p} lang={lang} colors={colors} onPress={() => onRowTap(p)} t={t} />
+                    <PlaceRow key={`reg-${p.id}`} place={p} lang={lang} colors={colors} selected={isSelected(p)} onPress={() => onRowTap(p)} t={t} />
                   ))}
                   {results.zones.length > 0 && <SectionHeader label={t("searchTakeover.zones")} colors={colors} />}
                   {results.zones.map((p) => (
-                    <PlaceRow key={`z-${p.id}`} place={p} lang={lang} colors={colors} onPress={() => onRowTap(p)} t={t} />
+                    <PlaceRow key={`z-${p.id}`} place={p} lang={lang} colors={colors} selected={isSelected(p)} onPress={() => onRowTap(p)} t={t} />
                   ))}
                   {results.metro.length > 0 && <SectionHeader label={t("searchTakeover.metro")} colors={colors} />}
                   {results.metro.map((p) => (
-                    <PlaceRow key={`m-${p.id}`} place={p} lang={lang} colors={colors} onPress={() => onRowTap(p)} t={t} />
+                    <PlaceRow key={`m-${p.id}`} place={p} lang={lang} colors={colors} selected={isSelected(p)} onPress={() => onRowTap(p)} t={t} />
                   ))}
                 </>
               ) : (
                 <EmptyRow label={t("searchTakeover.empty")} colors={colors} />
               )}
             </ScrollView>
+
+            {/* Footer CTA — apply the whole multi-selection. Visible only with picks. */}
+            {selCount > 0 && (
+              <View style={{ padding: 12 }}>
+                <Pressable onPress={showSelection} style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}>
+                  <LinearGradient colors={brand.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ color: "#FFFFFF", fontFamily: font.bold, fontSize: 16 }}>{t("searchTakeover.show", { n: selCount })}</Text>
+                  </LinearGradient>
+                </Pressable>
+              </View>
+            )}
           </Animated.View>
       </View>
     </Modal>
@@ -297,12 +331,14 @@ function PlaceRow({
   place,
   lang,
   colors,
+  selected,
   onPress,
   t,
 }: {
   place: Place;
   lang: Lang;
   colors: { text: string; textSecondary: string; border: string };
+  selected?: boolean;
   onPress: () => void;
   t: (k: string) => string;
 }) {
@@ -312,9 +348,9 @@ function PlaceRow({
   const icon = place.kind === "metro" ? "train-outline" : "location-outline";
   return (
     <Pressable onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View style={[{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 13, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: colors.border }, press.style]}>
-        <Ionicons name={icon} size={20} color={colors.textSecondary} />
-        <Text numberOfLines={1} style={{ flex: 1, color: colors.text, fontFamily: font.medium, fontSize: 15 }}>
+      <Animated.View style={[{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 13, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: selected ? tints.violet.bg : "transparent" }, press.style]}>
+        <Ionicons name={icon} size={20} color={selected ? brand.violet : colors.textSecondary} />
+        <Text numberOfLines={1} style={{ flex: 1, color: selected ? brand.violet : colors.text, fontFamily: font.medium, fontSize: 15 }}>
           {placeName(place, lang)}
         </Text>
         {secondary ? (
@@ -322,6 +358,7 @@ function PlaceRow({
             {secondary}
           </Text>
         ) : null}
+        {selected && <Ionicons name="checkmark" size={20} color={brand.violet} />}
       </Animated.View>
     </Pressable>
   );

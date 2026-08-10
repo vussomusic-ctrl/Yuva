@@ -28,6 +28,23 @@ export function locationLabel(filters: { regions: string[]; metro: string[] }, l
   return total > 1 ? `${name} +${total - 1}` : name;
 }
 
+// One chip per selected location id (regions first, then metro) for the search bar.
+export function locationChips(
+  filters: { regions: string[]; metro: string[] },
+  lang: "az" | "ru" | "en",
+): { id: string; label: string; kind: "region" | "metro" }[] {
+  const out: { id: string; label: string; kind: "region" | "metro" }[] = [];
+  for (const id of filters.regions) {
+    const p = placeById(id);
+    if (p) out.push({ id, label: placeName(p, lang), kind: "region" });
+  }
+  for (const id of filters.metro) {
+    const p = placeById(id);
+    if (p) out.push({ id, label: placeName(p, lang), kind: "metro" });
+  }
+  return out;
+}
+
 // Live suggestions for the search takeover: republic cities/rayons, Baku zones,
 // and metro — each matched by the folded query and capped per group. Empty query
 // → empty groups (the UI shows recent/popular instead).

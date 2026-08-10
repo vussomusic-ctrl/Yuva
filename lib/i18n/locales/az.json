@@ -447,7 +447,8 @@
     "empty": "Heç nə tapılmadı — rayon, qəsəbə və ya metro yoxlayın",
     "back": "Geri",
     "all": "Bütün {{name}}",
-    "districts": "Rayonlar"
+    "districts": "Rayonlar",
+    "show": "Göstər ({{n}})"
   },
   "search": {
     "resultsCount": "{{count}} elan tapıldı",
